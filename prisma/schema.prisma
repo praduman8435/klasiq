@@ -1,0 +1,320 @@
+// Prisma schema for the school-uniform commerce platform.
+// See docs/PHASE_0_AUDIT.md for the architectural reasoning behind this model.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UniformGender {
+  BOYS
+  GIRLS
+  UNISEX
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+enum FulfillmentType {
+  STORE_PICKUP
+  LOCAL_DELIVERY
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  UPI
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// Schools
+// ---------------------------------------------------------------------------
+
+/// A participating school. Its public storefront lives at /school/[slug] and
+/// is the landing target for that school's printed QR code.
+model School {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  name     String
+  logoUrl  String?
+  city     String?
+  isActive Boolean @default(true)
+  isDemo   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classes         SchoolClass[]
+  uniformProducts Product[]                 @relation("SchoolSpecificProducts")
+  assignments     SchoolUniformAssignment[]
+  recommendedSets RecommendedUniformSet[]
+  orders          Order[]
+
+  @@map("schools")
+}
+
+/// A grade/class within a school (e.g. "Class 7"). Owned by the school
+/// because class naming and structure differs between institutions.
+model SchoolClass {
+  id        String @id @default(cuid())
+  schoolId  String
+  name      String
+  sortOrder Int    @default(0)
+
+  school      School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  assignments SchoolUniformAssignment[]
+  sets        RecommendedUniformSet[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, name])
+  @@map("school_classes")
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
+
+/// Top-level shopping categories that back the main nav & category routes:
+/// /uniforms, /shoes, /socks, /school-bags. Self-referencing parentId keeps
+/// this extensible (e.g. future "Belts & Ties" under a broader grouping)
+/// without a schema change.
+model Category {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+  sortOrder   Int     @default(0)
+  parentId    String?
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
+}
+
+/// A sellable item. Most uniform products are generic (schoolId is null) and
+/// reused across many schools via SchoolUniformAssignment — e.g. "White
+/// Shirt". A product that only exists for one school (e.g. a school-crested
+/// blazer) sets schoolId directly instead of being reused.
+model Product {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+  imageUrl    String?
+  categoryId  String
+  schoolId    String?
+  isDemo      Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  school   School?  @relation("SchoolSpecificProducts", fields: [schoolId], references: [id], onDelete: Cascade)
+
+  variants    ProductVariant[]
+  assignments SchoolUniformAssignment[]
+  setItems    RecommendedUniformSetItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([schoolId])
+  @@map("products")
+}
+
+/// A purchasable size/price/stock combination of a Product. Price is
+/// intentionally per-variant (not per-product) because size can affect
+/// price. This is the unit referenced everywhere money or stock matters:
+/// basket items, order items.
+model ProductVariant {
+  id                String      @id @default(cuid())
+  productId         String
+  size              String
+  sku               String      @unique
+  priceInPaise      Int
+  stockQuantity     Int         @default(0)
+  lowStockThreshold Int         @default(5)
+  stockStatus       StockStatus @default(IN_STOCK)
+  sortOrder         Int         @default(0)
+
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  basketItems BasketItem[]
+  orderItems  OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, size])
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// ---------------------------------------------------------------------------
+// School <-> Product relationship
+// ---------------------------------------------------------------------------
+
+/// Marks a Product as part of a school's required/available uniform for a
+/// given class and gender group. classId/gender null = applies broadly
+/// (all classes / all genders) at that school. This is what the school
+/// storefront queries to build "the uniform collection relevant to that
+/// school" without duplicating Product rows per school.
+model SchoolUniformAssignment {
+  id         String        @id @default(cuid())
+  schoolId   String
+  classId    String?
+  gender     UniformGender @default(UNISEX)
+  productId  String
+  isRequired Boolean       @default(true)
+  sortOrder  Int           @default(0)
+
+  school  School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class   SchoolClass? @relation(fields: [classId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, classId, gender, productId])
+  @@index([schoolId])
+  @@map("school_uniform_assignments")
+}
+
+/// A named, curated bundle ("Class 7 Boys — Complete Uniform") that a parent
+/// can add to their basket in one action. Items reference a Product (not a
+/// specific size) because the correct size depends on the child; the parent
+/// picks sizes when the set is added to the basket.
+model RecommendedUniformSet {
+  id          String        @id @default(cuid())
+  schoolId    String
+  classId     String?
+  gender      UniformGender @default(UNISEX)
+  name        String
+  description String?
+  isActive    Boolean       @default(true)
+
+  school School                      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class  SchoolClass?                @relation(fields: [classId], references: [id], onDelete: Cascade)
+  items  RecommendedUniformSetItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@map("recommended_uniform_sets")
+}
+
+model RecommendedUniformSetItem {
+  id        String @id @default(cuid())
+  setId     String
+  productId String
+  quantity  Int    @default(1)
+  sortOrder Int    @default(0)
+
+  set     RecommendedUniformSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  product Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([setId, productId])
+  @@map("recommended_uniform_set_items")
+}
+
+// ---------------------------------------------------------------------------
+// Basket (guest cart, cookie-identified, server-persisted)
+// ---------------------------------------------------------------------------
+
+/// A guest basket identified by an opaque id stored in an httpOnly cookie.
+/// No authentication is required. Prices are always re-read from
+/// ProductVariant at render/order time — nothing price-related is trusted
+/// from the client.
+model Basket {
+  id        String       @id @default(cuid())
+  items     BasketItem[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("baskets")
+}
+
+model BasketItem {
+  id               String @id @default(cuid())
+  basketId         String
+  productVariantId String
+  quantity         Int    @default(1)
+
+  basket         Basket         @relation(fields: [basketId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([basketId, productVariantId])
+  @@map("basket_items")
+}
+
+// ---------------------------------------------------------------------------
+// Orders (schema modeled now; checkout flow is a Phase 2 deliverable)
+// ---------------------------------------------------------------------------
+
+model Order {
+  id              String          @id @default(cuid())
+  orderNumber     String          @unique
+  schoolId        String?
+  customerName    String
+  customerMobile  String
+  deliveryAddress String?
+  fulfillmentType FulfillmentType
+  paymentMethod   PaymentMethod
+  status          OrderStatus     @default(PENDING)
+  totalInPaise    Int
+
+  school School?     @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  items  OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@map("orders")
+}
+
+/// Snapshots product name/size/price at time of order so historical orders
+/// stay accurate even if the underlying Product/ProductVariant later changes.
+model OrderItem {
+  id               String @id @default(cuid())
+  orderId          String
+  productVariantId String
+  productName      String
+  size             String
+  unitPriceInPaise Int
+  quantity         Int
+
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
