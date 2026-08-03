@@ -11,9 +11,13 @@ const CATEGORY_ICON: Record<string, typeof Shirt> = {
 export function ProductPlaceholderImage({
   categorySlug,
   className,
+  compact = false,
 }: {
   categorySlug: string;
   className?: string;
+  /** Use for small thumbnails (e.g. checkout order summary rows) where the
+   * full "Placeholder" badge and larger icon don't fit cleanly. */
+  compact?: boolean;
 }) {
   const Icon = CATEGORY_ICON[categorySlug] ?? Shirt;
 
@@ -26,12 +30,17 @@ export function ProductPlaceholderImage({
     >
       <Icon
         aria-hidden
-        className="size-10 text-muted-foreground/50 sm:size-12"
+        className={cn(
+          "text-muted-foreground/50",
+          compact ? "size-5" : "size-10 sm:size-12",
+        )}
         strokeWidth={1.25}
       />
-      <span className="absolute bottom-1.5 right-1.5 rounded-full bg-background/80 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
-        Placeholder
-      </span>
+      {!compact && (
+        <span className="absolute bottom-1.5 right-1.5 rounded-full bg-background/80 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+          Placeholder
+        </span>
+      )}
     </div>
   );
 }

@@ -73,21 +73,20 @@ export default async function BagPage() {
           Delivery/pickup and payment are chosen at checkout.
         </p>
 
-        <div className="mt-5 rounded-xl border border-dashed bg-secondary/40 p-4 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">
-            Online checkout is launching soon.
-          </p>
-          <p className="mt-1">
-            For now, please visit the store or call us to complete this
-            order — your bag is saved and ready to go.
-          </p>
-        </div>
+        <Button
+          render={<Link href="/checkout" />}
+          nativeButton={false}
+          size="lg"
+          className="mt-5 h-14 w-full text-base"
+        >
+          Proceed to Checkout
+        </Button>
 
         <Button
           render={<Link href="/" />}
           nativeButton={false}
           variant="outline"
-          className="mt-4 w-full"
+          className="mt-3 w-full"
         >
           Continue shopping
         </Button>

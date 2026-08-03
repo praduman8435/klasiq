@@ -72,13 +72,21 @@ export async function addToBasket(
   }
 
   if (existing) {
+    // priceInPaiseAtAdd is deliberately left untouched here — it should
+    // keep reflecting the price the parent originally saw, not reset every
+    // time they bump the quantity of a line that's already in their bag.
     await db.basketItem.update({
       where: { id: existing.id },
       data: { quantity: nextQuantity },
     });
   } else {
     await db.basketItem.create({
-      data: { basketId, productVariantId, quantity: nextQuantity },
+      data: {
+        basketId,
+        productVariantId,
+        quantity: nextQuantity,
+        priceInPaiseAtAdd: variant.priceInPaise,
+      },
     });
   }
 
@@ -210,7 +218,12 @@ export async function addRecommendedSet(
       });
     } else {
       await db.basketItem.create({
-        data: { basketId, productVariantId: defaultVariant.id, quantity: nextQuantity },
+        data: {
+          basketId,
+          productVariantId: defaultVariant.id,
+          quantity: nextQuantity,
+          priceInPaiseAtAdd: defaultVariant.priceInPaise,
+        },
       });
     }
   }

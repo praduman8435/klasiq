@@ -46,6 +46,27 @@ enum OrderStatus {
   CANCELLED
 }
 
+/// Independent from OrderStatus on purpose — "order confirmed" is not the
+/// same fact as "payment completed". COD/pay-at-store orders are created
+/// UNPAID and stay that way until staff collect payment. FAILED exists now
+/// (unused by the Phase 2 COD-only flow) so a future online-payment
+/// integration doesn't need another migration to add it.
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
+/// ACTIVE baskets behave like a normal cart. Once a basket has produced an
+/// order it flips to CONVERTED and is never mutated or checked out again —
+/// see Basket.convertedOrderId and docs/PHASE_2_REPORT.md ("Basket
+/// conversion strategy") for why this replaces deleting/clearing items.
+enum BasketStatus {
+  ACTIVE
+  CONVERTED
+}
+
 // ---------------------------------------------------------------------------
 // Schools
 // ---------------------------------------------------------------------------
@@ -139,6 +160,11 @@ model Product {
   variants    ProductVariant[]
   assignments SchoolUniformAssignment[]
   setItems    RecommendedUniformSetItem[]
+  /// Convenience reference from historical order items. Nullable + SetNull:
+  /// a deleted product must never block deleting the product itself, and
+  /// must never invalidate the order — productName/skuSnapshot on OrderItem
+  /// are what actually keep the historical order accurate.
+  orderItems  OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -251,20 +277,34 @@ model RecommendedUniformSetItem {
 /// No authentication is required. Prices are always re-read from
 /// ProductVariant at render/order time — nothing price-related is trusted
 /// from the client.
+///
+/// Once a basket produces an order it flips to CONVERTED and
+/// convertedOrderId is set — see docs/PHASE_2_REPORT.md. A CONVERTED basket
+/// is treated as empty by every read/mutation helper; the cookie holder
+/// transparently gets a fresh ACTIVE basket on their next add-to-bag.
 model Basket {
-  id        String       @id @default(cuid())
-  items     BasketItem[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id               String       @id @default(cuid())
+  status           BasketStatus @default(ACTIVE)
+  convertedOrderId String?      @unique
+  items            BasketItem[]
+  convertedOrder   Order?       @relation(fields: [convertedOrderId], references: [id])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   @@map("baskets")
 }
 
 model BasketItem {
-  id               String @id @default(cuid())
-  basketId         String
-  productVariantId String
-  quantity         Int    @default(1)
+  id                String @id @default(cuid())
+  basketId          String
+  productVariantId  String
+  quantity          Int    @default(1)
+  /// The variant's price at the moment this line was first added — never
+  /// used to compute totals (those always come from ProductVariant at
+  /// checkout time), only to detect and surface a "price changed since you
+  /// added this" message. Deliberately not updated when quantity changes on
+  /// an existing line, so it keeps reflecting what the parent originally saw.
+  priceInPaiseAtAdd Int
 
   basket         Basket         @relation(fields: [basketId], references: [id], onDelete: Cascade)
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
@@ -277,23 +317,49 @@ model BasketItem {
 }
 
 // ---------------------------------------------------------------------------
-// Orders (schema modeled now; checkout flow is a Phase 2 deliverable)
+// Orders
 // ---------------------------------------------------------------------------
 
+/// A real, placed order. Created exactly once per successful checkout —
+/// see src/server/commerce/place-order.ts for the transactional
+/// create-order + decrement-stock logic and docs/PHASE_2_REPORT.md for the
+/// concurrency/idempotency reasoning.
 model Order {
-  id              String          @id @default(cuid())
-  orderNumber     String          @unique
-  schoolId        String?
-  customerName    String
-  customerMobile  String
-  deliveryAddress String?
-  fulfillmentType FulfillmentType
-  paymentMethod   PaymentMethod
-  status          OrderStatus     @default(PENDING)
-  totalInPaise    Int
+  id             String  @id @default(cuid())
+  /// Human-friendly, customer/staff-facing identifier (e.g.
+  /// ORD-20260804-K7M3P). Never used for access control on its own.
+  orderNumber    String  @unique
+  /// Unguessable token required (alongside orderNumber) to view the public
+  /// confirmation page. See "Order lookup security" in PHASE_2_REPORT.md.
+  accessToken    String  @unique
+  /// Client-supplied idempotency key for the checkout submission that
+  /// created this order. A repeat submission with the same key returns
+  /// this same order instead of creating a duplicate. Nullable only because
+  /// the column must allow more than one NULL under a unique constraint in
+  /// Postgres (rows can't practically exist without one in application
+  /// code, but the type reflects the DB truth, not a real optionality).
+  idempotencyKey String? @unique
+
+  schoolId       String?
+  customerName   String
+  customerMobile String
+
+  fulfillmentType     FulfillmentType
+  deliveryAddressLine String?
+  deliveryArea        String?
+  deliveryLandmark    String?
+
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(UNPAID)
+  status        OrderStatus   @default(PENDING)
+
+  subtotalInPaise    Int
+  deliveryFeeInPaise Int @default(0)
+  totalInPaise       Int
 
   school School?     @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   items  OrderItem[]
+  basket Basket?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -302,18 +368,26 @@ model Order {
   @@map("orders")
 }
 
-/// Snapshots product name/size/price at time of order so historical orders
-/// stay accurate even if the underlying Product/ProductVariant later changes.
+/// Snapshots product/variant identity, name, size, SKU and price at order
+/// time so a historical order stays accurate even if the underlying
+/// Product/ProductVariant is later renamed, repriced, or removed.
 model OrderItem {
-  id               String @id @default(cuid())
+  id               String  @id @default(cuid())
   orderId          String
+  /// Nullable + SetNull: losing this reference must never affect the
+  /// historical record, which lives entirely in the snapshot fields below.
+  productId        String?
   productVariantId String
+
   productName      String
   size             String
+  skuSnapshot      String
   unitPriceInPaise Int
   quantity         Int
+  lineTotalInPaise Int
 
   order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
 
   @@map("order_items")
