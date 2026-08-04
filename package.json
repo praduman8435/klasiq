@@ -1,5 +1,5 @@
 {
-  "name": "shop",
+  "name": "klasiq",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,6 +11,7 @@
     "test": "vitest run",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:create-admin": "tsx prisma/create-admin.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

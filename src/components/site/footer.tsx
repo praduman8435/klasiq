@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NAV_CATEGORIES } from "@/server/queries/categories";
+import { getBackedByLine } from "@/lib/constants";
 
 export function SiteFooter({ storeName }: { storeName: string }) {
   return (
@@ -9,8 +10,11 @@ export function SiteFooter({ storeName }: { storeName: string }) {
           <div>
             <p className="font-heading text-lg font-semibold">{storeName}</p>
             <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-              Serving local families for 30 years — school uniforms, shoes,
-              bags and everyday essentials.
+              School uniforms, shoes, bags and everyday essentials —
+              serving local families for around 30 years.
+            </p>
+            <p className="mt-2 max-w-xs text-xs text-muted-foreground">
+              {getBackedByLine()}
             </p>
           </div>
 

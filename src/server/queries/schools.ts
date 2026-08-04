@@ -39,6 +39,7 @@ export async function getSchoolAssignedProducts(params: {
   const assignments = await db.schoolUniformAssignment.findMany({
     where: {
       schoolId,
+      product: { isActive: true },
       AND: [
         classId ? { OR: [{ classId }, { classId: null }] } : {},
         gender ? { OR: [{ gender }, { gender: "UNISEX" as const }] } : {},
@@ -48,7 +49,7 @@ export async function getSchoolAssignedProducts(params: {
     include: {
       product: {
         include: {
-          variants: { orderBy: { sortOrder: "asc" } },
+          variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
           category: { select: { slug: true } },
         },
       },
@@ -87,8 +88,13 @@ export async function getSchoolRecommendedSets(params: {
     include: {
       items: {
         orderBy: { sortOrder: "asc" },
+        where: { product: { isActive: true } },
         include: {
-          product: { include: { variants: { orderBy: { sortOrder: "asc" } } } },
+          product: {
+            include: {
+              variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
+            },
+          },
         },
       },
     },

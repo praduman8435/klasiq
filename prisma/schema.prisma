@@ -74,13 +74,20 @@ enum BasketStatus {
 /// A participating school. Its public storefront lives at /school/[slug] and
 /// is the landing target for that school's printed QR code.
 model School {
-  id       String  @id @default(cuid())
-  slug     String  @unique
-  name     String
-  logoUrl  String?
-  city     String?
-  isActive Boolean @default(true)
-  isDemo   Boolean @default(false)
+  id                String  @id @default(cuid())
+  slug              String  @unique
+  name              String
+  logoUrl           String?
+  city              String?
+  isActive          Boolean @default(true)
+  isDemo            Boolean @default(false)
+  /// Controls whether the public storefront may claim an "Official Uniform
+  /// Partner" relationship. A school existing in Klasiq does NOT by itself
+  /// mean Klasiq is its official/exclusive supplier — the storefront shows
+  /// neutral "School Uniform Collection" wording unless this is explicitly
+  /// set true for a verified partnership. See docs/PHASE_3_REPORT.md
+  /// "School partnership wording".
+  isVerifiedPartner Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -188,10 +195,16 @@ model ProductVariant {
   lowStockThreshold Int         @default(5)
   stockStatus       StockStatus @default(IN_STOCK)
   sortOrder         Int         @default(0)
+  /// Lets admin retire a size (discontinued, mis-added, etc.) without
+  /// deleting it — deletion is blocked anyway once an OrderItem references
+  /// it (onDelete: Restrict below), so deactivation is the normal safe path.
+  /// Public queries only ever return isActive: true variants.
+  isActive          Boolean     @default(true)
 
-  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  basketItems BasketItem[]
-  orderItems  OrderItem[]
+  product              Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  basketItems          BasketItem[]
+  orderItems           OrderItem[]
+  inventoryAdjustments InventoryAdjustment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -357,9 +370,13 @@ model Order {
   deliveryFeeInPaise Int @default(0)
   totalInPaise       Int
 
-  school School?     @relation(fields: [schoolId], references: [id], onDelete: SetNull)
-  items  OrderItem[]
-  basket Basket?
+  school               School?               @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  items                OrderItem[]
+  basket               Basket?
+  /// Populated only for ORDER_CANCELLATION_RESTORE adjustments — lets an
+  /// admin trace "why did this variant's stock go up" back to the specific
+  /// cancelled order. See docs/PHASE_3_REPORT.md "Inventory audit trail".
+  inventoryAdjustments InventoryAdjustment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -391,4 +408,87 @@ model OrderItem {
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
 
   @@map("order_items")
+}
+
+// ---------------------------------------------------------------------------
+// Admin (Phase 3)
+// ---------------------------------------------------------------------------
+
+/// A shop staff account. Deliberately minimal — no roles/permissions system
+/// (every admin user can do everything), no self-service signup. The first
+/// account is created via a bootstrap script (see docs/PHASE_3_REPORT.md),
+/// not through any public route.
+model AdminUser {
+  id           String  @id @default(cuid())
+  name         String
+  email        String  @unique
+  /// scrypt hash in `salt:hash` hex form — see src/lib/admin/password.ts.
+  /// Never a plaintext password, never a reversible encryption.
+  passwordHash String
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions             AdminSession[]
+  inventoryAdjustments InventoryAdjustment[]
+
+  @@map("admin_users")
+}
+
+/// A server-side session. The httpOnly cookie holds a random opaque token;
+/// only its SHA-256 hash is stored here, so a database read/backup leak
+/// cannot be replayed as a live session cookie. See src/lib/admin/session.ts.
+model AdminSession {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique
+  adminUserId String
+  expiresAt   DateTime
+
+  createdAt DateTime @default(now())
+
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@map("admin_sessions")
+}
+
+/// Why a variant's stock quantity changed. STOCK_RECEIVED and
+/// MANUAL_CORRECTION are staff-initiated from /admin/inventory;
+/// ORDER_CANCELLATION_RESTORE is written automatically when an admin
+/// cancels an order. Deliberately does NOT cover the customer-checkout
+/// decrement — that is already fully traceable via Order/OrderItem, and
+/// forcing it through this table too would mean touching the proven Phase 2
+/// checkout transaction for no added traceability. See "Inventory audit
+/// trail" in docs/PHASE_3_REPORT.md.
+enum InventoryAdjustmentReason {
+  STOCK_RECEIVED
+  MANUAL_CORRECTION
+  ORDER_CANCELLATION_RESTORE
+}
+
+model InventoryAdjustment {
+  id               String                    @id @default(cuid())
+  productVariantId String
+  previousQuantity Int
+  newQuantity      Int
+  delta            Int
+  reason           InventoryAdjustmentReason
+  note             String?
+  /// Null for system-restored stock where no admin session context applies
+  /// (kept nullable defensively; in practice every current write path sets
+  /// this because cancellation is itself an admin action).
+  adminUserId      String?
+  /// Set only for ORDER_CANCELLATION_RESTORE.
+  orderId          String?
+
+  createdAt DateTime @default(now())
+
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  adminUser      AdminUser?     @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  order          Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([productVariantId])
+  @@index([orderId])
+  @@map("inventory_adjustments")
 }

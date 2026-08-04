@@ -80,3 +80,46 @@ export function isValidPaymentStatusTransition(params: {
 }): boolean {
   return PAYMENT_TRANSITIONS[params.from].includes(params.to);
 }
+
+export function nextValidPaymentStatuses(from: PaymentStatus): PaymentStatus[] {
+  return PAYMENT_TRANSITIONS[from];
+}
+
+// ---------------------------------------------------------------------------
+// Display labels (admin UI)
+// ---------------------------------------------------------------------------
+
+export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  PENDING: "Pending",
+  CONFIRMED: "Confirmed",
+  PREPARING: "Preparing",
+  READY_FOR_PICKUP: "Ready for Pickup",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  DELIVERED: "Delivered",
+  CANCELLED: "Cancelled",
+};
+
+/** The button label an admin sees for transitioning INTO this status. */
+export const ORDER_STATUS_ACTION_LABEL: Record<OrderStatus, string> = {
+  PENDING: "Reopen",
+  CONFIRMED: "Confirm Order",
+  PREPARING: "Start Preparing",
+  READY_FOR_PICKUP: "Mark Ready for Pickup",
+  OUT_FOR_DELIVERY: "Mark Out for Delivery",
+  DELIVERED: "Mark Delivered",
+  CANCELLED: "Cancel Order",
+};
+
+export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
+  UNPAID: "Unpaid",
+  PAID: "Paid",
+  REFUNDED: "Refunded",
+  FAILED: "Payment Failed",
+};
+
+export const PAYMENT_STATUS_ACTION_LABEL: Record<PaymentStatus, string> = {
+  UNPAID: "Mark Unpaid",
+  PAID: "Mark Paid",
+  REFUNDED: "Mark Refunded",
+  FAILED: "Mark Failed",
+};

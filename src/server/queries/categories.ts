@@ -26,7 +26,7 @@ export async function getGenericCategoryProducts(categorySlug: string) {
     },
     orderBy: { name: "asc" },
     include: {
-      variants: { orderBy: { sortOrder: "asc" } },
+      variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
     },
   });
 }

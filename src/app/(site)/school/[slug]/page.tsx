@@ -4,7 +4,7 @@ import { ProductCard } from "@/components/product/product-card";
 import { SchoolLogo } from "@/components/school/school-logo";
 import { GenderClassSelector } from "@/components/school/gender-class-selector";
 import { RecommendedSetCard } from "@/components/school/recommended-set-card";
-import { STORE_NAME } from "@/lib/constants";
+import { BRAND } from "@/lib/constants";
 import {
   getSchoolAssignedProducts,
   getSchoolBySlug,
@@ -30,7 +30,7 @@ export async function generateMetadata({
   }
   return {
     title: `${school.name} Uniforms`,
-    description: `Official uniform collection for ${school.name}. Find the right size, check availability and add to your bag.`,
+    description: `School uniform collection for ${school.name}. Find the right size, check availability and add to your bag.`,
     alternates: { canonical: `/school/${school.slug}` },
   };
 }
@@ -62,7 +62,7 @@ export default async function SchoolStorefrontPage({
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       {school.isDemo && (
         <p className="mb-4 inline-flex rounded-full bg-accent/40 px-3 py-1 text-xs font-medium text-accent-foreground">
-          Demo school — for illustration only, not a real {STORE_NAME} partner.
+          Demo school — for illustration only, not a real {BRAND.name} partner.
         </p>
       )}
 
@@ -73,7 +73,10 @@ export default async function SchoolStorefrontPage({
             {school.name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {school.city ? `${school.city} · ` : ""}Official Uniform Collection
+            {school.city ? `${school.city} · ` : ""}
+            {school.isVerifiedPartner
+              ? "Official Uniform Partner"
+              : "School Uniform Collection"}
           </p>
         </div>
       </div>

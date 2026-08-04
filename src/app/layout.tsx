@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { SiteHeader } from "@/components/site/header";
-import { SiteFooter } from "@/components/site/footer";
-import { STORE_NAME } from "@/lib/constants";
+import { BRAND } from "@/lib/constants";
+import { SITE_URL } from "@/lib/site-config";
 import "./globals.css";
 
 const bodyFont = Plus_Jakarta_Sans({
@@ -20,13 +19,12 @@ const headingFont = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://example.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: `${STORE_NAME} | School Uniforms, Made Simple`,
-    template: `%s | ${STORE_NAME}`,
+    default: `${BRAND.name} | School Essentials Made Simple`,
+    template: `%s | ${BRAND.name}`,
   },
-  description:
-    "Find your child's school uniform in under a minute. Search your school, pick the size, and get the right uniform without running around the market.",
+  description: BRAND.description,
 };
 
 export const viewport: Viewport = {
@@ -35,6 +33,13 @@ export const viewport: Viewport = {
   themeColor: "#fdfbf7",
 };
 
+/**
+ * Deliberately minimal: fonts, global styles, and the toast host only.
+ * Public storefront chrome (header/footer/search/bag) lives in
+ * `(site)/layout.tsx`; the admin surface has its own shell in
+ * `admin/(protected)/layout.tsx`. Neither should leak into the other —
+ * see docs/PHASE_3_REPORT.md "Admin architecture".
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -46,17 +51,7 @@ export default function RootLayout({
       className={`${bodyFont.variable} ${headingFont.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
-        >
-          Skip to content
-        </a>
-        <SiteHeader storeName={STORE_NAME} />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter storeName={STORE_NAME} />
+        {children}
         <Toaster position="bottom-center" />
       </body>
     </html>

@@ -10,7 +10,7 @@ import {
   Truck,
 } from "lucide-react";
 import { SchoolSearch } from "@/components/site/school-search";
-import { STORE_TAGLINE } from "@/lib/constants";
+import { BRAND, getBackedByLine } from "@/lib/constants";
 
 export const metadata: Metadata = {
   description:
@@ -48,7 +48,7 @@ const TRUST_POINTS = [
   {
     icon: ShieldCheck,
     title: "Trusted local retailer",
-    description: "Family-run and serving this community for 30 years.",
+    description: "Family-run, built on decades of local retail trust.",
   },
   {
     icon: RefreshCw,
@@ -78,7 +78,7 @@ export default function HomePage() {
       <section className="border-b bg-gradient-to-b from-secondary/50 to-background px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">
           <h1 className="text-balance font-heading text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-            {STORE_TAGLINE}
+            {BRAND.tagline}
           </h1>
           <p className="max-w-xl text-balance text-base text-muted-foreground sm:text-lg">
             Find your school and get the right uniform, size and essentials
@@ -148,7 +148,10 @@ export default function HomePage() {
 
       <section className="px-4 py-12 text-center sm:px-6">
         <p className="font-heading text-xl text-muted-foreground">
-          Serving local families for 30 years.
+          {BRAND.heritageLine}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {getBackedByLine()}
         </p>
       </section>
     </div>
