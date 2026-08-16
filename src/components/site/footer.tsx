@@ -1,34 +1,61 @@
 import Link from "next/link";
-import { NAV_CATEGORIES } from "@/server/queries/categories";
-import { getBackedByLine } from "@/lib/constants";
+import { getHeaderCategories } from "@/server/queries/categories";
+import { CategoryNavLink } from "@/components/site/category-nav-link";
+import { BRAND, STORE_CONTACT, getBackedByLine } from "@/lib/constants";
 
-export function SiteFooter({ storeName }: { storeName: string }) {
+/**
+ * Phase 3.6.7 Part 1 — the footer's "Shop" links reuse the EXACT same
+ * `getHeaderCategories()` call the header nav uses (see
+ * src/components/site/header.tsx), never a second, independent
+ * category list — this is the one other place a hardcoded
+ * `NAV_CATEGORIES` reference was found during this phase's audit.
+ *
+ * Phase 3.7 Part 7 (homepage redesign) — the dark-first theme on "/" is
+ * applied once, at the `(site)` layout level, so this component just
+ * uses semantic tokens as always.
+ */
+export async function SiteFooter({ storeName }: { storeName: string }) {
+  const categories = await getHeaderCategories();
+
   return (
     <footer className="border-t bg-secondary/40">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
-            <p className="font-heading text-lg font-semibold">{storeName}</p>
+            <p className="font-heading text-base font-semibold">{storeName}</p>
             <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-              School uniforms, shoes, bags and everyday essentials —
-              serving local families for around 30 years.
+              {BRAND.description}
             </p>
             <p className="mt-2 max-w-xs text-xs text-muted-foreground">
               {getBackedByLine()}
+            </p>
+            <p className="mt-2 max-w-xs text-xs text-muted-foreground">
+              <a href={STORE_CONTACT.phoneHref} className="underline underline-offset-2 hover:text-foreground">
+                {STORE_CONTACT.phone}
+              </a>
+              {" · "}
+              <a
+                href={STORE_CONTACT.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Get Directions
+              </a>
             </p>
           </div>
 
           <div>
             <p className="text-sm font-semibold text-foreground">Shop</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
-              {NAV_CATEGORIES.map((category) => (
+              {categories.map((category) => (
                 <li key={category.slug}>
-                  <Link
-                    href={`/${category.slug}`}
+                  <CategoryNavLink
+                    slug={category.slug}
+                    name={category.name}
                     className="transition-colors hover:text-foreground"
-                  >
-                    {category.label}
-                  </Link>
+                    activeClassName="text-foreground font-medium"
+                  />
                 </li>
               ))}
             </ul>

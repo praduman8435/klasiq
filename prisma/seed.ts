@@ -81,24 +81,33 @@ async function main() {
   // --- Categories --------------------------------------------------------
   const [uniformsCategory, shoesCategory, socksCategory, bagsCategory] =
     await Promise.all([
+      // Phase 3.6.7 Part 1 — displayInHeader/headerOrder are set ONLY in
+      // `create`, never `update`: a fresh database's seed run must
+      // reproduce the same four header links Phase 3.6.7's own migration
+      // backfill gives an EXISTING database (see that migration's own
+      // comment for why the backfill alone can't cover a fresh database
+      // — it runs before this script ever inserts a row). Re-running
+      // seed against a database an admin has already configured must
+      // never silently overwrite their real choices, exactly like this
+      // upsert already never re-touches `sortOrder` on repeat runs.
       db.category.upsert({
         where: { slug: "uniforms" },
-        create: { slug: "uniforms", name: "School Uniforms", sortOrder: 0 },
+        create: { slug: "uniforms", name: "School Uniforms", sortOrder: 0, displayInHeader: true, headerOrder: 0 },
         update: { name: "School Uniforms" },
       }),
       db.category.upsert({
         where: { slug: "shoes" },
-        create: { slug: "shoes", name: "Shoes", sortOrder: 1 },
+        create: { slug: "shoes", name: "Shoes", sortOrder: 1, displayInHeader: true, headerOrder: 1 },
         update: { name: "Shoes" },
       }),
       db.category.upsert({
         where: { slug: "socks" },
-        create: { slug: "socks", name: "Socks", sortOrder: 2 },
+        create: { slug: "socks", name: "Socks", sortOrder: 2, displayInHeader: true, headerOrder: 2 },
         update: { name: "Socks" },
       }),
       db.category.upsert({
         where: { slug: "school-bags" },
-        create: { slug: "school-bags", name: "School Bags", sortOrder: 3 },
+        create: { slug: "school-bags", name: "School Bags", sortOrder: 3, displayInHeader: true, headerOrder: 3 },
         update: { name: "School Bags" },
       }),
     ]);

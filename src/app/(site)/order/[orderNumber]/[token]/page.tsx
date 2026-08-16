@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { Bookmark, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BRAND, STORE_CONTACT } from "@/lib/constants";
 import { formatPaise } from "@/lib/money";
-import { getFulfillmentLabel, getPaymentMethodLabel } from "@/lib/order-message";
+import { getFulfillmentLabel, getOrderSchoolContext, getPaymentMethodLabel } from "@/lib/order-message";
+import { PAYMENT_STATUS_LABEL } from "@/lib/order-lifecycle";
 import { getOrderByNumberAndToken } from "@/server/queries/orders";
 
 type PageProps = {
@@ -14,13 +18,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const PAYMENT_STATUS_LABEL: Record<string, string> = {
-  UNPAID: "Unpaid",
-  PAID: "Paid",
-  REFUNDED: "Refunded",
-  FAILED: "Payment failed",
-};
-
 export default async function OrderConfirmationPage({ params }: PageProps) {
   const { orderNumber, token } = await params;
   const order = await getOrderByNumberAndToken(orderNumber, token);
@@ -30,103 +27,172 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
   }
 
   const isPickup = order.fulfillmentType === "STORE_PICKUP";
+  const isDelivery = order.fulfillmentType === "LOCAL_DELIVERY";
+  const schoolContext = getOrderSchoolContext(order.items);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
       <div className="flex flex-col items-center text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <CheckCircle2 className="size-7" aria-hidden />
+        <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <CheckCircle2 className="size-6" aria-hidden />
         </span>
-        <h1 className="mt-4 font-heading text-2xl font-semibold sm:text-3xl">
-          Order received!
+        <h1 className="mt-3 font-heading text-2xl font-semibold sm:text-3xl">
+          Order confirmed
         </h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           We&apos;ll have this ready for you soon.
+          {order.customerWhatsapp && ` Updates go to WhatsApp at ${order.customerWhatsapp}.`}
         </p>
-        <p className="mt-4 rounded-full bg-secondary px-4 py-1.5 font-mono text-sm font-medium">
+        <p className="mt-3 rounded-full bg-secondary px-4 py-1.5 font-mono text-sm font-medium">
           {order.orderNumber}
         </p>
+        {schoolContext && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Shopping for <span className="text-foreground">{schoolContext.name}</span>
+          </p>
+        )}
       </div>
 
-      <div className="mt-8 rounded-2xl border bg-card p-5 sm:p-6">
-        <h2 className="font-heading text-lg font-semibold">Items</h2>
-        <ul className="mt-3 divide-y">
-          {order.items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-3 py-3 text-sm">
-              <div>
-                <p className="font-medium">{item.productName}</p>
-                <p className="text-xs text-muted-foreground">
-                  Size {item.size} &middot; Qty {item.quantity}
-                </p>
+      <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-accent/40 bg-accent/10 p-3.5">
+        <Bookmark className="mt-0.5 size-4 shrink-0 text-accent-foreground" aria-hidden />
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Save this page&apos;s link</span> — it&apos;s the
+          only way to view this order again without verifying your mobile number.
+        </p>
+      </div>
+
+      {/* One continuous surface with hairline dividers, matching the same
+          "no card-in-card" precedent used on the customer portal's own
+          order-detail page (see track/(protected)/orders/[orderNumber]). */}
+      <div className="mt-5 flex flex-col divide-y overflow-hidden rounded-xl border bg-card">
+        <section className="flex flex-col gap-3 p-4 sm:p-5">
+          <h2 className="font-heading text-base font-medium">Items</h2>
+          <ul className="divide-y">
+            {order.items.map((item) => (
+              <li key={item.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                <div>
+                  <p className="font-medium">{item.productName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Size {item.size} &middot; Qty {item.quantity}
+                  </p>
+                </div>
+                {/* Section 13 — the customer's actual paid amount, never the
+                    catalog price; identical to lineTotalInPaise whenever no
+                    discount applied (every ONLINE order, always). */}
+                <p className="font-medium">{formatPaise(item.effectiveLineTotalInPaise)}</p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="border-t pt-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>{formatPaise(order.subtotalInPaise)}</span>
+            </div>
+            {order.discountInPaise > 0 && (
+              <div className="mt-1 flex justify-between">
+                <span className="text-muted-foreground">Discount</span>
+                <span>-{formatPaise(order.discountInPaise)}</span>
               </div>
-              <p className="font-semibold">{formatPaise(item.lineTotalInPaise)}</p>
-            </li>
-          ))}
-        </ul>
+            )}
+            <div className="mt-1 flex justify-between">
+              <span className="text-muted-foreground">Delivery</span>
+              <span>
+                {order.deliveryFeeInPaise > 0 ? formatPaise(order.deliveryFeeInPaise) : "Free"}
+              </span>
+            </div>
+            <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+              <span>Taxes</span>
+              <span>Included where applicable</span>
+            </div>
+            <div className="mt-2 flex justify-between border-t pt-2 text-base font-semibold">
+              <span>Total</span>
+              <span>{formatPaise(order.totalInPaise)}</span>
+            </div>
+          </div>
+        </section>
 
-        <div className="mt-4 border-t pt-4 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span>{formatPaise(order.subtotalInPaise)}</span>
-          </div>
-          <div className="mt-1 flex justify-between">
-            <span className="text-muted-foreground">Delivery</span>
-            <span>
-              {order.deliveryFeeInPaise > 0 ? formatPaise(order.deliveryFeeInPaise) : "Free"}
-            </span>
-          </div>
-          <div className="mt-2 flex justify-between border-t pt-2 text-base font-semibold">
-            <span>Total</span>
-            <span>{formatPaise(order.totalInPaise)}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="font-heading text-base font-semibold">
-            {isPickup ? "Store Pickup" : "Local Delivery"}
+        <section className="flex flex-col gap-2 p-4 sm:p-5">
+          <h2 className="font-heading text-base font-medium">
+            {isPickup ? "Store Pickup" : isDelivery ? "Local Delivery" : "Counter Sale"}
           </h2>
-          {isPickup ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Bring this order number when you collect your order at the store.
-            </p>
-          ) : (
-            <div className="mt-2 text-sm text-muted-foreground">
+          {isPickup && (
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <p>
+                Bring this order number when you collect your order at {BRAND.legacyStoreNames[0]}.
+              </p>
+              <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                <a href={STORE_CONTACT.phoneHref} className="underline underline-offset-2 hover:text-foreground">
+                  Call {STORE_CONTACT.phone}
+                </a>
+                <a
+                  href={STORE_CONTACT.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  Get Directions
+                </a>
+              </p>
+            </div>
+          )}
+          {isDelivery && (
+            <div className="text-sm text-muted-foreground">
               <p>{order.deliveryAddressLine}</p>
-              <p>{order.deliveryArea}</p>
+              {order.deliveryFormattedAddress && <p>{order.deliveryFormattedAddress}</p>}
+              {order.deliveryArea && <p>{order.deliveryArea}</p>}
               {order.deliveryLandmark && <p>Landmark: {order.deliveryLandmark}</p>}
             </div>
           )}
-        </div>
+          {!isPickup && !isDelivery && (
+            <p className="text-sm text-muted-foreground">Collected in-store at time of sale.</p>
+          )}
+        </section>
 
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="font-heading text-base font-semibold">Payment</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+        <section className="flex flex-col gap-2 p-4 sm:p-5">
+          <h2 className="font-heading text-base font-medium">Payment</h2>
+          <p className="text-sm text-muted-foreground">
             {getPaymentMethodLabel({
               paymentMethod: order.paymentMethod,
               fulfillmentType: order.fulfillmentType,
             })}
           </p>
-          <p className="mt-1 text-xs font-medium text-muted-foreground">
+          <p className="text-xs font-medium text-muted-foreground">
             Status: {PAYMENT_STATUS_LABEL[order.paymentStatus] ?? order.paymentStatus}
           </p>
-        </div>
+        </section>
+
+        <section className="flex flex-col gap-2 p-4 sm:p-5">
+          <h2 className="font-heading text-base font-medium">Contact details</h2>
+          <p className="text-sm text-muted-foreground">
+            {order.customerName || order.customerMobile
+              ? [order.customerName, order.customerMobile].filter(Boolean).join(" · ")
+              : "Guest customer"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Fulfillment: {getFulfillmentLabel(order.fulfillmentType)}
+          </p>
+        </section>
       </div>
 
-      <div className="mt-4 rounded-2xl border bg-card p-5">
-        <h2 className="font-heading text-base font-semibold">Contact details</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {order.customerName} &middot; {order.customerMobile}
+      <div className="mt-5 rounded-xl bg-secondary/30 p-4 text-center sm:p-5">
+        <p className="text-sm font-medium text-foreground">Want updates on this order?</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Verify your mobile number anytime to see live status, your invoice, and request a return or exchange.
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Fulfillment: {getFulfillmentLabel(order.fulfillmentType)}
-        </p>
+        <Button render={<Link href="/track" />} nativeButton={false} className="mt-4 h-11 w-full sm:w-auto">
+          Track My Orders
+        </Button>
       </div>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Save this page&apos;s link — it&apos;s the only way to view this order again.
-      </p>
+      <Button
+        render={<Link href="/" />}
+        nativeButton={false}
+        variant="ghost"
+        className="mt-2 h-10 w-full text-muted-foreground"
+      >
+        Continue Shopping
+      </Button>
     </div>
   );
 }

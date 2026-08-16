@@ -88,9 +88,9 @@ function SetItemsEditor({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <div className="rounded-lg border border-border bg-card p-3.5">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="font-medium">{set.name}</p>
           <p className="text-xs text-muted-foreground">
             {set.class?.name ?? "All Classes"} &middot; {GENDER_LABEL[set.gender]}
@@ -102,7 +102,7 @@ function SetItemsEditor({
           aria-label={`Delete ${set.name}`}
           disabled={isPending}
           onClick={handleDeleteSet}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
         >
           <Trash2 className="size-4" aria-hidden />
         </button>
@@ -134,7 +134,7 @@ function SetItemsEditor({
           aria-label="Product to add"
           value={productId}
           onChange={(e) => setProductId(e.target.value)}
-          className="h-8 rounded-lg border bg-background px-2 text-xs"
+          className="h-8 rounded-md border border-border bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Add item...</option>
           {products.map((p) => (
@@ -150,7 +150,7 @@ function SetItemsEditor({
           onChange={(e) => setQuantity(e.target.value)}
           className="h-8 w-16 text-xs"
         />
-        <Button type="submit" size="sm" variant="outline" disabled={isPending || !productId}>
+        <Button type="submit" size="sm" variant="outline" className="h-8" disabled={isPending || !productId}>
           Add
         </Button>
       </form>
@@ -203,19 +203,19 @@ export function SchoolRecommendedSetsManager({
 
       <form
         onSubmit={handleCreate}
-        className="flex flex-col gap-2 rounded-xl border border-dashed p-4 sm:flex-row sm:flex-wrap sm:items-center"
+        className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-3.5 sm:flex-row sm:flex-wrap sm:items-center"
       >
         <Input
           placeholder="Set name, e.g. Class 7 — Boys — Complete Uniform"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="sm:max-w-xs"
+          className="h-9 sm:max-w-xs"
         />
         <select
           aria-label="Class for set"
           value={classId}
           onChange={(e) => setClassId(e.target.value)}
-          className="h-9 rounded-lg border bg-background px-3 text-sm"
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">All Classes</option>
           {classes.map((c) => (
@@ -228,13 +228,13 @@ export function SchoolRecommendedSetsManager({
           aria-label="Gender for set"
           value={gender}
           onChange={(e) => setGender(e.target.value as Gender)}
-          className="h-9 rounded-lg border bg-background px-3 text-sm"
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="UNISEX">All (unisex)</option>
           <option value="BOYS">Boys</option>
           <option value="GIRLS">Girls</option>
         </select>
-        <Button type="submit" variant="outline" disabled={isPending || !name.trim()}>
+        <Button type="submit" variant="outline" className="h-9" disabled={isPending || !name.trim()}>
           New set
         </Button>
       </form>

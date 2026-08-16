@@ -1,14 +1,34 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
+import { generateAccessToken } from "@/lib/access-token";
 
 export const BASKET_COOKIE_NAME = "shop_basket_id";
 const BASKET_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 60; // 60 days
 
-/** Read-only basket id lookup — safe to call from Server Components. */
+/**
+ * Read-only basket id lookup — safe to call from Server Components.
+ *
+ * Phase 3.7 Part 4 — the cookie itself holds `Basket.accessToken` (an
+ * unguessable, cryptographically-random bearer token), never `Basket.id`
+ * directly — see that field's own doc comment in prisma/schema.prisma
+ * for why a plain `cuid()` primary key isn't a safe bearer credential by
+ * itself. This function resolves that token to the basket's real `id`
+ * so every existing caller keeps working exactly as before (a usable
+ * `Basket.id` for FK lookups/comparisons) — the token-vs-id indirection
+ * is fully contained here, nowhere else needed to change. Mirrors the
+ * original contract exactly: returns an id if the token resolves to a
+ * real row, `null` otherwise — no opinion on that basket's `status`
+ * (callers like `getBasket()`/`getConvertedBasketOrderLink()` already
+ * make their own status decision after this resolves).
+ */
 export async function getBasketId(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(BASKET_COOKIE_NAME)?.value ?? null;
+  const token = cookieStore.get(BASKET_COOKIE_NAME)?.value;
+  if (!token) return null;
+
+  const basket = await db.basket.findUnique({ where: { accessToken: token }, select: { id: true } });
+  return basket?.id ?? null;
 }
 
 /**
@@ -20,18 +40,30 @@ export async function getBasketId(): Promise<string | null> {
  * parent placed an order, then came back and tried to add something new)
  * transparently gets a fresh ACTIVE basket instead of reusing the old one —
  * see docs/PHASE_2_REPORT.md "Basket conversion strategy".
+ *
+ * Phase 3.7 Part 4 — a freshly-created basket is issued a real
+ * `generateAccessToken()` value (never its own `id`) as both its
+ * `accessToken` column and the cookie value; see `getBasketId`'s own
+ * doc comment above for the full reasoning.
  */
 export async function getOrCreateBasketId(): Promise<string> {
   const cookieStore = await cookies();
-  const existing = cookieStore.get(BASKET_COOKIE_NAME)?.value;
-  if (existing) {
-    const basket = await db.basket.findUnique({ where: { id: existing } });
+  const existingToken = cookieStore.get(BASKET_COOKIE_NAME)?.value;
+  if (existingToken) {
+    const basket = await db.basket.findUnique({ where: { accessToken: existingToken } });
     if (basket && basket.status === "ACTIVE") return basket.id;
   }
 
-  const basket = await db.basket.create({ data: {} });
-  cookieStore.set(BASKET_COOKIE_NAME, basket.id, {
+  const accessToken = generateAccessToken();
+  const basket = await db.basket.create({ data: { accessToken } });
+  cookieStore.set(BASKET_COOKIE_NAME, accessToken, {
     httpOnly: true,
+    // Personal-data audit (2026-08-10) — was missing `secure`, unlike the
+    // admin/customer session cookies (src/lib/admin/session.ts,
+    // src/lib/customer-portal/session.ts), which already set it. Matches
+    // their exact rule: only require HTTPS-only transmission once actually
+    // deployed over HTTPS, never in local HTTP development.
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: BASKET_COOKIE_MAX_AGE_SECONDS,
@@ -62,7 +94,10 @@ export async function getBasket() {
           productVariant: {
             include: {
               product: {
-                include: { category: { select: { slug: true } } },
+                include: {
+                  category: { select: { slug: true } },
+                  school: { select: { name: true, slug: true } },
+                },
               },
             },
           },
@@ -90,6 +125,30 @@ export function basketTotalInPaise(
     (sum, item) => sum + item.productVariant.priceInPaise * item.quantity,
     0,
   );
+}
+
+/**
+ * Phase 3.7 Part 7 critique fix — the school a Bag/Checkout page can
+ * confidently tell the customer they're "shopping for," so the school-fit
+ * flow doesn't lose that context once they leave `/school/[slug]`. Only
+ * returns a school when EVERY line in the basket traces back to that same
+ * school's exclusive products — a single generic item makes the
+ * association unreliable (the customer may also be buying unrelated
+ * general-retail items), so this deliberately returns `null` for a fully
+ * generic basket, a mixed basket, or a basket spanning two schools, rather
+ * than ever guessing or showing a misleading name.
+ */
+export function getBasketSchoolContext(
+  basket: Awaited<ReturnType<typeof getBasket>>,
+): { name: string; slug: string } | null {
+  if (!basket || basket.items.length === 0) return null;
+
+  const schools = basket.items.map((item) => item.productVariant.product.school);
+  if (schools.some((school) => !school)) return null;
+
+  const first = schools[0]!;
+  const allSameSchool = schools.every((school) => school!.slug === first.slug);
+  return allSameSchool ? { name: first.name, slug: first.slug } : null;
 }
 
 /**

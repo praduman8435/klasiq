@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   clampAddQuantity,
   clampSetQuantity,
+  computeCheckoutBlockingIssues,
   pickDefaultOrderableVariant,
 } from "@/lib/basket-math";
 
@@ -120,5 +121,101 @@ describe("pickDefaultOrderableVariant", () => {
     const copy = [...variants];
     pickDefaultOrderableVariant(variants);
     expect(variants).toEqual(copy);
+  });
+});
+
+describe("computeCheckoutBlockingIssues", () => {
+  const line = (
+    overrides: Partial<Parameters<typeof computeCheckoutBlockingIssues>[0][number]> = {},
+  ) => ({
+    id: "item-1",
+    quantity: 2,
+    productVariant: {
+      isActive: true,
+      stockQuantity: 10,
+      stockStatus: "IN_STOCK" as const,
+      size: "M",
+      product: { name: "Shirt", isActive: true },
+    },
+    ...overrides,
+  });
+
+  it("returns no issues for a perfectly normal, in-stock line", () => {
+    expect(computeCheckoutBlockingIssues([line()])).toEqual([]);
+  });
+
+  it("flags a deactivated variant", () => {
+    const issues = computeCheckoutBlockingIssues([
+      line({ productVariant: { ...line().productVariant, isActive: false } }),
+    ]);
+    expect(issues).toEqual([
+      { id: "item-1", label: "Shirt (size M)", reason: "no longer available" },
+    ]);
+  });
+
+  it("flags a deactivated product even if the variant itself is active", () => {
+    const issues = computeCheckoutBlockingIssues([
+      line({
+        productVariant: {
+          ...line().productVariant,
+          product: { name: "Shirt", isActive: false },
+        },
+      }),
+    ]);
+    expect(issues).toEqual([
+      { id: "item-1", label: "Shirt (size M)", reason: "no longer available" },
+    ]);
+  });
+
+  it("flags an out-of-stock variant", () => {
+    const issues = computeCheckoutBlockingIssues([
+      line({
+        productVariant: {
+          ...line().productVariant,
+          stockStatus: "OUT_OF_STOCK",
+          stockQuantity: 0,
+        },
+      }),
+    ]);
+    expect(issues).toEqual([
+      { id: "item-1", label: "Shirt (size M)", reason: "no longer available" },
+    ]);
+  });
+
+  it("flags a quantity that exceeds available stock, distinct from full unavailability", () => {
+    const issues = computeCheckoutBlockingIssues([
+      line({ quantity: 5, productVariant: { ...line().productVariant, stockQuantity: 3 } }),
+    ]);
+    expect(issues).toEqual([
+      {
+        id: "item-1",
+        label: "Shirt (size M)",
+        reason: "only 3 left in stock, but 5 are in your bag",
+      },
+    ]);
+  });
+
+  it("uses singular phrasing when only 1 unit remains", () => {
+    const issues = computeCheckoutBlockingIssues([
+      line({ quantity: 2, productVariant: { ...line().productVariant, stockQuantity: 1 } }),
+    ]);
+    expect(issues[0].reason).toBe("only 1 left in stock, but 2 are in your bag");
+  });
+
+  it("does not flag a line exactly at the stock limit", () => {
+    const issues = computeCheckoutBlockingIssues([
+      line({ quantity: 3, productVariant: { ...line().productVariant, stockQuantity: 3 } }),
+    ]);
+    expect(issues).toEqual([]);
+  });
+
+  it("collects issues across multiple lines, leaving healthy lines out", () => {
+    const issues = computeCheckoutBlockingIssues([
+      line({ id: "ok", quantity: 1 }),
+      line({ id: "bad", productVariant: { ...line().productVariant, isActive: false } }),
+    ]);
+    expect(issues).toEqual([
+      { id: "bad", label: "Shirt (size M)", reason: "no longer available" },
+    ]);
   });
 });

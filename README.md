@@ -98,6 +98,27 @@ defaults):
 - `ADMIN_BOOTSTRAP_*` — only read by `npm run db:create-admin`, not by the
   running app.
 
+## Security — secrets
+
+Every credential this app uses (database connection string, WhatsApp
+Business API token, Geoapify key, admin bootstrap password) is read
+exclusively from environment variables — none is ever hardcoded in
+source, and `.env` is gitignored (`.env.example` is the only tracked,
+placeholder-only template). This app has no client-exposed environment
+variables at all (no `NEXT_PUBLIC_`/`REACT_APP_`-prefixed variable
+exists anywhere in the codebase) — every credential above is server-only
+by construction. A full audit (source tree + entire git history) as of
+2026-08-10 found no secret ever committed to this repository.
+
+**If that ever changes** — if any real credential is ever hardcoded and
+committed, even briefly and even if removed in a later commit — treat it
+as compromised immediately: rotate it at the provider (Meta Business
+Settings, Geoapify dashboard, database host, etc.) as soon as it's
+found. Git history is permanent; deleting the line in a new commit does
+not remove the old value from the repository's history, any clone, or
+any fork. Never rely on `git rm`/a force-push/`.gitignore` alone to
+"undo" a committed secret.
+
 ## Tests
 
 `npm test` runs both pure unit tests and integration tests against a real

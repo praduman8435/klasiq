@@ -89,93 +89,108 @@ export function ProductForm({
     });
   }
 
+  const selectClass =
+    "h-9 rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
       {error && (
-        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={nameId}>Product name</Label>
-        <Input id={nameId} value={name} onChange={(e) => handleNameChange(e.target.value)} required />
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Product</h3>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={nameId}>Product name</Label>
+          <Input id={nameId} className="h-9" value={name} onChange={(e) => handleNameChange(e.target.value)} required />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={slugId}>Slug</Label>
+          <Input
+            id={slugId}
+            className="h-9"
+            value={slug}
+            onChange={(e) => {
+              setSlugTouched(true);
+              setSlug(e.target.value);
+            }}
+            required
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={descriptionId}>Description (optional)</Label>
+          <Input id={descriptionId} className="h-9" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={slugId}>Slug</Label>
-        <Input
-          id={slugId}
-          value={slug}
-          onChange={(e) => {
-            setSlugTouched(true);
-            setSlug(e.target.value);
-          }}
-          required
-        />
+      <div className="border-t border-border" />
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Classification</h3>
+        <div className="flex flex-col gap-1.5">
+          <Label>Category</Label>
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={selectClass} required>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label>School</Label>
+          <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} className={selectClass}>
+            <option value="">Generic — reusable by any school</option>
+            {schools.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} (exclusive)
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Most uniform items should stay Generic so schools can share them. Only pick a specific
+            school for an item exclusive to it (e.g. a crested blazer).
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={descriptionId}>Description (optional)</Label>
-        <Input id={descriptionId} value={description} onChange={(e) => setDescription(e.target.value)} />
+      <div className="border-t border-border" />
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Presentation</h3>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={imageId}>Image URL (optional)</Label>
+          <Input
+            id={imageId}
+            className="h-9"
+            type="url"
+            placeholder="https://..."
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Paste a link to an already-hosted image. Leave blank to show the placeholder tile.
+          </p>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="size-4 rounded border border-border"
+          />
+          Active (visible on the storefront)
+        </label>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label>Category</Label>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="h-9 rounded-lg border bg-background px-3 text-sm"
-          required
-        >
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label>School</Label>
-        <select
-          value={schoolId}
-          onChange={(e) => setSchoolId(e.target.value)}
-          className="h-9 rounded-lg border bg-background px-3 text-sm"
-        >
-          <option value="">Generic — reusable by any school</option>
-          {schools.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} (exclusive)
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-muted-foreground">
-          Most uniform items should stay Generic so schools can share them. Only pick a specific
-          school for an item exclusive to it (e.g. a crested blazer).
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={imageId}>Image URL (optional)</Label>
-        <Input id={imageId} type="url" placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-        <p className="text-xs text-muted-foreground">
-          Paste a link to an already-hosted image. Leave blank to show the placeholder tile.
-        </p>
-      </div>
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-          className="size-4 rounded border"
-        />
-        Active (visible on the storefront)
-      </label>
-
-      <Button type="submit" className="mt-2 w-full sm:w-auto" disabled={isPending}>
-        {isPending ? "Saving..." : isEditing ? "Save changes" : "Create product"}
+      <Button type="submit" className="h-9 w-full sm:w-auto" disabled={isPending}>
+        {isPending ? "Saving…" : isEditing ? "Save changes" : "Create product"}
       </Button>
     </form>
   );

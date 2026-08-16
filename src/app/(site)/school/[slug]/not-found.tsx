@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { SchoolSearch } from "@/components/site/school-search";
+import { getHeaderCategories, pickBrowseFallbackCategory } from "@/server/queries/categories";
 
-export default function SchoolNotFound() {
+export default async function SchoolNotFound() {
+  const headerCategories = await getHeaderCategories();
+  const browseFallback = pickBrowseFallbackCategory(headerCategories);
+
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center sm:px-6">
       <h1 className="font-heading text-2xl font-semibold">
@@ -13,11 +17,23 @@ export default function SchoolNotFound() {
       </p>
       <SchoolSearch size="compact" className="mt-6" />
       <p className="mt-6 text-sm text-muted-foreground">
-        Or browse{" "}
-        <Link href="/uniforms" className="underline underline-offset-2">
-          generic uniform essentials
-        </Link>{" "}
-        that work for most schools.
+        {browseFallback ? (
+          <>
+            Or browse{" "}
+            <Link href={`/${browseFallback.slug}`} className="underline underline-offset-2">
+              {browseFallback.name.toLowerCase()}
+            </Link>{" "}
+            that work for most schools.
+          </>
+        ) : (
+          <>
+            Or{" "}
+            <Link href="/search" className="underline underline-offset-2">
+              search our full catalog
+            </Link>
+            .
+          </>
+        )}
       </p>
     </div>
   );

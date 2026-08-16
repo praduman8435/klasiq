@@ -60,7 +60,7 @@ export function SchoolClassesManager({
           {classes.map((cls) => (
             <li
               key={cls.id}
-              className="flex items-center gap-1.5 rounded-full border bg-secondary/40 py-1 pl-3 pr-1.5 text-sm"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/20 py-1 pl-3 pr-1.5 text-sm"
             >
               {cls.name}
               <button
@@ -82,9 +82,9 @@ export function SchoolClassesManager({
           value={newClassName}
           onChange={(e) => setNewClassName(e.target.value)}
           placeholder="e.g. Class 7"
-          className="max-w-48"
+          className="h-9 max-w-48"
         />
-        <Button type="submit" variant="outline" disabled={isPending || !newClassName.trim()}>
+        <Button type="submit" variant="outline" className="h-9" disabled={isPending || !newClassName.trim()}>
           Add class
         </Button>
       </form>

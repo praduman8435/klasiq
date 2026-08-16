@@ -75,10 +75,10 @@ export function SchoolAssignmentsManager({
       {assignments.length === 0 ? (
         <p className="text-sm text-muted-foreground">No uniform items assigned yet.</p>
       ) : (
-        <ul className="divide-y rounded-xl border">
+        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
           {assignments.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-              <div>
+              <div className="min-w-0">
                 <span className="font-medium">{a.product.name}</span>{" "}
                 <span className="text-muted-foreground">
                   &middot; {a.class?.name ?? "All Classes"} &middot; {GENDER_LABEL[a.gender]}
@@ -89,7 +89,7 @@ export function SchoolAssignmentsManager({
                 aria-label={`Remove ${a.product.name} assignment`}
                 disabled={isPending}
                 onClick={() => handleDelete(a.id)}
-                className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+                className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
               >
                 <Trash2 className="size-4" aria-hidden />
               </button>
@@ -103,7 +103,7 @@ export function SchoolAssignmentsManager({
           aria-label="Product"
           value={productId}
           onChange={(e) => setProductId(e.target.value)}
-          className="h-9 rounded-lg border bg-background px-3 text-sm"
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Choose a product...</option>
           {products.map((p) => (
@@ -117,7 +117,7 @@ export function SchoolAssignmentsManager({
           aria-label="Class"
           value={classId}
           onChange={(e) => setClassId(e.target.value)}
-          className="h-9 rounded-lg border bg-background px-3 text-sm"
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">All Classes</option>
           {classes.map((c) => (
@@ -131,14 +131,14 @@ export function SchoolAssignmentsManager({
           aria-label="Gender group"
           value={gender}
           onChange={(e) => setGender(e.target.value as Assignment["gender"])}
-          className="h-9 rounded-lg border bg-background px-3 text-sm"
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="UNISEX">All (unisex)</option>
           <option value="BOYS">Boys</option>
           <option value="GIRLS">Girls</option>
         </select>
 
-        <Button type="submit" variant="outline" disabled={isPending || !productId}>
+        <Button type="submit" variant="outline" className="h-9" disabled={isPending || !productId}>
           Assign
         </Button>
       </form>

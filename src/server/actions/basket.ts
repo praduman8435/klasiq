@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getBasketId, getOrCreateBasketId } from "@/lib/basket";
-import { isOrderable } from "@/lib/stock";
+import { isOrderable, isVariantOrderable } from "@/lib/stock";
 import {
   clampAddQuantity,
   clampSetQuantity,
@@ -41,9 +41,24 @@ export async function addToBasket(
   // Price and stock are never trusted from the caller — always re-read here.
   const variant = await db.productVariant.findUnique({
     where: { id: productVariantId },
+    include: { product: { select: { isActive: true } } },
   });
   if (!variant) {
     return { success: false, message: "That item no longer exists." };
+  }
+  // Phase 3.7 Part 4 — previously only checked `stockStatus`, never
+  // `isActive`/`product.isActive` (two independent fields — deactivating
+  // a variant/product never itself flips its stockStatus). A customer
+  // could never see a deactivated item through the normal storefront UI
+  // (ProductCard/ProductDetail already filter it out), but this Server
+  // Action is a directly-reachable, independently-authoritative
+  // boundary — "never rely on disabled UI controls as security" — so it
+  // must reject one on its own terms too, exactly like
+  // `resolveAndDecrementOrderLines` already does at checkout time. Kept
+  // as its own distinct check (rather than folded into `isVariantOrderable`
+  // here) so the out-of-stock message below stays unchanged.
+  if (!variant.isActive || !variant.product.isActive) {
+    return { success: false, message: "That item is no longer available." };
   }
   if (!isOrderable(variant.stockStatus)) {
     return { success: false, message: "That size is currently out of stock." };
@@ -125,8 +140,22 @@ export async function setBasketItemQuantity(
 
   const variant = await db.productVariant.findUnique({
     where: { id: item.productVariantId },
+    include: { product: { select: { isActive: true } } },
   });
-  if (!variant || !isOrderable(variant.stockStatus)) {
+  // Phase 3.7 Part 4 — now also checks `isActive`/`product.isActive` via
+  // the shared `isVariantOrderable`, not just `stockStatus` (see
+  // `addToBasket`'s identical fix above for the full reasoning) — a
+  // variant or product deactivated after this line was added previously
+  // survived a quantity-update attempt untouched, since only
+  // stockStatus was checked.
+  if (
+    !variant ||
+    !isVariantOrderable({
+      isActive: variant.isActive,
+      stockStatus: variant.stockStatus,
+      productIsActive: variant.product.isActive,
+    })
+  ) {
     await db.basketItem.delete({ where: { id: item.id } });
     revalidateBasketViews();
     return { success: false, message: "That size is no longer available and was removed." };
@@ -172,11 +201,25 @@ export async function addRecommendedSet(
     return { success: false, message: "Invalid request." };
   }
 
+  // Phase 3.7 Part 4 — filters `product.isActive` on the join and
+  // `variants: { where: { isActive: true } }` on the nested list, matching
+  // the identical, already-proven-safe shape `getSchoolRecommendedSets`
+  // (src/server/queries/schools.ts) already uses for the read-only display
+  // of this same data. This Server Action previously ran its own,
+  // independent, unfiltered query — meaning a deactivated product/variant
+  // that the customer could never see via the display query could still
+  // be added to their bag through this mutation, since only `stockStatus`
+  // (via `pickDefaultOrderableVariant`) was ever checked, never `isActive`.
   const set = await db.recommendedUniformSet.findUnique({
     where: { id: parsed.data.setId },
     include: {
       items: {
-        include: { product: { include: { variants: true } } },
+        where: { product: { isActive: true } },
+        include: {
+          product: {
+            include: { variants: { where: { isActive: true } } },
+          },
+        },
       },
     },
   });

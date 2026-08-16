@@ -67,9 +67,27 @@ export function isTerminalOrderStatus(status: OrderStatus): boolean {
  * PAID only when staff actually collect money — nothing in the order-status
  * lifecycle implies payment.
  */
+/**
+ * Phase 3.6.5 Part 3 — PARTIALLY_PAID is deliberately terminal here
+ * (`[]`), with no other status transitioning into it either: it is
+ * reachable ONLY via `createCounterSale`'s own payment computation at
+ * order-creation time (`src/lib/payment.ts`), which writes it directly,
+ * bypassing this transition table entirely — the exact same precedent
+ * `status: "DELIVERED"` already set for Counter Sale's order-status
+ * field. This admin-facing mutation (`updatePaymentStatus`) still has no
+ * path into or out of PARTIALLY_PAID — Phase 3.6.5 Part 5's
+ * `receivePayment` (`src/server/commerce/receive-payment.ts`) is the one
+ * OTHER code path allowed to move a partially-paid (or full-credit
+ * UNPAID) order toward PAID, and it too writes `paymentStatus` directly
+ * via `src/lib/payment.ts`'s own derivation, bypassing this transition
+ * table exactly like `createCounterSale` does — see
+ * docs/PHASE_3_6_5_REPORT.md Part 3 "Payment lifecycle" and Part 5
+ * "Payment status".
+ */
 const PAYMENT_TRANSITIONS: Record<PaymentStatus, PaymentStatus[]> = {
   UNPAID: ["PAID", "FAILED"],
   PAID: ["REFUNDED"],
+  PARTIALLY_PAID: [],
   REFUNDED: [],
   FAILED: ["UNPAID"],
 };
@@ -99,6 +117,25 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
+/**
+ * Shared status → color mapping, used by BOTH the admin order badge
+ * (src/components/admin/order-status-badge.tsx) and the customer portal
+ * (src/components/customer-portal/order-history-card.tsx and the order-
+ * detail page) — centralized here rather than duplicated so a status
+ * always reads the same way everywhere, and so "can a customer tell a
+ * cancelled order apart from a delivered one without opening it" (Phase
+ * 3.4 Part 3 audit) is answered by color AND text in exactly one place.
+ */
+export const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
+  PENDING: "bg-muted text-muted-foreground",
+  CONFIRMED: "bg-secondary text-secondary-foreground",
+  PREPARING: "bg-accent/50 text-accent-foreground",
+  READY_FOR_PICKUP: "bg-primary/15 text-primary",
+  OUT_FOR_DELIVERY: "bg-primary/15 text-primary",
+  DELIVERED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  CANCELLED: "bg-destructive/10 text-destructive",
+};
+
 /** The button label an admin sees for transitioning INTO this status. */
 export const ORDER_STATUS_ACTION_LABEL: Record<OrderStatus, string> = {
   PENDING: "Reopen",
@@ -113,6 +150,7 @@ export const ORDER_STATUS_ACTION_LABEL: Record<OrderStatus, string> = {
 export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   UNPAID: "Unpaid",
   PAID: "Paid",
+  PARTIALLY_PAID: "Partially Paid",
   REFUNDED: "Refunded",
   FAILED: "Payment Failed",
 };
@@ -120,6 +158,7 @@ export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
 export const PAYMENT_STATUS_ACTION_LABEL: Record<PaymentStatus, string> = {
   UNPAID: "Mark Unpaid",
   PAID: "Mark Paid",
+  PARTIALLY_PAID: "Mark Partially Paid",
   REFUNDED: "Mark Refunded",
   FAILED: "Mark Failed",
 };

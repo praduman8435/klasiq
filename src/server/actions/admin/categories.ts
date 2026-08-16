@@ -36,6 +36,52 @@ function revalidateCategoryViews() {
   revalidatePath("/", "layout");
 }
 
+/**
+ * Section 11 — "duplicate header order conflicts" is checked ONLY among
+ * OTHER categories that are ALSO currently `displayInHeader: true` (a
+ * hidden category's stale `headerOrder` is inert and can never conflict
+ * with anything — see the schema's own doc comment). Returns the
+ * conflicting category's name so the admin gets an actionable message,
+ * never a bare "conflict."
+ */
+async function findHeaderOrderConflict(params: {
+  displayInHeader: boolean;
+  headerOrder: number;
+  excludeId?: string;
+}): Promise<string | null> {
+  if (!params.displayInHeader) return null;
+  const conflict = await db.category.findFirst({
+    where: {
+      displayInHeader: true,
+      headerOrder: params.headerOrder,
+      ...(params.excludeId ? { id: { not: params.excludeId } } : {}),
+    },
+    select: { name: true },
+  });
+  return conflict?.name ?? null;
+}
+
+/**
+ * Section 11 — "review whether duplicate display names should be
+ * allowed." Decision: NOT allowed (case-insensitive). A category name is
+ * the exact text a shopper sees as a header link and an admin sees in
+ * the category list — two categories sharing one name would be a real,
+ * avoidable point of confusion in both places (which "Uniforms" does a
+ * customer just clicked?), unlike the slug, which is already the
+ * enforced-unique true identity. See docs/PHASE_3_6_7_REPORT.md
+ * "Validation" for the full reasoning.
+ */
+async function findNameConflict(name: string, excludeId?: string): Promise<boolean> {
+  const conflict = await db.category.findFirst({
+    where: {
+      name: { equals: name, mode: "insensitive" },
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
+    select: { id: true },
+  });
+  return conflict !== null;
+}
+
 export async function createCategoryAction(
   input: unknown,
 ): Promise<AdminActionResult<{ success: true }>> {
@@ -55,12 +101,32 @@ export async function createCategoryAction(
     return { success: false, error: { type: "CONFLICT", message: "That slug is already in use." } };
   }
 
+  if (await findNameConflict(parsed.data.name)) {
+    return { success: false, error: { type: "CONFLICT", message: "A category with that name already exists." } };
+  }
+
+  const conflictingCategoryName = await findHeaderOrderConflict({
+    displayInHeader: parsed.data.displayInHeader,
+    headerOrder: parsed.data.headerOrder,
+  });
+  if (conflictingCategoryName) {
+    return {
+      success: false,
+      error: {
+        type: "CONFLICT",
+        message: `Header order ${parsed.data.headerOrder} is already used by "${conflictingCategoryName}".`,
+      },
+    };
+  }
+
   const maxSortOrder = await db.category.aggregate({ _max: { sortOrder: true } });
   await db.category.create({
     data: {
       name: parsed.data.name,
       slug: parsed.data.slug,
       description: parsed.data.description || null,
+      displayInHeader: parsed.data.displayInHeader,
+      headerOrder: parsed.data.headerOrder,
       sortOrder: (maxSortOrder._max.sortOrder ?? -1) + 1,
     },
   });
@@ -95,12 +161,33 @@ export async function updateCategoryAction(
     }
   }
 
+  if (await findNameConflict(parsed.data.name, parsed.data.id)) {
+    return { success: false, error: { type: "CONFLICT", message: "A category with that name already exists." } };
+  }
+
+  const conflictingCategoryName = await findHeaderOrderConflict({
+    displayInHeader: parsed.data.displayInHeader,
+    headerOrder: parsed.data.headerOrder,
+    excludeId: parsed.data.id,
+  });
+  if (conflictingCategoryName) {
+    return {
+      success: false,
+      error: {
+        type: "CONFLICT",
+        message: `Header order ${parsed.data.headerOrder} is already used by "${conflictingCategoryName}".`,
+      },
+    };
+  }
+
   await db.category.update({
     where: { id: parsed.data.id },
     data: {
       name: parsed.data.name,
       slug: parsed.data.slug,
       description: parsed.data.description || null,
+      displayInHeader: parsed.data.displayInHeader,
+      headerOrder: parsed.data.headerOrder,
     },
   });
 

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { ProductForm } from "@/components/admin/product-form";
 import { ProductVariantsManager } from "@/components/admin/product-variants-manager";
 import { getAdminProductById, getAllSchoolsForPicker } from "@/server/queries/admin/products";
@@ -23,18 +26,34 @@ export default async function AdminProductDetailPage({ params }: PageProps) {
   if (!product) notFound();
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">{product.name}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {product.category.name}
-          {product.school ? ` · ${product.school.name} exclusive` : " · Generic"}
-        </p>
+    <div>
+      <div className="mb-5 flex flex-col gap-3">
+        <Link
+          href="/admin/products"
+          className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+          Products
+        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="font-heading text-xl font-semibold tracking-tight">{product.name}</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {product.category.name}
+              {product.school ? ` · ${product.school.name} exclusive` : " · Generic"}
+            </p>
+          </div>
+          {!product.isActive && (
+            <Badge variant="outline" className="border-border text-muted-foreground">
+              Inactive
+            </Badge>
+          )}
+        </div>
       </div>
 
-      <section className="max-w-xl rounded-2xl border bg-card p-5">
-        <h2 className="font-heading text-base font-semibold">Product details</h2>
-        <div className="mt-3">
+      <div className="max-w-xl">
+        <h2 className="text-sm font-semibold">Product details</h2>
+        <div className="mt-2">
           <ProductForm
             initial={{
               id: product.id,
@@ -50,11 +69,13 @@ export default async function AdminProductDetailPage({ params }: PageProps) {
             schools={schools}
           />
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-2xl border bg-card p-5">
-        <h2 className="font-heading text-base font-semibold">Sizes &amp; pricing</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <div className="my-6 border-t border-border" />
+
+      <section>
+        <h2 className="text-sm font-semibold">Sizes &amp; pricing</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
           Each size has its own price, SKU and stock count.
         </p>
         <div className="mt-3">

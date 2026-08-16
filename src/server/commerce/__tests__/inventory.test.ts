@@ -31,6 +31,10 @@ afterAll(async () => {
   if (createdOrderIds.length) await db.order.deleteMany({ where: { id: { in: createdOrderIds } } });
   if (createdBasketIds.length) await db.basket.deleteMany({ where: { id: { in: createdBasketIds } } });
   if (createdProductIds.length) await db.product.deleteMany({ where: { id: { in: createdProductIds } } });
+  // Since Phase 3.3, placeOrderForBasket also resolves/creates a Customer
+  // for this file's fixed checkout phone number — see the identical note
+  // in place-order.test.ts's afterAll.
+  await db.customer.deleteMany({ where: { primaryPhoneNormalized: "+919876543210" } });
   await db.adminUser.delete({ where: { id: adminUserId } });
   await db.category.delete({ where: { id: categoryId } });
   await db.$disconnect();
@@ -173,6 +177,7 @@ function pickupInput(overrides: Partial<CheckoutInput> = {}): CheckoutInput {
   return {
     customerName: "Concurrency Test",
     customerMobile: "9876543210",
+    whatsappSameAsPrimary: true,
     fulfillmentType: "STORE_PICKUP",
     idempotencyKey: randomUUID(),
     ...overrides,
@@ -182,7 +187,7 @@ function pickupInput(overrides: Partial<CheckoutInput> = {}): CheckoutInput {
 describe("concurrency — customer checkout racing an admin stock adjustment", () => {
   it("applies both a checkout decrement and an admin correction correctly when stock covers both", async () => {
     const variant = await createTestVariant(10);
-    const basket = await db.basket.create({ data: {} });
+    const basket = await db.basket.create({ data: { accessToken: randomUUID() } });
     createdBasketIds.push(basket.id);
     await db.basketItem.create({
       data: { basketId: basket.id, productVariantId: variant.id, quantity: 3, priceInPaiseAtAdd: 20000 },
@@ -212,7 +217,7 @@ describe("concurrency — customer checkout racing an admin stock adjustment", (
 
   it("lets exactly one of a checkout and an admin over-correction succeed when demand exceeds stock", async () => {
     const variant = await createTestVariant(5);
-    const basket = await db.basket.create({ data: {} });
+    const basket = await db.basket.create({ data: { accessToken: randomUUID() } });
     createdBasketIds.push(basket.id);
     await db.basketItem.create({
       data: { basketId: basket.id, productVariantId: variant.id, quantity: 3, priceInPaiseAtAdd: 20000 },

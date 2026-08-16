@@ -1,17 +1,6 @@
-import { randomInt } from "node:crypto";
+import { UNAMBIGUOUS_ALPHABET, generateUnambiguousCode } from "@/lib/unambiguous-code";
 
-// Crockford-ish alphabet with 0/O/1/I/L removed — a shop assistant reading
-// this back over the phone shouldn't have to guess which letter someone said.
-const ORDER_NUMBER_ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ";
 const SUFFIX_LENGTH = 5;
-
-function randomSuffix(): string {
-  let suffix = "";
-  for (let i = 0; i < SUFFIX_LENGTH; i++) {
-    suffix += ORDER_NUMBER_ALPHABET[randomInt(ORDER_NUMBER_ALPHABET.length)];
-  }
-  return suffix;
-}
 
 function datePart(date: Date): string {
   const yyyy = date.getUTCFullYear().toString().padStart(4, "0");
@@ -32,10 +21,10 @@ function datePart(date: Date): string {
  * loop exists to make even that safe, not because it's expected to fire.
  */
 export function generateOrderNumber(date: Date): string {
-  return `ORD-${datePart(date)}-${randomSuffix()}`;
+  return `ORD-${datePart(date)}-${generateUnambiguousCode(SUFFIX_LENGTH)}`;
 }
 
-const ORDER_NUMBER_PATTERN = /^ORD-\d{8}-[23456789ABCDEFGHJKMNPQRSTVWXYZ]{5}$/;
+const ORDER_NUMBER_PATTERN = new RegExp(`^ORD-\\d{8}-[${UNAMBIGUOUS_ALPHABET}]{5}$`);
 
 export function isValidOrderNumberFormat(value: string): boolean {
   return ORDER_NUMBER_PATTERN.test(value);

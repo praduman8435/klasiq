@@ -4,6 +4,7 @@
  * actually gets enforced — server actions call these with numbers freshly
  * read from the database, never from the request body.
  */
+import { isOrderable } from "@/lib/stock";
 
 export type OrderableVariant = {
   id: string;
@@ -56,4 +57,58 @@ export function pickDefaultOrderableVariant<T extends OrderableVariant>(
   return [...variants]
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .find((variant) => variant.stockStatus !== "OUT_OF_STOCK");
+}
+
+export type CheckoutBlockingLine = {
+  id: string;
+  quantity: number;
+  productVariant: {
+    isActive: boolean;
+    stockQuantity: number;
+    stockStatus: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
+    size: string;
+    product: { name: string; isActive: boolean };
+  };
+};
+
+export type CheckoutBlockingIssue = {
+  id: string;
+  label: string;
+  reason: string;
+};
+
+/**
+ * Phase 3.7 Part 5 — the ONE shared definition of "why can't this basket
+ * line go to checkout," reused by the Checkout page's blocking view. Part 4
+ * already surfaces the same conditions inline in the Bag (see
+ * `basket-line-item.tsx`'s `isUnavailable`/`exceedsStock`), but never gated
+ * Checkout itself on them — a customer could reach Checkout with such a
+ * line and only discover it reactively, from a post-submit STOCK_ISSUE
+ * error. This mirrors `isVariantOrderable` (deactivated product/variant,
+ * out of stock) plus the quantity-exceeds-stock check, so the checkout page
+ * and the Bag page never disagree about what counts as a problem.
+ */
+export function computeCheckoutBlockingIssues(
+  items: readonly CheckoutBlockingLine[],
+): CheckoutBlockingIssue[] {
+  return items.flatMap((item) => {
+    const { productVariant: variant } = item;
+    const label = `${variant.product.name} (size ${variant.size})`;
+
+    if (!variant.isActive || !variant.product.isActive || !isOrderable(variant.stockStatus)) {
+      return [{ id: item.id, label, reason: "no longer available" }];
+    }
+    if (item.quantity > variant.stockQuantity) {
+      return [
+        {
+          id: item.id,
+          label,
+          reason: `only ${variant.stockQuantity} left in stock, but ${item.quantity} ${
+            item.quantity === 1 ? "is" : "are"
+          } in your bag`,
+        },
+      ];
+    }
+    return [];
+  });
 }

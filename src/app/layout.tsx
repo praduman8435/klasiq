@@ -21,7 +21,7 @@ const headingFont = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${BRAND.name} | School Essentials Made Simple`,
+    default: `${BRAND.name} | ${BRAND.tagline}`,
     template: `%s | ${BRAND.name}`,
   },
   description: BRAND.description,
@@ -52,7 +52,16 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}
-        <Toaster position="bottom-center" />
+        {/* PDP redesign critique fix — the Product Detail page's mobile
+            sticky purchase bar (`product-detail.tsx`) sits in the same
+            bottom-center real estate Sonner defaults into, so a toast
+            fired right after tapping Add to Bag would render on top of
+            it. `mobileOffset` lifts toasts clear of that bar's height
+            (~69px) plus its safe-area padding on every page — harmless
+            on pages without a sticky bar (toasts just sit a little
+            higher off the edge), and it means this doesn't need to be
+            threaded per-route. */}
+        <Toaster position="bottom-center" mobileOffset={{ bottom: "88px" }} />
       </body>
     </html>
   );

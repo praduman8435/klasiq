@@ -5,14 +5,14 @@ export const metadata: Metadata = { title: "Add School" };
 
 export default function NewSchoolPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Add School</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <div>
+      <div className="mb-5">
+        <h1 className="font-heading text-xl font-semibold tracking-tight">Add School</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
           You can configure classes, uniform items and recommended sets after creating it.
         </p>
       </div>
-      <div className="max-w-xl rounded-2xl border bg-card p-5">
+      <div className="max-w-xl">
         <SchoolForm />
       </div>
     </div>

@@ -1,11 +1,18 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Minus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ProductPlaceholderImage } from "@/components/product/product-placeholder-image";
+import { Check } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ProductThumbnail } from "@/components/product/product-thumbnail";
 import { formatPaise } from "@/lib/money";
 import { STOCK_STATUS_LABEL, isOrderable } from "@/lib/stock";
 import { cn } from "@/lib/utils";
@@ -13,20 +20,27 @@ import { addToBasket } from "@/server/actions/basket";
 import type { ProductWithVariants } from "@/types/catalog";
 
 const STOCK_BADGE_CLASS: Record<string, string> = {
-  IN_STOCK: "text-emerald-700 dark:text-emerald-400",
-  LOW_STOCK: "text-amber-700 dark:text-amber-400",
+  IN_STOCK: "text-emerald-600 dark:text-emerald-400",
+  LOW_STOCK: "text-amber-600 dark:text-amber-400",
   OUT_OF_STOCK: "text-muted-foreground line-through",
 };
 
-export function ProductCard({
-  product,
-  categorySlug,
-}: {
-  product: ProductWithVariants;
-  categorySlug: string;
-}) {
+/**
+ * Premium retail pass — the previous version leaned on bold weight
+ * everywhere (700-weight price, a bordered quantity-stepper-shaped size
+ * select, an icon-only Add button) to establish structure, which read as
+ * "admin panel" rather than storefront. Hierarchy now comes from size,
+ * spacing and color rather than uniform boldness: a medium-weight serif
+ * name, a same-row price/size pairing, and one full-width text CTA at the
+ * card's own weight class (never louder than the product name above it).
+ * Same shared component behind every category page, /search, AND the
+ * homepage's "Shop the essentials" rail — one card design system, not a
+ * bigger homepage variant and a smaller category one.
+ */
+export function ProductCard({ product }: { product: ProductWithVariants }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [justAdded, setJustAdded] = useState(false);
   const sortedVariants = useMemo(
     () => [...product.variants].sort((a, b) => a.sortOrder - b.sortOrder),
     [product.variants],
@@ -35,30 +49,31 @@ export function ProductCard({
     sortedVariants.find((v) => isOrderable(v.stockStatus)) ?? sortedVariants[0];
 
   const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id);
-  const [quantity, setQuantity] = useState(1);
-
   const selectedVariant = sortedVariants.find((v) => v.id === selectedVariantId);
   const canOrder = selectedVariant ? isOrderable(selectedVariant.stockStatus) : false;
-  const maxQuantity = selectedVariant
-    ? Math.max(1, Math.min(selectedVariant.stockQuantity, 20))
-    : 1;
+  const hasSizeChoice = sortedVariants.length > 1;
 
-  function selectVariant(variantId: string) {
-    setSelectedVariantId(variantId);
-    setQuantity(1);
-  }
-
-  function addToBag(onSuccess?: () => void) {
+  function addToBag() {
     if (!selectedVariant || !canOrder) return;
     startTransition(async () => {
       const result = await addToBasket({
         productVariantId: selectedVariant.id,
-        quantity,
+        quantity: 1,
       });
       if (result.success) {
         toast.success(`Added ${product.name} (Size ${selectedVariant.size}) to your bag.`);
-        router.refresh();
-        onSuccess?.();
+        setJustAdded(true);
+        // `router.refresh()` re-fetches this route's Server Component tree
+        // (needed so the header's bag-count badge — itself a Server
+        // Component — picks up the new count). Firing it immediately raced
+        // the "Added" visual state: the refresh could remount this card
+        // before the customer ever saw it, so the CTA appeared to do
+        // nothing. Delaying it until after the "Added" window closes lets
+        // the feedback actually be seen first.
+        window.setTimeout(() => {
+          setJustAdded(false);
+          router.refresh();
+        }, 1400);
       } else {
         toast.error(result.message ?? "Could not add to bag.");
       }
@@ -69,109 +84,99 @@ export function ProductCard({
     return null;
   }
 
-  return (
-    <div className="flex flex-col rounded-2xl border bg-card p-4 shadow-sm">
-      <ProductPlaceholderImage categorySlug={categorySlug} className="aspect-4/3 w-full" />
+  const ctaLabel = !canOrder ? "Out of Stock" : justAdded ? "Added" : isPending ? "Adding..." : "Add to Bag";
 
-      <div className="mt-3 flex-1">
-        <h3 className="font-heading text-base font-semibold leading-tight">
-          {product.name}
+  return (
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card transition-colors hover:border-foreground/15">
+      {/* This image link duplicates the product-name link just below,
+          which already has a proper accessible name. Rather than give
+          both an identical name (a screen reader would announce
+          "Product X" twice in a row for one card), this one is hidden
+          from assistive tech entirely — sighted mouse/touch users can
+          still click the image, keyboard/AT users reach the same
+          destination via the named text link. */}
+      <Link
+        href={`/product/${product.slug}`}
+        aria-hidden="true"
+        tabIndex={-1}
+        className="block focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+      >
+        {/* `bg-card` (not the default `bg-muted`) keeps the image slot on
+            the exact same surface as the content below it — the previous
+            visible seam between a darker image panel and a lighter
+            content panel read as two stacked UI regions rather than one
+            considered object. */}
+        <ProductThumbnail
+          imageUrl={product.imageUrl}
+          alt={product.name}
+          categorySlug={product.category.slug}
+          className="aspect-square w-full rounded-none bg-card transition-transform duration-300 group-hover:scale-[1.03]"
+        />
+      </Link>
+
+      <div className="flex flex-1 flex-col gap-1.5 p-3">
+        <h3 className="line-clamp-1 font-heading text-sm font-medium leading-snug">
+          <Link href={`/product/${product.slug}`} className="hover:underline">
+            {product.name}
+          </Link>
         </h3>
-        {product.description && (
-          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-            {product.description}
+
+        {selectedVariant && (
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium tabular-nums text-foreground">
+              {formatPaise(selectedVariant.priceInPaise)}
+            </span>
+            {hasSizeChoice && (
+              <Select value={selectedVariantId} onValueChange={(id) => setSelectedVariantId(id as string)}>
+                <SelectTrigger
+                  size="sm"
+                  aria-label={`Select size for ${product.name}`}
+                  className="h-7 min-w-0 shrink-0 gap-0.5 rounded-md border-0 bg-transparent px-1.5 text-xs font-medium text-foreground shadow-none hover:bg-muted dark:bg-transparent dark:hover:bg-muted/50"
+                >
+                  <SelectValue>{selectedVariant.size}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {sortedVariants.map((variant) => {
+                    const orderable = isOrderable(variant.stockStatus);
+                    return (
+                      <SelectItem key={variant.id} value={variant.id} disabled={!orderable}>
+                        {variant.size}
+                        {!orderable && " — Out of stock"}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+
+        {selectedVariant && (
+          <p className={cn("text-xs font-medium leading-none", STOCK_BADGE_CLASS[selectedVariant.stockStatus])}>
+            {STOCK_STATUS_LABEL[selectedVariant.stockStatus]}
           </p>
         )}
-      </div>
 
-      <fieldset className="mt-3">
-        <legend className="text-xs font-medium text-muted-foreground">
-          Size
-        </legend>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {sortedVariants.map((variant) => {
-            const orderable = isOrderable(variant.stockStatus);
-            const isSelected = variant.id === selectedVariantId;
-            return (
-              <button
-                key={variant.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => selectVariant(variant.id)}
-                className={cn(
-                  "rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors",
-                  isSelected
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background hover:bg-muted",
-                  !orderable && "text-muted-foreground line-through opacity-60",
-                )}
-              >
-                {variant.size}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
-
-      {selectedVariant && (
-        <p className="mt-2 text-sm">
-          <span className="font-semibold text-foreground">
-            {formatPaise(selectedVariant.priceInPaise)}
-          </span>{" "}
-          <span className={cn("text-xs font-medium", STOCK_BADGE_CLASS[selectedVariant.stockStatus])}>
-            {STOCK_STATUS_LABEL[selectedVariant.stockStatus]}
-          </span>
-        </p>
-      )}
-
-      <div className="mt-3 flex items-center gap-2">
-        <div className="flex items-center rounded-lg border">
-          <button
-            type="button"
-            aria-label="Decrease quantity"
-            disabled={!canOrder || quantity <= 1}
-            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="flex size-10 items-center justify-center text-muted-foreground disabled:opacity-40"
-          >
-            <Minus className="size-3.5" aria-hidden />
-          </button>
-          <span
-            aria-live="polite"
-            className="w-6 text-center text-sm font-medium tabular-nums"
-          >
-            {quantity}
-          </span>
-          <button
-            type="button"
-            aria-label="Increase quantity"
-            disabled={!canOrder || quantity >= maxQuantity}
-            onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
-            className="flex size-10 items-center justify-center text-muted-foreground disabled:opacity-40"
-          >
-            <Plus className="size-3.5" aria-hidden />
-          </button>
-        </div>
-
-        <Button
+        <button
           type="button"
-          variant="outline"
-          className="flex-1"
+          aria-label={
+            selectedVariant ? `Add ${product.name} (Size ${selectedVariant.size}) to bag` : `Add ${product.name} to bag`
+          }
           disabled={!canOrder || isPending}
-          onClick={() => addToBag()}
+          onClick={addToBag}
+          className={cn(
+            "mt-1.5 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98] disabled:pointer-events-none",
+            !canOrder
+              ? "bg-muted text-muted-foreground"
+              : justAdded
+                ? "bg-emerald-600 text-white"
+                : "bg-primary text-primary-foreground hover:bg-primary/90",
+          )}
         >
-          Add to Bag
-        </Button>
+          {justAdded && <Check className="size-3.5" aria-hidden />}
+          {ctaLabel}
+        </button>
       </div>
-
-      <Button
-        type="button"
-        variant="secondary"
-        className="mt-2 w-full"
-        disabled={!canOrder || isPending}
-        onClick={() => addToBag(() => router.push("/bag"))}
-      >
-        Buy Now
-      </Button>
     </div>
   );
 }

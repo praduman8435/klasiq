@@ -1,87 +1,108 @@
 import Link from "next/link";
 import { Boxes, Plus, School as SchoolIcon, ClipboardList } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/admin/stat-card";
+import { DashboardMetricGroup } from "@/components/admin/stat-card";
 import { formatPaise } from "@/lib/money";
 import { getDashboardStats } from "@/server/queries/admin/dashboard";
+
+const QUICK_ACTIONS = [
+  { href: "/admin/products/new", label: "Add Product", icon: Plus },
+  { href: "/admin/schools/new", label: "Add School", icon: SchoolIcon },
+  { href: "/admin/inventory", label: "Update Stock", icon: Boxes },
+  { href: "/admin/orders", label: "View Orders", icon: ClipboardList },
+] as const;
 
 export default async function AdminDashboardPage() {
   const stats = await getDashboardStats();
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          What needs attention right now.
-        </p>
+    // AdminShell itself now establishes the dark scope + background for
+    // the whole admin application — this page just renders its own
+    // content directly into it, no separate rounded "card" of its own
+    // (that used to double up a second identical dark background inside
+    // a first one, reading as a floating panel once the shell around it
+    // was still light).
+    <div>
+      <div className="mb-5">
+        <h1 className="font-heading text-xl font-semibold tracking-tight">Dashboard</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">What needs attention right now.</p>
       </div>
 
-      <section>
-        <h2 className="text-sm font-semibold text-muted-foreground">Orders</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Pending" value={stats.pendingCount} href="/admin/orders?status=PENDING" />
-          <StatCard label="Confirmed" value={stats.confirmedCount} href="/admin/orders?status=CONFIRMED" />
-          <StatCard
-            label="Ready for Pickup"
-            value={stats.readyForPickupCount}
-            href="/admin/orders?status=READY_FOR_PICKUP"
-          />
-          <StatCard
-            label="Out for Delivery"
-            value={stats.outForDeliveryCount}
-            href="/admin/orders?status=OUT_FOR_DELIVERY"
-          />
-        </div>
-      </section>
+      <div className="flex flex-col gap-6">
+        <section>
+          <h2 className="text-sm font-semibold">Orders</h2>
+          <div className="mt-2">
+            <DashboardMetricGroup
+              wideCols={4}
+              metrics={[
+                { label: "Pending", value: stats.pendingCount, href: "/admin/orders?status=PENDING" },
+                { label: "Confirmed", value: stats.confirmedCount, href: "/admin/orders?status=CONFIRMED" },
+                {
+                  label: "Ready for Pickup",
+                  value: stats.readyForPickupCount,
+                  href: "/admin/orders?status=READY_FOR_PICKUP",
+                },
+                {
+                  label: "Out for Delivery",
+                  value: stats.outForDeliveryCount,
+                  href: "/admin/orders?status=OUT_FOR_DELIVERY",
+                },
+              ]}
+            />
+          </div>
+        </section>
 
-      <section>
-        <h2 className="text-sm font-semibold text-muted-foreground">Today</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Orders Today" value={stats.ordersToday} />
-          <StatCard label="Today's Order Value" value={formatPaise(stats.todaysOrderValueInPaise)} />
-        </div>
-      </section>
+        <section>
+          <h2 className="text-sm font-semibold">Today</h2>
+          <div className="mt-2">
+            <DashboardMetricGroup
+              metrics={[
+                { label: "Orders today", value: stats.ordersToday },
+                { label: "Order value", value: formatPaise(stats.todaysOrderValueInPaise) },
+              ]}
+            />
+          </div>
+        </section>
 
-      <section>
-        <h2 className="text-sm font-semibold text-muted-foreground">Inventory</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard
-            label="Low Stock"
-            value={stats.lowStockCount}
-            href="/admin/inventory?stock=LOW_STOCK"
-            tone="warning"
-          />
-          <StatCard
-            label="Out of Stock"
-            value={stats.outOfStockCount}
-            href="/admin/inventory?stock=OUT_OF_STOCK"
-            tone="danger"
-          />
-        </div>
-      </section>
+        <section>
+          <h2 className="text-sm font-semibold">Inventory</h2>
+          <div className="mt-2">
+            <DashboardMetricGroup
+              metrics={[
+                {
+                  label: "Low stock",
+                  value: stats.lowStockCount,
+                  href: "/admin/inventory?stock=LOW_STOCK",
+                  tone: "warning",
+                },
+                {
+                  label: "Out of stock",
+                  value: stats.outOfStockCount,
+                  href: "/admin/inventory?stock=OUT_OF_STOCK",
+                  tone: "danger",
+                },
+              ]}
+            />
+          </div>
+        </section>
 
-      <section>
-        <h2 className="text-sm font-semibold text-muted-foreground">Shortcuts</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Button render={<Link href="/admin/products/new" />} nativeButton={false} variant="outline" className="h-auto flex-col gap-2 py-4">
-            <Plus className="size-5" aria-hidden />
-            Add Product
-          </Button>
-          <Button render={<Link href="/admin/schools/new" />} nativeButton={false} variant="outline" className="h-auto flex-col gap-2 py-4">
-            <SchoolIcon className="size-5" aria-hidden />
-            Add School
-          </Button>
-          <Button render={<Link href="/admin/inventory" />} nativeButton={false} variant="outline" className="h-auto flex-col gap-2 py-4">
-            <Boxes className="size-5" aria-hidden />
-            Update Stock
-          </Button>
-          <Button render={<Link href="/admin/orders" />} nativeButton={false} variant="outline" className="h-auto flex-col gap-2 py-4">
-            <ClipboardList className="size-5" aria-hidden />
-            View Orders
-          </Button>
-        </div>
-      </section>
+        <section>
+          <h2 className="text-sm font-semibold">Quick actions</h2>
+          <div className="mt-2 overflow-hidden rounded-lg border border-border bg-border">
+            <div className="grid grid-cols-2 gap-px sm:grid-cols-4">
+              {QUICK_ACTIONS.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-2 bg-card p-3.5 text-sm font-medium transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:bg-muted/40"
+                >
+                  <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

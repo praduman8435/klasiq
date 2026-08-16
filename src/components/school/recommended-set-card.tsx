@@ -3,11 +3,15 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { formatPaise } from "@/lib/money";
 import { pickDefaultOrderableVariant } from "@/lib/basket-math";
 import { addRecommendedSet } from "@/server/actions/basket";
 import type { RecommendedSetWithItems } from "@/types/catalog";
+
+const GENDER_LABEL: Partial<Record<RecommendedSetWithItems["gender"], string>> = {
+  BOYS: "Boys",
+  GIRLS: "Girls",
+};
 
 export function RecommendedSetCard({ set }: { set: RecommendedSetWithItems }) {
   const router = useRouter();
@@ -20,6 +24,8 @@ export function RecommendedSetCard({ set }: { set: RecommendedSetWithItems }) {
     const price = defaultVariant?.priceInPaise ?? item.product.variants[0]?.priceInPaise ?? 0;
     return sum + price * item.quantity;
   }, 0);
+
+  const subtitleParts = [set.class?.name, GENDER_LABEL[set.gender]].filter(Boolean);
 
   function handleAdd() {
     startTransition(async () => {
@@ -34,44 +40,40 @@ export function RecommendedSetCard({ set }: { set: RecommendedSetWithItems }) {
   }
 
   return (
-    <div className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
-      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-        Recommended Complete Uniform
+    <div className="rounded-xl border border-border/70 bg-card p-4 sm:p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+        Recommended Set
       </p>
-      <h3 className="mt-1 font-heading text-xl font-semibold">{set.name}</h3>
-      {set.description && (
-        <p className="mt-1 text-sm text-muted-foreground">{set.description}</p>
+      {subtitleParts.length > 0 && (
+        <p className="mt-1.5 text-xs font-medium text-muted-foreground">{subtitleParts.join(" · ")}</p>
       )}
+      <h3 className="mt-0.5 font-heading text-lg font-medium">{set.name}</h3>
+      {set.description && <p className="mt-1 text-sm text-muted-foreground">{set.description}</p>}
 
-      <ul className="mt-4 space-y-1.5 text-sm">
+      <ul className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
         {set.items.map((item) => (
-          <li key={item.id} className="flex justify-between gap-4">
-            <span>
-              {item.quantity} &times; {item.product.name}
-            </span>
+          <li key={item.id}>
+            {item.quantity} &times; {item.product.name}
           </li>
         ))}
       </ul>
 
-      <div className="mt-5 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
-          Estimated total:{" "}
-          <span className="font-semibold text-foreground">
-            {formatPaise(estimatedTotalInPaise)}
-          </span>
-          <span className="block text-xs">
-            Sizes default to what&apos;s in stock — adjust in your bag.
-          </span>
-        </p>
-        <Button
-          type="button"
-          disabled={isPending}
-          onClick={handleAdd}
-          className="sm:w-auto"
-        >
-          Add Complete Set
-        </Button>
+      <div className="mt-4 flex items-center justify-between border-t pt-3 text-sm">
+        <span className="text-muted-foreground">Estimated total</span>
+        <span className="text-base font-medium text-foreground">{formatPaise(estimatedTotalInPaise)}</span>
       </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Sizes default to what&apos;s in stock — adjust in your bag.
+      </p>
+
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={handleAdd}
+        className="mt-3 flex h-10 w-full items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+      >
+        {isPending ? "Adding..." : "Add Complete Set"}
+      </button>
     </div>
   );
 }

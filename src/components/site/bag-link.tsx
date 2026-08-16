@@ -11,7 +11,7 @@ export async function BagLink({ className }: { className?: string }) {
     <Link
       href="/bag"
       className={cn(
-        "relative inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
+        "relative inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-medium transition-colors hover:bg-muted",
         className,
       )}
       aria-label={
@@ -23,7 +23,7 @@ export async function BagLink({ className }: { className?: string }) {
       {count > 0 && (
         <span
           aria-hidden
-          className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
+          className="flex size-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
         >
           {count > 9 ? "9+" : count}
         </span>

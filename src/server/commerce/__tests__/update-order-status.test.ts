@@ -71,6 +71,8 @@ async function createTestOrder(params: {
       status: params.status ?? "CONFIRMED",
       subtotalInPaise: 35000 * itemQuantity,
       totalInPaise: 35000 * itemQuantity,
+      amountReceivedInPaise: 35000 * itemQuantity,
+      outstandingInPaise: 0,
       items: {
         create: [
           {
@@ -82,6 +84,7 @@ async function createTestOrder(params: {
             unitPriceInPaise: 35000,
             quantity: itemQuantity,
             lineTotalInPaise: 35000 * itemQuantity,
+            effectiveLineTotalInPaise: 35000 * itemQuantity,
           },
         ],
       },
@@ -210,6 +213,96 @@ describe("updateOrderStatus — cancellation restores inventory", () => {
 
     const finalOrder = await db.order.findUniqueOrThrow({ where: { id: order.id } });
     expect(finalOrder.status).toBe("CANCELLED");
+  });
+
+  it("logs an accurate audit entry for each order when two different orders sharing the same variant are cancelled concurrently", async () => {
+    // Regression test — src/server/commerce/update-order-status.ts's
+    // CANCELLED branch used to read the variant, then separately compute
+    // previousQuantity/newQuantity from that same (increasingly stale)
+    // read for the InventoryAdjustment log, instead of reusing
+    // applyInventoryDelta's re-read-after-write pattern. The stockQuantity
+    // column itself was always correct (its own update was a genuine
+    // atomic increment), but two concurrent cancellations touching the
+    // same variant could each log a previousQuantity/newQuantity that
+    // never actually existed on the row.
+    const suffix = randomUUID();
+    const product = await db.product.create({
+      data: { slug: `test-product-${suffix}`, name: `Test Product ${suffix.slice(0, 8)}`, categoryId },
+    });
+    createdProductIds.push(product.id);
+    const variant = await db.productVariant.create({
+      data: {
+        productId: product.id,
+        size: "M",
+        sku: `TEST-SKU-${suffix}`,
+        priceInPaise: 35000,
+        stockQuantity: 10,
+        lowStockThreshold: 5,
+      },
+    });
+
+    async function createOrderAgainstSharedVariant(qty: number) {
+      const orderSuffix = randomUUID();
+      const order = await db.order.create({
+        data: {
+          orderNumber: `ORD-TEST-${orderSuffix.slice(0, 8).toUpperCase()}`,
+          accessToken: randomUUID(),
+          customerName: "Test Customer",
+          customerMobile: "9876543210",
+          fulfillmentType: "STORE_PICKUP",
+          paymentMethod: "CASH_ON_DELIVERY",
+          status: "CONFIRMED",
+          subtotalInPaise: 35000 * qty,
+          totalInPaise: 35000 * qty,
+          amountReceivedInPaise: 35000 * qty,
+          outstandingInPaise: 0,
+          items: {
+            create: [
+              {
+                productId: product.id,
+                productVariantId: variant.id,
+                productName: product.name,
+                size: "M",
+                skuSnapshot: variant.sku,
+                unitPriceInPaise: 35000,
+                quantity: qty,
+                lineTotalInPaise: 35000 * qty,
+                effectiveLineTotalInPaise: 35000 * qty,
+              },
+            ],
+          },
+        },
+      });
+      createdOrderIds.push(order.id);
+      return order;
+    }
+
+    const orderA = await createOrderAgainstSharedVariant(2);
+    const orderB = await createOrderAgainstSharedVariant(3);
+
+    await Promise.all([
+      updateOrderStatus({ orderNumber: orderA.orderNumber, newStatus: "CANCELLED", adminUserId }),
+      updateOrderStatus({ orderNumber: orderB.orderNumber, newStatus: "CANCELLED", adminUserId }),
+    ]);
+
+    const finalVariant = await db.productVariant.findUniqueOrThrow({ where: { id: variant.id } });
+    expect(finalVariant.stockQuantity).toBe(15); // 10 + 2 + 3
+
+    const adjustmentA = await db.inventoryAdjustment.findFirstOrThrow({ where: { orderId: orderA.id } });
+    const adjustmentB = await db.inventoryAdjustment.findFirstOrThrow({ where: { orderId: orderB.id } });
+
+    // Whichever order's restore actually committed first, its own logged
+    // previousQuantity/newQuantity must reflect the REAL row values at
+    // that moment, and the second one's must chain from the first's —
+    // never both claiming the same stale previousQuantity=10.
+    const [first, second] =
+      adjustmentA.createdAt.getTime() <= adjustmentB.createdAt.getTime()
+        ? [adjustmentA, adjustmentB]
+        : [adjustmentB, adjustmentA];
+    expect(first.previousQuantity).toBe(10);
+    expect(first.newQuantity).toBe(10 + first.delta);
+    expect(second.previousQuantity).toBe(first.newQuantity);
+    expect(second.newQuantity).toBe(first.newQuantity + second.delta);
   });
 
   it("does not allow cancelling a DELIVERED order", async () => {

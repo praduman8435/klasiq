@@ -10,6 +10,10 @@ describe("getFulfillmentLabel", () => {
     expect(getFulfillmentLabel("STORE_PICKUP")).toBe("Store Pickup");
     expect(getFulfillmentLabel("LOCAL_DELIVERY")).toBe("Local Delivery");
   });
+
+  it("labels a counter handover as 'Counter Sale' (Phase 3.2)", () => {
+    expect(getFulfillmentLabel("COUNTER_HANDOVER")).toBe("Counter Sale");
+  });
 });
 
 describe("getPaymentMethodLabel", () => {
@@ -23,6 +27,21 @@ describe("getPaymentMethodLabel", () => {
     expect(
       getPaymentMethodLabel({ paymentMethod: "CASH_ON_DELIVERY", fulfillmentType: "LOCAL_DELIVERY" }),
     ).toBe("Cash on Delivery");
+  });
+
+  it("labels CASH and CARD regardless of fulfillment type (Phase 3.2)", () => {
+    expect(
+      getPaymentMethodLabel({ paymentMethod: "CASH", fulfillmentType: "COUNTER_HANDOVER" }),
+    ).toBe("Cash");
+    expect(
+      getPaymentMethodLabel({ paymentMethod: "CARD", fulfillmentType: "COUNTER_HANDOVER" }),
+    ).toBe("Card");
+  });
+
+  it("labels UPI the same regardless of fulfillment type", () => {
+    expect(
+      getPaymentMethodLabel({ paymentMethod: "UPI", fulfillmentType: "COUNTER_HANDOVER" }),
+    ).toBe("UPI");
   });
 });
 

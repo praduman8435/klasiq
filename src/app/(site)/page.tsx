@@ -1,159 +1,186 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import {
-  Footprints,
-  MapPin,
-  RefreshCw,
-  Shirt,
-  ShieldCheck,
-  Store,
-  Truck,
-} from "lucide-react";
 import { SchoolSearch } from "@/components/site/school-search";
-import { BRAND, getBackedByLine } from "@/lib/constants";
+import { ProductCard } from "@/components/product/product-card";
+import { getCategoryIcon } from "@/lib/category-icons";
+import { BRAND } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import {
+  getFeaturedGenericProducts,
+  getHeaderCategories,
+  pickBrowseFallbackCategory,
+} from "@/server/queries/categories";
 
 export const metadata: Metadata = {
-  description:
-    "Search your child's school and get the right uniform, size and essentials without running around the market.",
+  description: BRAND.description,
 };
 
-const ESSENTIAL_CATEGORIES = [
-  {
-    slug: "uniforms",
-    label: "Uniforms",
-    description: "Shirts, pants, skirts & more",
-    icon: Shirt,
-  },
-  {
-    slug: "shoes",
-    label: "Shoes",
-    description: "School-approved footwear",
-    icon: Footprints,
-  },
-  {
-    slug: "socks",
-    label: "Socks",
-    description: "Everyday pairs, all sizes",
-    icon: Store,
-  },
-  {
-    slug: "school-bags",
-    label: "School Bags",
-    description: "Backpacks & trolley bags",
-    icon: Truck,
-  },
-] as const;
+/**
+ * Phase 3.7 Part 7 (homepage redesign) — dark-first, compact, editorial.
+ * Replaces the light cream hero + 5 huge category cards + no product
+ * discovery with: a dark cinematic hero (restrained red glow, one rare
+ * gold badge, a compact school-search that no longer eats the whole
+ * viewport), a horizontally-scrolling category rail (compact chips, not
+ * dashboard cards), and one small real-product teaser section. The whole
+ * page — header and footer included, via `RouteThemeScope` — wears the
+ * `.dark` token scope defined in globals.css; every other route is
+ * completely unaffected. Still the same "One Red Rule"/"Gold Is Rare
+ * Rule" discipline as before: one signature category tile in red, one
+ * gold badge in the hero, nothing else competing for either color.
+ */
+export default async function HomePage() {
+  const [categories, featuredProducts] = await Promise.all([
+    getHeaderCategories(),
+    getFeaturedGenericProducts(5),
+  ]);
+  const signatureCategory = pickBrowseFallbackCategory(categories);
 
-const TRUST_POINTS = [
-  {
-    icon: ShieldCheck,
-    title: "Trusted local retailer",
-    description: "Family-run, built on decades of local retail trust.",
-  },
-  {
-    icon: RefreshCw,
-    title: "Easy size exchange",
-    description: "Growing kids happen — bring it back and we'll sort it out.",
-  },
-  {
-    icon: Store,
-    title: "Store pickup",
-    description: "Order ahead and collect at your convenience.",
-  },
-  {
-    icon: Truck,
-    title: "Local delivery",
-    description: "Delivered nearby without the trip to the market.",
-  },
-  {
-    icon: MapPin,
-    title: "School-approved uniforms",
-    description: "The right fit for your child's exact school and class.",
-  },
-];
-
-export default function HomePage() {
   return (
     <div className="flex flex-col">
-      <section className="border-b bg-gradient-to-b from-secondary/50 to-background px-4 py-16 sm:px-6 sm:py-24">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">
-          <h1 className="text-balance font-heading text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-            {BRAND.tagline}
+      {/* Final mobile polish — `py-10` read as noticeably more generous
+          than every other section on this page (`py-6`), pushing "Shop
+          by category" past 450px down the viewport on narrow phones
+          before this measurably helped the hero feel any more premium.
+          `py-8` still reads as a deliberately more spacious hero than
+          the plain content sections below it, just not doubly so. */}
+      <section className="relative px-4 py-8 sm:px-6 sm:py-14">
+        {/* Critique fix — the previous two-blob (red + gold) glow read as
+            a generic dark-SaaS-landing-page decoration and stacked a
+            second, non-CTA red instance on top of the signature chip
+            below. One soft gold glow, centered behind the badge, is
+            enough "cinematic" atmosphere without borrowing the trope or
+            spending red decoratively. Final-polish pass — a very slow
+            (10s) drift/pulse gives the page a quiet sense of life on
+            load without reading as an animated decoration; collapses to
+            static under prefers-reduced-motion via the global rule.
+            Search-overlay fix — `overflow-hidden` used to live on the
+            section itself, which also clipped the school-search
+            dropdown the moment it grew past the hero's own bottom edge.
+            Scoping `overflow-hidden` to just this glow's own wrapper
+            (sized to the section, but not an ancestor of the search box
+            below) keeps the glow contained. The dropdown itself no
+            longer lives in this subtree at all — `SchoolSearch` now
+            portals it to `document.body` (see that component's own doc
+            comment), which is what actually resolved the remaining
+            "Shop by category" overlap; a same-tree CSS/z-index fix here
+            couldn't win against that rail's independently-composited
+            `overflow-x-auto` scroll layer. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-1/2 top-0 size-80 rounded-full bg-accent/10 blur-3xl [animation:hero-glow-drift_10s_ease-in-out_infinite] sm:size-96" />
+        </div>
+
+        {/* Final refinement pass — the hero previously carried a full
+            explanatory paragraph ("Uniforms, footwear, bags, kurtis...")
+            plus a duplicate "Shop by school" / "Find your school's
+            essentials" heading pair directly above the search input that
+            already speaks for itself. That's four lines of reading before
+            a shopper could act, on top of the eyebrow and headline. Less
+            explanation, more shopping: the search box is the CTA, its own
+            placeholder is the label. Nothing replaces the removed copy —
+            adding a new subtitle would recreate the exact verbosity this
+            pass exists to remove. */}
+        <div className="relative mx-auto flex max-w-xl flex-col items-center gap-3 text-center [animation:hero-entrance_0.7s_ease-out]">
+          <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+            Trusted local retail
+          </span>
+          <h1 className="text-balance font-heading text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">
+            {BRAND.heroHeadline}
           </h1>
-          <p className="max-w-xl text-balance text-base text-muted-foreground sm:text-lg">
-            Find your school and get the right uniform, size and essentials
-            without running around the market.
-          </p>
 
-          <SchoolSearch size="hero" className="max-w-xl" />
-
-          <p className="text-sm text-muted-foreground">
-            Scanned a QR code at your school? You&apos;ll land straight on
-            your school&apos;s page — no search needed.
-          </p>
+          <div className="w-full max-w-sm transition-transform duration-300 focus-within:scale-[1.015]">
+            <SchoolSearch size="hero" />
+          </div>
         </div>
       </section>
 
-      <section className="px-4 py-14 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center font-heading text-2xl font-semibold sm:text-3xl">
-            Or shop essentials
-          </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            Not sure your school is listed yet? These work for anyone.
-          </p>
-
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {ESSENTIAL_CATEGORIES.map(({ slug, label, description, icon: Icon }) => (
-              <Link
-                key={slug}
-                href={`/${slug}`}
-                className="group flex flex-col items-center gap-3 rounded-2xl border bg-card p-6 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+      {/* Final polish pass — this section and the one below it each
+          carried their own independent `py-6`, so the boundary between
+          them silently doubled to a 48px gap (24px bottom + 24px top) —
+          nearly twice this page's own established rhythm step. Dropping
+          this section's bottom padding lets the next section's own
+          top padding own that one shared gap instead. */}
+      {categories.length > 0 && (
+        <section className="px-4 pt-6 sm:px-6">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="font-heading text-base font-semibold sm:text-lg">
+              Shop by category
+            </h2>
+            {/* Final QA pass — the "there's more to scroll" cue this rail
+                relies on (a chip visibly straddling the row's own right
+                edge) turned out to depend on accidental pixel alignment:
+                a width-by-width sweep found it missing at exactly 375px
+                (a common real device width) even though it held at every
+                other tested width. A static trailing fade makes the cue
+                reliable regardless of how the chips happen to land. */}
+            <div className="relative mt-3">
+              <div
+                className={cn(
+                  "flex gap-2 overflow-x-auto pb-1",
+                  "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                )}
               >
-                <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  <Icon className="size-6" aria-hidden />
-                </span>
-                <span className="font-heading text-base font-semibold">
-                  {label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {description}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t bg-secondary/30 px-4 py-14 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center font-heading text-2xl font-semibold sm:text-3xl">
-            Why parents choose us
-          </h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {TRUST_POINTS.map(({ icon: Icon, title, description }) => (
-              <div key={title} className="flex items-start gap-3">
-                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Icon className="size-4.5" aria-hidden />
-                </span>
-                <div>
-                  <p className="font-medium text-foreground">{title}</p>
-                  <p className="text-sm text-muted-foreground">{description}</p>
-                </div>
+                {categories.map((category) => {
+                  const Icon = getCategoryIcon(category.slug || category.name);
+                  const isSignature = category.slug === signatureCategory?.slug;
+                  return (
+                    <Link
+                      key={category.slug}
+                      href={`/${category.slug}`}
+                      className={cn(
+                        "group flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-all duration-150 active:scale-95",
+                        isSignature
+                          ? // Critique fix — a translucent red tint with red
+                            // text measured 3.63:1 against the dark
+                            // background, failing AA for normal-size text.
+                            // Solid fill + primary-foreground matches the
+                            // system's own established "active state" recipe
+                            // (the checkout fulfillment tabs) and passes AA.
+                            "border-transparent bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "border-border bg-card text-foreground hover:border-primary/25 hover:bg-muted",
+                      )}
+                    >
+                      <Icon className="size-4 shrink-0" aria-hidden />
+                      {category.name}
+                    </Link>
+                  );
+                })}
               </div>
-            ))}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent"
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section className="px-4 py-12 text-center sm:px-6">
-        <p className="font-heading text-xl text-muted-foreground">
-          {BRAND.heritageLine}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {getBackedByLine()}
-        </p>
-      </section>
+      {featuredProducts.length > 0 && (
+        <section className="px-4 py-6 sm:px-6">
+          <div className="mx-auto max-w-5xl">
+            <div className="flex items-end justify-between gap-3">
+              <h2 className="font-heading text-base font-semibold sm:text-lg">
+                Shop the essentials
+              </h2>
+              <Link
+                href="/search"
+                className="text-sm font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
+                Shop all
+              </Link>
+            </div>
+            {/* Same grid rhythm as `CategoryProductGrid` — the homepage
+                teaser and every category page render the identical
+                `ProductCard` at the identical column counts, so this rail
+                never reads as a separate, oversized "homepage card"
+                design. See category-product-grid.tsx. */}
+            <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

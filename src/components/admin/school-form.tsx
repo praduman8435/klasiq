@@ -72,86 +72,103 @@ export function SchoolForm({ initial }: { initial?: SchoolFormValues }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
       {error && (
-        <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={nameId}>School name</Label>
-        <Input
-          id={nameId}
-          value={name}
-          onChange={(e) => handleNameChange(e.target.value)}
-          required
-        />
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">School</h3>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={nameId}>School name</Label>
+          <Input id={nameId} className="h-9" value={name} onChange={(e) => handleNameChange(e.target.value)} required />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={cityId}>City (optional)</Label>
+          <Input id={cityId} className="h-9" value={city} onChange={(e) => setCity(e.target.value)} />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={slugId}>Slug (public URL)</Label>
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <span>/school/</span>
+      <div className="border-t border-border" />
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Public URL</h3>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={slugId}>Slug</Label>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <span>/school/</span>
+            <Input
+              id={slugId}
+              className="h-9"
+              value={slug}
+              onChange={(e) => {
+                setSlugTouched(true);
+                setSlug(e.target.value);
+              }}
+              required
+            />
+          </div>
+          {isEditing && (
+            <p className="text-xs font-medium text-amber-500">
+              Changing the slug breaks any printed QR codes or shared links using the old address.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="border-t border-border" />
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Branding</h3>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={logoId}>Logo URL (optional)</Label>
           <Input
-            id={slugId}
-            value={slug}
-            onChange={(e) => {
-              setSlugTouched(true);
-              setSlug(e.target.value);
-            }}
-            required
+            id={logoId}
+            className="h-9"
+            type="url"
+            placeholder="https://..."
+            value={logoUrl}
+            onChange={(e) => setLogoUrl(e.target.value)}
           />
         </div>
-        {isEditing && (
-          <p className="text-xs text-amber-700 dark:text-amber-400">
-            Changing the slug breaks any printed QR codes or shared links using the old address.
-          </p>
-        )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={cityId}>City (optional)</Label>
-        <Input id={cityId} value={city} onChange={(e) => setCity(e.target.value)} />
+      <div className="border-t border-border" />
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          Partnership / Visibility
+        </h3>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="size-4 rounded border border-border"
+          />
+          Active (visible in search and reachable at its storefront URL)
+        </label>
+
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isVerifiedPartner}
+            onChange={(e) => setIsVerifiedPartner(e.target.checked)}
+            className="mt-0.5 size-4 rounded border border-border"
+          />
+          <span>
+            Verified partner — shows &quot;Official Uniform Partner&quot; instead of the default
+            &quot;School Uniform Collection&quot; wording. Only enable this for a confirmed real
+            partnership.
+          </span>
+        </label>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor={logoId}>Logo URL (optional)</Label>
-        <Input
-          id={logoId}
-          type="url"
-          placeholder="https://..."
-          value={logoUrl}
-          onChange={(e) => setLogoUrl(e.target.value)}
-        />
-      </div>
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-          className="size-4 rounded border"
-        />
-        Active (visible in search and reachable at its storefront URL)
-      </label>
-
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isVerifiedPartner}
-          onChange={(e) => setIsVerifiedPartner(e.target.checked)}
-          className="mt-0.5 size-4 rounded border"
-        />
-        <span>
-          Verified partner — shows &quot;Official Uniform Partner&quot; instead of the default
-          &quot;School Uniform Collection&quot; wording. Only enable this for a confirmed real
-          partnership.
-        </span>
-      </label>
-
-      <Button type="submit" className="mt-2 w-full sm:w-auto" disabled={isPending}>
-        {isPending ? "Saving..." : isEditing ? "Save changes" : "Create school"}
+      <Button type="submit" className="h-9 w-full sm:w-auto" disabled={isPending}>
+        {isPending ? "Saving…" : isEditing ? "Save changes" : "Create school"}
       </Button>
     </form>
   );
