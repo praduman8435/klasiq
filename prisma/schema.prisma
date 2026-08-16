@@ -6,8 +6,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Supabase (and other pooled Postgres providers) serve two distinct
+  // connection strings: a pgbouncer-fronted pooler for normal app traffic
+  // (DATABASE_URL, safe for many concurrent serverless invocations) and a
+  // direct, unpooled connection for schema changes (DIRECT_URL) — `prisma
+  // migrate`/`db push` need a real session, not a pooled transaction-mode
+  // one. Locally (docker-compose Postgres, no pooler in front of it),
+  // DIRECT_URL is simply set to the same value as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------
