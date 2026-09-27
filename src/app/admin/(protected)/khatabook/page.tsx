@@ -17,7 +17,7 @@ type PageProps = { searchParams: Promise<{ q?: string; page?: string; tab?: stri
 
 const DAY = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" });
 const MONTH = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", month: "short" });
-const SHOP = BRAND.legacyStoreNames[0] ?? BRAND.name;
+const SHOP = BRAND.name;
 
 function dueForLabel(since: Date | null) {
   if (!since) return null;

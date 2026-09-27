@@ -23,7 +23,7 @@ type PageProps = { params: Promise<{ customerId: string }> };
 
 const DAY = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" });
 const YEAR = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", year: "numeric" });
-const SHOP = BRAND.legacyStoreNames[0] ?? BRAND.name;
+const SHOP = BRAND.name;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { customerId } = await params;
