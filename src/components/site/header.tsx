@@ -5,77 +5,61 @@ import { SchoolSearch } from "@/components/site/school-search";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { BagLink } from "@/components/site/bag-link";
 import { TrackOrdersLink } from "@/components/site/track-orders-link";
+import { BrandWordmark } from "@/components/site/brand-wordmark";
+import { FULFILLMENT_CONFIG } from "@/lib/fulfillment-config";
 
 /**
- * Phase 3.6.7 Part 1 — an async Server Component (this file has never
- * had "use client") reading the header's categories live from the DB on
- * every render, rather than a hardcoded constant. `MobileNav` (a Client
- * Component, so it cannot fetch itself) receives the same, already-
- * fetched list as a prop — one query, two renderers, never duplicated.
- *
- * Phase 3.7 Part 7 (homepage redesign) — the dark-first theme on "/" is
- * applied once, at the `(site)` layout level (`RouteThemeScope` there),
- * so this component just uses semantic tokens as always and inherits
- * whichever theme is active. Compacted from h-16 to h-14 and every
- * control tightened, per the redesign brief's "premium ecommerce
- * density, not landing-page density."
+ * Storefront header, shopping-app style. Phones: menu, wordmark, Orders
+ * and Bag on one row, and the one search box (schools + products) full
+ * width under it — both rows stay pinned, so search is always a thumb
+ * away. Desktop: a single row with the category links.
  */
-export async function SiteHeader({ storeName }: { storeName: string }) {
+export async function SiteHeader({ storeName, bagCount }: { storeName: string; bagCount: number }) {
   const categories = await getHeaderCategories();
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
-        <MobileNav categories={categories} />
+    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-2 sm:gap-3 sm:px-6 md:h-16">
+        <MobileNav
+          categories={categories}
+          bagCount={bagCount}
+          serviceableAreaNote={FULFILLMENT_CONFIG.serviceableAreaNote}
+        />
 
-        <Link
-          href="/"
-          className="shrink-0 font-heading text-base font-semibold tracking-tight sm:text-lg"
-        >
-          {storeName}
+        <Link href="/" aria-label={`${storeName} home`} className="shrink-0 rounded-md px-1.5 py-1 md:px-0">
+          <BrandWordmark />
         </Link>
 
-        {/* Final QA pass — this nav silently clipped category links
-            mid-word between `md` (768px) and ~850px with zero indication
-            it was scrollable (confirmed: 331px of content in as little as
-            255px of visible box at 768px). A trailing edge-fade gives the
-            same "there's more to scroll" cue the homepage's own category
-            rail already relies on, harmless when the nav isn't actually
-            overflowing (nothing sits under it in that case). */}
-        <div className="relative hidden min-w-0 md:block">
-          <nav
-            aria-label="Categories"
-            className="flex items-center gap-1 overflow-x-auto"
-          >
-            {categories.map((category) => (
-              <CategoryNavLink
-                key={category.slug}
-                slug={category.slug}
-                name={category.name}
-                className="shrink-0 rounded-full px-2.5 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
-                activeClassName="bg-muted text-foreground"
-              />
-            ))}
-          </nav>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent"
-          />
+        <nav aria-label="Categories" className="relative ml-4 hidden min-w-0 items-center lg:flex">
+          {categories.map((category) => (
+            <CategoryNavLink
+              key={category.slug}
+              slug={category.slug}
+              name={category.name}
+              className="relative shrink-0 whitespace-nowrap px-2.5 py-5 text-sm font-semibold text-foreground/75 transition-colors after:absolute after:inset-x-2.5 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-transparent hover:text-foreground"
+              activeClassName="text-primary after:bg-primary"
+            />
+          ))}
+        </nav>
+
+        <div className="mx-4 hidden min-w-0 flex-1 md:block lg:max-w-sm xl:max-w-md">
+          <SchoolSearch size="header" withProducts />
         </div>
 
-        <div className="hidden min-w-40 flex-1 justify-center px-4 md:flex">
-          <SchoolSearch size="compact" className="max-w-xs" />
-        </div>
-
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1.5">
           <TrackOrdersLink
-            className="hidden h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-medium transition-colors hover:bg-muted sm:inline-flex"
-            activeClassName="border-transparent bg-muted"
+            className="flex h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl px-2 text-xs font-semibold text-foreground/80 transition-colors hover:bg-muted hover:text-foreground sm:flex-row sm:gap-1.5 sm:px-3 sm:text-sm"
+            activeClassName="text-primary"
+            iconClassName="size-5"
           >
-            <span className="hidden md:inline">Track Orders</span>
+            Orders
           </TrackOrdersLink>
-          <BagLink />
+          <BagLink count={bagCount} />
         </div>
+      </div>
+
+      <div className="px-3 pb-2.5 md:hidden">
+        <SchoolSearch size="header" withProducts />
       </div>
     </header>
   );

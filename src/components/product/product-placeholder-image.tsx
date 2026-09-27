@@ -1,4 +1,5 @@
 import { getCategoryIcon } from "@/lib/category-icons";
+import { getCategoryTint } from "@/lib/category-style";
 import { cn } from "@/lib/utils";
 
 /**
@@ -33,11 +34,13 @@ export function ProductPlaceholderImage({
   large?: boolean;
 }) {
   const Icon = getCategoryIcon(categorySlug);
+  const tint = getCategoryTint(categorySlug);
 
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center overflow-hidden bg-muted",
+        "relative flex items-center justify-center overflow-hidden",
+        tint.bg,
         className,
       )}
     >
@@ -53,7 +56,7 @@ export function ProductPlaceholderImage({
       <Icon
         aria-hidden
         className={cn(
-          "text-muted-foreground/75",
+          cn(tint.fg, "opacity-80"),
           compact ? "size-5" : large ? "size-16 sm:size-20" : "size-10 sm:size-12",
         )}
         strokeWidth={1.25}

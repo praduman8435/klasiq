@@ -25,7 +25,7 @@ export function RecommendedSetCard({ set }: { set: RecommendedSetWithItems }) {
     return sum + price * item.quantity;
   }, 0);
 
-  const subtitleParts = [set.class?.name, GENDER_LABEL[set.gender]].filter(Boolean);
+  const subtitleParts = [set.class?.name, GENDER_LABEL[set.gender]].filter((part): part is string => Boolean(part));
 
   function handleAdd() {
     startTransition(async () => {
@@ -40,14 +40,11 @@ export function RecommendedSetCard({ set }: { set: RecommendedSetWithItems }) {
   }
 
   return (
-    <div className="rounded-xl border border-border/70 bg-card p-4 sm:p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-        Recommended Set
-      </p>
-      {subtitleParts.length > 0 && (
-        <p className="mt-1.5 text-xs font-medium text-muted-foreground">{subtitleParts.join(" · ")}</p>
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      <h3 className="text-lg font-bold leading-snug">{set.name}</h3>
+      {subtitleParts.length > 0 && !subtitleParts.every((part) => set.name.includes(part)) && (
+        <p className="mt-0.5 text-sm text-muted-foreground">Complete set · {subtitleParts.join(" · ")}</p>
       )}
-      <h3 className="mt-0.5 font-heading text-lg font-medium">{set.name}</h3>
       {set.description && <p className="mt-1 text-sm text-muted-foreground">{set.description}</p>}
 
       <ul className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">

@@ -27,20 +27,20 @@ export const BANNER_ICON_COMPONENTS: Record<PromoBannerIcon, LucideIcon> = {
 const TONES: Record<PromoBannerTone, { card: string; body: string; cta: string; art: string }> = {
   RED: {
     card: "bg-primary text-primary-foreground",
-    body: "text-primary-foreground/85",
-    cta: "bg-card text-foreground",
+    body: "text-white/85",
+    cta: "bg-accent text-accent-foreground",
     art: "bg-white/12 text-white",
   },
   INK: {
     card: "bg-card text-card-foreground ring-1 ring-border",
     body: "text-muted-foreground",
     cta: "bg-primary text-primary-foreground",
-    art: "bg-white/10 text-white",
+    art: "bg-white/8 text-white",
   },
   SOFT: {
-    card: "bg-primary/15 text-foreground ring-1 ring-primary/30",
-    body: "text-foreground/75",
-    cta: "bg-foreground text-background",
+    card: "bg-accent text-accent-foreground",
+    body: "text-accent-foreground/75",
+    cta: "bg-primary text-primary-foreground focus-visible:ring-primary/50",
     art: "bg-white text-primary",
   },
 };
@@ -48,9 +48,8 @@ const TONES: Record<PromoBannerTone, { card: string; body: string; cta: string; 
 /**
  * One homepage banner. Shared by the storefront carousel and the admin
  * banner editor's live preview, so what the owner previews is exactly
- * what customers see. The tones are written for the homepage's `.dark`
- * token scope; anything that shows a card outside the homepage wraps it
- * in `.dark` too. `preview` renders the CTA as a plain span, so a
+ * what customers see. Anything that shows a card outside the storefront
+ * (the admin preview) wraps it in `.storefront` for the same colours. `preview` renders the CTA as a plain span, so a
  * preview never navigates away from the editor.
  */
 export function PromoBannerCard({
@@ -83,7 +82,7 @@ export function PromoBannerCard({
       >
         <Icon className="size-12 -translate-x-2 translate-y-2" strokeWidth={1.5} />
       </span>
-      <h3 className="text-balance pr-20 font-heading text-xl font-semibold leading-tight">{banner.title}</h3>
+      <h3 className="text-balance pr-20 text-xl font-bold leading-tight">{banner.title}</h3>
       {banner.body && <p className={cn("mt-1.5 pr-12 text-sm leading-snug", tone.body)}>{banner.body}</p>}
       <div className="h-4 shrink-0" aria-hidden />
       {cta &&

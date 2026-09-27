@@ -2,11 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Loader2, School as SchoolIcon, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { isDarkRoute } from "@/components/site/route-theme-scope";
+import { useRouter } from "next/navigation";
+import { ArrowUpRight, Loader2, School as SchoolIcon, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SchoolResult = {
@@ -18,17 +15,35 @@ type SchoolResult = {
 
 type MenuRect = { top: number; left: number; width: number };
 
+type Option = { kind: "school"; school: SchoolResult } | { kind: "products"; query: string };
+
+/**
+ * The storefront search box. Schools always come first — typing two
+ * letters of a school's name shows it — and with `withProducts` (the
+ * header) the last row, and Enter, search the whole catalogue instead, so
+ * one box finds both "Children Sr. Sec. School" and "black shoes".
+ *
+ * The dropdown portals to `document.body` and is positioned from the
+ * input's live rect: rendered in-tree, it lost to later horizontally
+ * scrolling rows (their own compositing layers) no matter the z-index.
+ */
 export function SchoolSearch({
   size = "hero",
-  placeholder = "Search your school...",
+  withProducts = false,
+  placeholder,
   className,
+  autoFocus = false,
+  onNavigate,
 }: {
-  size?: "hero" | "compact";
+  size?: "hero" | "compact" | "header";
+  withProducts?: boolean;
   placeholder?: string;
   className?: string;
+  autoFocus?: boolean;
+  /** Called after a result is chosen (the menu drawer closes itself). */
+  onNavigate?: () => void;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const listId = useId();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SchoolResult[]>([]);
@@ -39,29 +54,24 @@ export function SchoolSearch({
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
+  const trimmed = query.trim();
+
   useEffect(() => {
-    const trimmed = query.trim();
-    if (trimmed.length < 2) {
-      // Nothing to fetch — the change handler already cleared results.
-      return;
-    }
+    if (trimmed.length < 2) return;
 
     const controller = new AbortController();
     const timeout = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(
-          `/api/schools/search?q=${encodeURIComponent(trimmed)}`,
-          { signal: controller.signal },
-        );
+        const res = await fetch(`/api/schools/search?q=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal,
+        });
         if (!res.ok) throw new Error("search failed");
         const data = (await res.json()) as { schools: SchoolResult[] };
         setResults(data.schools);
         setActiveIndex(-1);
       } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          setResults([]);
-        }
+        if ((error as Error).name !== "AbortError") setResults([]);
       } finally {
         setIsLoading(false);
       }
@@ -71,13 +81,14 @@ export function SchoolSearch({
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [query]);
+  }, [trimmed]);
 
-  const showDropdown = isOpen && query.trim().length >= 2;
+  const options: Option[] = [
+    ...(trimmed.length >= 2 ? results.map((school) => ({ kind: "school" as const, school })) : []),
+    ...(withProducts && trimmed ? [{ kind: "products" as const, query: trimmed }] : []),
+  ];
+  const showDropdown = isOpen && (withProducts ? trimmed.length > 0 : trimmed.length >= 2);
 
-  // Positions the dropdown as a `document.body` portal, anchored to the
-  // search box's live viewport coordinates — see the doc comment below
-  // the JSX for why a same-tree `absolute` dropdown wasn't reliable here.
   useEffect(() => {
     if (!showDropdown) return;
 
@@ -98,9 +109,6 @@ export function SchoolSearch({
   }, [showDropdown]);
 
   useEffect(() => {
-    // The portaled menu lives outside `containerRef`'s DOM subtree, so a
-    // click inside it must NOT count as "outside" — checked via its own
-    // ref alongside the input's.
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
       if (containerRef.current?.contains(target)) return;
@@ -111,29 +119,38 @@ export function SchoolSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function selectSchool(school: SchoolResult) {
+  function choose(option: Option) {
     setIsOpen(false);
     setQuery("");
-    router.push(`/school/${school.slug}`);
+    setResults([]);
+    router.push(option.kind === "school" ? `/school/${option.school.slug}` : `/search?q=${encodeURIComponent(option.query)}`);
+    onNavigate?.();
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (!isOpen || results.length === 0) return;
+    if (event.key === "Escape") {
+      setIsOpen(false);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const active = options[activeIndex];
+      if (active) return choose(active);
+      if (withProducts && trimmed) return choose({ kind: "products", query: trimmed });
+      if (options.length === 1) return choose(options[0]);
+      return;
+    }
+    if (!isOpen || options.length === 0) return;
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActiveIndex((index) => (index + 1) % results.length);
+      setActiveIndex((index) => (index + 1) % options.length);
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      setActiveIndex((index) => (index - 1 + results.length) % results.length);
-    } else if (event.key === "Enter") {
-      if (activeIndex >= 0 && results[activeIndex]) {
-        event.preventDefault();
-        selectSchool(results[activeIndex]);
-      }
-    } else if (event.key === "Escape") {
-      setIsOpen(false);
+      setActiveIndex((index) => (index - 1 + options.length) % options.length);
     }
   }
+
+  const schoolsSearched = trimmed.length >= 2 && !isLoading;
 
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
@@ -141,20 +158,25 @@ export function SchoolSearch({
         aria-hidden
         className={cn(
           "pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground",
-          size === "hero" ? "left-3.5 size-4.5" : "left-3 size-4",
+          size === "hero" ? "left-4 size-5" : "left-3 size-4.5",
         )}
       />
-      <Input
+      <input
+        type="search"
         role="combobox"
         aria-expanded={showDropdown}
         aria-controls={listId}
-        aria-label="Search for your school"
+        aria-autocomplete="list"
+        aria-label={withProducts ? "Search for a school or a product" : "Search for your school"}
         autoComplete="off"
+        enterKeyHint="search"
+        autoFocus={autoFocus}
         value={query}
         onChange={(event) => {
           const value = event.target.value;
           setQuery(value);
           setIsOpen(true);
+          setActiveIndex(-1);
           if (value.trim().length < 2) {
             setResults([]);
             setIsLoading(false);
@@ -162,36 +184,16 @@ export function SchoolSearch({
         }}
         onFocus={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={placeholder ?? (withProducts ? "Search school, uniform, shoes…" : "Type your school's name…")}
         className={cn(
-          // Rounded-xl (not a pill) so the input reads as the same
-          // shape family as its own results panel — one connected
-          // autocomplete surface, not two mismatched shapes stacked
-          // together.
-          "w-full rounded-xl border bg-card",
-          size === "hero" ? "h-11 pl-10 pr-4 text-sm sm:h-12 sm:text-base" : "h-9 pl-9 pr-3 text-sm",
+          "w-full min-w-0 appearance-none text-foreground outline-none transition-[box-shadow,background-color,border-color] placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring [&::-webkit-search-cancel-button]:hidden",
+          size === "hero" && "h-13 rounded-2xl border border-border bg-card pl-12 pr-4 text-base shadow-[0_1px_2px_oklch(0.2_0.03_268/0.06)]",
+          size === "compact" && "h-11 rounded-xl border border-border bg-card pl-10 pr-3 text-base",
+          size === "header" &&
+            "h-10 rounded-xl border border-transparent bg-muted pl-10 pr-3 text-base focus-visible:border-primary/40 focus-visible:bg-card",
         )}
       />
 
-      {/*
-        Portal fix — this dropdown used to render as a same-tree
-        `absolute` sibling of the input, positioned via CSS alone. On the
-        homepage that reliably lost to the "Shop by category" rail below
-        it for any result list tall enough to reach that far down:
-        `elementFromPoint` at the exact overlap pixel resolved to the
-        category rail's own `overflow-x-auto` scroll container, not this
-        dropdown — Chromium promotes independently-scrolling containers
-        to their own compositing layer, and layer paint order isn't
-        always governed by ordinary CSS stacking rules when neither side
-        has an explicit stacking context. Raising z-index alone couldn't
-        fix a bug that lives one level below CSS stacking, at the
-        compositing-layer boundary.
-        Rendering into `document.body` via a portal sidesteps the whole
-        question: the menu is no longer a descendant of anything on the
-        page that could out-layer it, positioned instead from the
-        search box's own live `getBoundingClientRect()` (updated on
-        resize/scroll while open) via `position: fixed`.
-      */}
       {showDropdown &&
         menuRect &&
         typeof document !== "undefined" &&
@@ -200,65 +202,64 @@ export function SchoolSearch({
             ref={menuRef}
             id={listId}
             role="listbox"
+            aria-label="Search suggestions"
             style={{ top: menuRect.top, left: menuRect.left, width: menuRect.width }}
-            // `document.body` sits outside `RouteThemeScope`'s `.dark`
-            // wrapper, so a portaled element needs the same route-aware
-            // `.dark` class reapplied directly — the exact pattern
-            // `MobileNav`'s own portaled `Sheet` already uses, and for
-            // the same reason (otherwise this menu silently renders in
-            // the light palette regardless of the page underneath it).
-            className={cn(
-              "fixed z-50 max-h-80 divide-y divide-border/60 overflow-y-auto overflow-x-hidden rounded-xl border border-border/70 bg-popover shadow-md",
-              isDarkRoute(pathname) && "dark",
-            )}
+            className="fixed z-50 max-h-[min(24rem,60vh)] overflow-y-auto overflow-x-hidden rounded-2xl border border-border bg-popover py-1.5 shadow-[0_12px_32px_-8px_oklch(0.2_0.03_268/0.25)]"
           >
-            {isLoading && (
-              <li className="flex items-center gap-2 px-4 py-3.5 text-sm text-muted-foreground">
+            {trimmed.length >= 2 && isLoading && (
+              <li className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                Searching schools...
+                Finding schools…
               </li>
             )}
-            {!isLoading && results.length === 0 && (
-              <li className="px-4 py-3.5 text-sm text-muted-foreground">
-                No schools found. You can still{" "}
-                <Link href="/search" className="underline underline-offset-2">
-                  search our full catalog
-                </Link>
-                .
+            {schoolsSearched && results.length > 0 && (
+              <li role="presentation" className="px-4 pb-1 pt-2 text-xs font-semibold text-muted-foreground">
+                Schools
               </li>
             )}
-            {!isLoading &&
-              results.map((school, index) => (
-                <li key={school.slug} role="option" aria-selected={index === activeIndex}>
-                  <button
-                    type="button"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => selectSchool(school)}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm transition-colors",
-                      index === activeIndex ? "bg-muted" : "hover:bg-muted",
-                    )}
-                  >
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
-                      <SchoolIcon className="size-4" aria-hidden />
-                    </span>
-                    <span className="min-w-0">
-                      {/* `line-clamp-2` (not `truncate`) — a school name
-                          genuinely too long for one line wraps once
-                          rather than being cut mid-word; still bounded
-                          so one very long name can't blow out the row. */}
-                      <span className="line-clamp-2 font-medium text-foreground">
-                        {school.name}
+            {options.map((option, index) => (
+              <li key={option.kind === "school" ? option.school.slug : "products"} role="option" aria-selected={index === activeIndex}>
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => choose(option)}
+                  className={cn(
+                    "flex min-h-12 w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors",
+                    index === activeIndex ? "bg-secondary" : "hover:bg-muted",
+                    option.kind === "products" && results.length > 0 && "border-t border-border",
+                  )}
+                >
+                  {option.kind === "school" ? (
+                    <>
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                        <SchoolIcon className="size-4.5" aria-hidden />
                       </span>
-                      {school.city && (
-                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                          {school.city}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                </li>
-              ))}
+                      <span className="min-w-0 flex-1">
+                        <span className="line-clamp-2 font-medium text-foreground">{option.school.name}</span>
+                        {option.school.city && (
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">{option.school.city}</span>
+                        )}
+                      </span>
+                      <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+                        <Search className="size-4" aria-hidden />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">
+                        See products for <span className="font-semibold">&ldquo;{option.query}&rdquo;</span>
+                      </span>
+                    </>
+                  )}
+                </button>
+              </li>
+            ))}
+            {schoolsSearched && results.length === 0 && !withProducts && (
+              <li className="px-4 py-3 text-sm text-muted-foreground">
+                No school found with that name. Try a shorter part of the name, or call the store.
+              </li>
+            )}
           </ul>,
           document.body,
         )}

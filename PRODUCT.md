@@ -21,7 +21,7 @@ The core differentiator is the combination of an **exact school-fit guarantee** 
 ## Operating Context
 
 - **Customer storefront**: anonymous, cookie-based basket (no login) → checkout with name + mobile number only → Store Pickup or Local Delivery → cash payment on pickup/delivery. No online payment gateway.
-- **Customer identity/order tracking**: OTP-based phone verification (no password, no persistent account) for "Track Orders" — order history, order detail, invoice download, and return/exchange requests.
+- **Customer identity/order tracking**: OTP-based phone verification (no password, no persistent account) for "Track Orders" — order history, order detail, invoice download, and return/exchange requests. Currently the OTP step is paused in production until WhatsApp is configured: customers sign in with just their mobile number, and OTP returns automatically once the WhatsApp settings are set (`isOtpPaused` in `src/server/customer-portal/otp.ts`).
 - **Fulfillment**: Store Pickup (collect at the physical store) and Local Delivery (route-distance-based delivery fee, free within a radius or above an order threshold), both explicitly scoped to the store's own serviceable area.
 - **Notifications**: WhatsApp order-lifecycle and return/exchange-lifecycle messages (Order Placed/Confirmed/Preparing/Ready for Pickup/Delivered; Return/Exchange Requested/Approved/Rejected/Received/Completed).
 - **Admin/staff operations** (separate surface, `/admin`): counter sale (in-store walk-in sales, can include price negotiation/discounts), order management, inventory/stock management, category management, school management, returns/exchange processing, and KhataBook (a customer credit ledger for local families who run a running tab).
@@ -42,7 +42,9 @@ The core differentiator is the combination of an **exact school-fit guarantee** 
 - Tagline: "Classic quality, modern shopping." — deliberately brand-wide, not school-only.
 - Heritage line: "Serving local families for around 30 years." — confirmed real, kept deliberately non-specific on an exact founding year.
 - Backed by two real, named legacy physical stores: **Milan Readymade & General Store** and **Shubham Vashtralaya** — referenced sparingly (footer/trust areas), never as the primary on-screen brand.
-- Typography: Fraunces (display/heading) paired with Plus Jakarta Sans (body) — an established, intentional pairing, not a placeholder.
+- Typography: Fraunces is the wordmark face only (the "Klasiq." wordmark); Plus Jakarta Sans carries every heading and all body text.
+- Colour: the brand colours are black, red and grey only (owner's rule, 2026-09-28).
+- Direction: the storefront deliberately follows the category standard — a Myntra/Flipkart-style shopping app — by the owner's choice.
 
 ## Evidence on Hand
 

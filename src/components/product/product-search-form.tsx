@@ -40,7 +40,7 @@ export function ProductSearchForm({
           defaultValue={query}
           placeholder={placeholder}
           autoComplete="off"
-          className="h-11 w-full rounded-xl border bg-card pl-10 pr-4 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-11 w-full rounded-xl border bg-card pl-10 pr-4 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </div>
       <button

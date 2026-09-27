@@ -11,8 +11,8 @@ const bodyFont = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const headingFont = Fraunces({
-  variable: "--font-heading",
+const displayFont = Fraunces({
+  variable: "--font-display",
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   display: "swap",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#fdfbf7",
+  themeColor: "#0b0e14",
 };
 
 /**
@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bodyFont.variable} ${headingFont.variable} h-full antialiased`}
+      className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}

@@ -78,7 +78,7 @@ export function GenderClassSelector({
 
       {classes.length > 0 && (
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Class</span>
+          <span className="text-sm font-medium text-muted-foreground">Class</span>
           <Select
             value={selectedClassId ?? ALL_CLASSES_VALUE}
             onValueChange={(value) =>

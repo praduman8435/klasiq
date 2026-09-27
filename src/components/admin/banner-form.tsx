@@ -35,11 +35,11 @@ export type BannerFormValues = {
   endsOn: string;
 };
 
-const TONE_LABEL: Record<PromoBannerTone, string> = { RED: "Red", INK: "Dark", SOFT: "Soft red" };
+const TONE_LABEL: Record<PromoBannerTone, string> = { RED: "Red", INK: "Black", SOFT: "Light grey" };
 const TONE_SWATCH: Record<PromoBannerTone, string> = {
-  RED: "bg-primary",
+  RED: "bg-[oklch(0.56_0.2_25)]",
   INK: "bg-[oklch(0.2_0.02_260)]",
-  SOFT: "bg-primary/30",
+  SOFT: "bg-[oklch(0.96_0.004_260)]",
 };
 const ICON_LABEL: Record<PromoBannerIcon, string> = {
   DELIVERY: "Delivery",
@@ -63,7 +63,7 @@ function CharCount({ value, max }: { value: string; max: number }) {
 
 /**
  * Create/edit form for a homepage banner, with a live preview rendered by
- * the storefront's own `PromoBannerCard` inside the homepage's `.dark` scope —
+ * the storefront's own `PromoBannerCard` inside a `.storefront` scope —
  * so the preview uses the homepage's colours, not admin's.
  */
 export function BannerForm({
@@ -299,7 +299,7 @@ export function BannerForm({
 
       <div className="lg:sticky lg:top-6 lg:self-start">
         <p className="mb-2 text-sm font-medium">Preview</p>
-        <div className="dark rounded-2xl bg-background p-4">
+        <div className="storefront rounded-2xl bg-card p-4 text-foreground">
           <PromoBannerCard
             preview
             banner={{

@@ -3,90 +3,183 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { CategoryNavLink } from "@/components/site/category-nav-link";
-import { SchoolSearch } from "@/components/site/school-search";
-import { TrackOrdersLink } from "@/components/site/track-orders-link";
+  BookOpen,
+  ChevronRight,
+  MapPin,
+  Menu,
+  PackageSearch,
+  Phone,
+  School as SchoolIcon,
+  ShoppingBag,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { BrandWordmark } from "@/components/site/brand-wordmark";
 import { getCategoryIcon } from "@/lib/category-icons";
-import { isDarkRoute } from "@/components/site/route-theme-scope";
+import { STORE_CONTACT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-export function MobileNav({ categories }: { categories: { slug: string; name: string }[] }) {
+const ROW =
+  "flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted active:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring";
+
+function RowIcon({ icon: Icon, active = false }: { icon: LucideIcon; active?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-lg",
+        active ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground/80",
+      )}
+    >
+      <Icon className="size-4" strokeWidth={2} aria-hidden />
+    </span>
+  );
+}
+
+/**
+ * The drawer behind the header's ☰, after the kirana shop's: deliberately
+ * plain, the way a shopping app's menu is. The wordmark and a close button,
+ * one list of categories (the current one in red), then schools, your
+ * orders and khata, the bag, and how to reach the store.
+ */
+export function MobileNav({
+  categories,
+  bagCount,
+  serviceableAreaNote,
+}: {
+  categories: { slug: string; name: string }[];
+  bagCount: number;
+  serviceableAreaNote: string;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const close = () => setOpen(false);
+  const onSchools = pathname === "/schools" || pathname.startsWith("/school/");
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
-            className="size-11 md:hidden [&_svg:not([class*='size-'])]:size-5"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted lg:hidden"
             aria-label="Open menu"
           />
         }
       >
-        <Menu className="size-5" aria-hidden />
+        <Menu className="size-6" aria-hidden />
       </SheetTrigger>
-      {/* `Sheet`'s portal renders at `document.body` by default, outside
-          `RouteThemeScope`'s `.dark`-scoped wrapper — so on a dark route
-          this panel would otherwise always render in the light palette
-          regardless of the page underneath it. Applying the same
-          `isDarkRoute()` check used by `RouteThemeScope` directly here
-          keeps one source of truth for "which routes are dark" while
-          still rendering correctly wherever the portal actually lands. */}
-      <SheetContent side="left" className={cn("w-[85vw] max-w-sm", isDarkRoute(pathname) && "dark")}>
-        <SheetHeader>
-          <SheetTitle className="text-left font-heading">Browse</SheetTitle>
-        </SheetHeader>
-        <div className="flex flex-col gap-6 px-4 pb-6">
-          <SchoolSearch size="compact" />
-          <nav aria-label="Categories" className="flex flex-col gap-1">
-            {categories.map((category) => (
-              <CategoryNavLink
-                key={category.slug}
-                slug={category.slug}
-                name={category.name}
-                icon={getCategoryIcon(category.slug || category.name)}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium transition-colors hover:bg-muted"
-                activeClassName="bg-muted"
+
+      <SheetContent
+        side="left"
+        showCloseButton={false}
+        className="gap-0 overflow-y-auto overscroll-contain border-r-0 bg-card p-0 data-[side=left]:w-[88vw] data-[side=left]:max-w-xs"
+      >
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-card px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+          <SheetTitle>
+            <BrandWordmark />
+          </SheetTitle>
+          <SheetClose
+            render={
+              <button
+                type="button"
+                className="-mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-xl text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"
               />
-            ))}
-          </nav>
-          <div className="flex flex-col gap-1 border-t pt-4">
-            <Link
-              href="/search"
-              onClick={() => setOpen(false)}
-              aria-current={pathname === "/search" ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium transition-colors hover:bg-muted",
-                pathname === "/search" && "bg-muted",
-              )}
-            >
-              <Search className="size-4.5 shrink-0 text-muted-foreground" aria-hidden />
-              Search Products
-            </Link>
-            <TrackOrdersLink
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium transition-colors hover:bg-muted"
-              activeClassName="bg-muted"
-              iconClassName="size-4.5 text-muted-foreground"
-            >
-              Track Orders
-            </TrackOrdersLink>
-          </div>
+            }
+          >
+            <X className="size-5" strokeWidth={2.25} aria-hidden />
+            <span className="sr-only">Close menu</span>
+          </SheetClose>
         </div>
+
+        <nav aria-labelledby="drawer-categories-heading" className="px-2 pt-3">
+          <h2 id="drawer-categories-heading" className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
+            Categories
+          </h2>
+          <ul>
+            {categories.map((category) => {
+              const isCurrent = pathname === `/${category.slug}`;
+              return (
+                <li key={category.slug}>
+                  <Link
+                    href={`/${category.slug}`}
+                    onClick={close}
+                    aria-current={isCurrent ? "page" : undefined}
+                    className={cn(ROW, isCurrent && "bg-secondary")}
+                  >
+                    <RowIcon icon={getCategoryIcon(category.slug || category.name)} active={isCurrent} />
+                    <span className="min-w-0 flex-1 truncate">{category.name}</span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="mx-4 my-3 border-t border-border" />
+
+        <ul className="px-2">
+          <li>
+            <Link
+              href="/schools"
+              onClick={close}
+              aria-current={pathname === "/schools" ? "page" : undefined}
+              className={cn(ROW, onSchools && "bg-secondary")}
+            >
+              <RowIcon icon={SchoolIcon} active={onSchools} />
+              <span className="flex-1">Find your school</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/track" onClick={close} className={ROW}>
+              <RowIcon icon={PackageSearch} />
+              <span className="flex-1">Track order</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/track/khata" onClick={close} className={ROW}>
+              <RowIcon icon={BookOpen} />
+              <span className="flex-1">Mera Khata</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/bag" onClick={close} className={ROW}>
+              <RowIcon icon={ShoppingBag} />
+              <span className="flex-1">
+                Your bag
+                <span className="sr-only">
+                  {bagCount > 0 ? `, ${bagCount} item${bagCount === 1 ? "" : "s"}` : ", empty"}
+                </span>
+              </span>
+              {bagCount > 0 && (
+                <span
+                  aria-hidden
+                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold tabular-nums text-primary-foreground"
+                >
+                  {bagCount > 99 ? "99+" : bagCount}
+                </span>
+              )}
+            </Link>
+          </li>
+          <li>
+            <a href={STORE_CONTACT.phoneHref} aria-label={`Call the store, ${STORE_CONTACT.phone}`} className={ROW}>
+              <RowIcon icon={Phone} />
+              <span className="flex-1">Call the store</span>
+            </a>
+          </li>
+          <li>
+            <a href={STORE_CONTACT.mapsUrl} target="_blank" rel="noopener noreferrer" className={ROW}>
+              <RowIcon icon={MapPin} />
+              <span className="flex-1">Get directions</span>
+            </a>
+          </li>
+        </ul>
+
+        <p className="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4 text-xs leading-relaxed text-muted-foreground">
+          {serviceableAreaNote}
+        </p>
       </SheetContent>
     </Sheet>
   );

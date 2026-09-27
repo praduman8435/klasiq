@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/product-card";
+import { SchoolCrest } from "@/components/school/school-crest";
 import { GenderClassSelector } from "@/components/school/gender-class-selector";
 import { RecommendedSetCard } from "@/components/school/recommended-set-card";
 import { BRAND } from "@/lib/constants";
@@ -73,8 +74,8 @@ export default async function SchoolStorefrontPage({
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
       {school.isDemo && (
         <div className="mb-4 flex flex-col gap-1">
-          <span className="inline-flex w-fit items-center rounded-md border border-accent/30 bg-accent/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-accent">
-            Demo School · Sample Store
+          <span className="inline-flex w-fit items-center rounded-md border border-border bg-secondary px-2 py-1 text-xs font-semibold text-foreground">
+            Demo school · sample items
           </span>
           <p className="text-xs text-muted-foreground">
             For illustration only — not a real {BRAND.name} partner.
@@ -92,11 +93,14 @@ export default async function SchoolStorefrontPage({
           Partner" / "Uniform Collection" wording — `isVerifiedPartner`
           still exists on the model for future use, this storefront just no
           longer renders any partnership claim from it. */}
-      <div>
-        <h1 className="font-heading text-xl font-medium tracking-tight sm:text-2xl">
-          {school.name}
-        </h1>
-        {school.city && <p className="mt-1 text-sm text-muted-foreground">{school.city}</p>}
+      <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <SchoolCrest school={school} className="h-16 w-14 shrink-0 sm:h-18 sm:w-16" />
+        <div className="min-w-0">
+          <h1 className="text-balance text-xl font-bold leading-tight tracking-tight sm:text-2xl">{school.name}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {school.city ? `${school.city} · ` : ""}Choose boys or girls and the class to see the exact uniform.
+          </p>
+        </div>
       </div>
 
       <div className="mt-5 sm:mt-6">

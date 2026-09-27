@@ -3,7 +3,9 @@ import Link from "next/link";
 import { CategoryProductGrid } from "@/components/product/category-product-grid";
 import { ProductSearchForm } from "@/components/product/product-search-form";
 import { productSearchQuerySchema } from "@/lib/validation/product-search";
+import { SchoolCard } from "@/components/school/school-card";
 import { searchGenericProducts } from "@/server/queries/categories";
+import { searchSchools } from "@/server/queries/schools";
 
 type PageProps = { searchParams: Promise<{ q?: string }> };
 
@@ -36,25 +38,48 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const parsed = productSearchQuerySchema.safeParse({ q });
   const query = parsed.success ? parsed.data.q : undefined;
 
-  const products = query ? await searchGenericProducts(query) : [];
+  const [products, schools] = query
+    ? await Promise.all([searchGenericProducts(query), searchSchools(query, 6)])
+    : [[], []];
 
   return (
     <CategoryProductGrid
-      title="Search"
-      description={query ? `Results for "${query}"` : "Search our catalog by product name."}
+      title={query ? `“${query}”` : "Search"}
+      description={query ? undefined : "Search by school or product name."}
       products={products}
-      headerExtra={<ProductSearchForm action="/search" query={query} />}
+      headerExtra={<ProductSearchForm action="/search" query={query} placeholder="Search school, uniform, shoes…" />}
+      beforeGrid={
+        schools.length > 0 ? (
+          <section aria-labelledby="search-schools" className="mt-6">
+            <h2 id="search-schools" className="text-base font-bold">
+              Schools
+            </h2>
+            <ul className="mt-2.5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {schools.map((school) => (
+                <li key={school.id}>
+                  <SchoolCard school={school} />
+                </li>
+              ))}
+            </ul>
+            {products.length > 0 && <h2 className="mt-6 text-base font-bold">Products</h2>}
+          </section>
+        ) : undefined
+      }
       emptyState={
         query ? (
           <>
-            No products found for &quot;{query}&quot;. Try a different search, or{" "}
+            {schools.length > 0 ? (
+              <>No products match that name. Open the school above, or{" "}</>
+            ) : (
+              <>Nothing found for &quot;{query}&quot;. Try a different search, or{" "}</>
+            )}
             <Link href="/" className="underline underline-offset-2">
               browse categories
             </Link>
             .
           </>
         ) : (
-          <>Type a product name above to search — e.g. &quot;shirt&quot;, &quot;shoes&quot;, &quot;bag&quot;.</>
+          <>Type a school or product name above, like &quot;shirt&quot;, &quot;shoes&quot; or &quot;bag&quot;.</>
         )
       }
     />

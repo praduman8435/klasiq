@@ -11,8 +11,22 @@ export async function searchSchools(query: string, limit = 8) {
     },
     orderBy: { name: "asc" },
     take: limit,
-    select: { id: true, slug: true, name: true, city: true, logoUrl: true },
+    select: { id: true, slug: true, name: true, city: true, logoUrl: true, isDemo: true },
   });
+}
+
+/** Every school a parent can shop for, real schools before demo ones. */
+export async function getActiveSchools(limit?: number) {
+  return db.school.findMany({
+    where: { isActive: true },
+    orderBy: [{ isDemo: "asc" }, { name: "asc" }],
+    take: limit,
+    select: { id: true, slug: true, name: true, city: true, logoUrl: true, isDemo: true },
+  });
+}
+
+export async function countActiveSchools() {
+  return db.school.count({ where: { isActive: true } });
 }
 
 export async function getSchoolBySlug(slug: string) {

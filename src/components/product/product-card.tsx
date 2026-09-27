@@ -21,22 +21,16 @@ import { addToBasket } from "@/server/actions/basket";
 import type { ProductWithVariants } from "@/types/catalog";
 
 const STOCK_BADGE_CLASS: Record<string, string> = {
-  IN_STOCK: "text-emerald-600 dark:text-emerald-400",
-  LOW_STOCK: "text-amber-600 dark:text-amber-400",
-  OUT_OF_STOCK: "text-muted-foreground line-through",
+  IN_STOCK: "text-muted-foreground",
+  LOW_STOCK: "text-deal",
+  OUT_OF_STOCK: "text-muted-foreground",
 };
 
 /**
- * Premium retail pass — the previous version leaned on bold weight
- * everywhere (700-weight price, a bordered quantity-stepper-shaped size
- * select, an icon-only Add button) to establish structure, which read as
- * "admin panel" rather than storefront. Hierarchy now comes from size,
- * spacing and color rather than uniform boldness: a medium-weight serif
- * name, a same-row price/size pairing, and one full-width text CTA at the
- * card's own weight class (never louder than the product name above it).
- * Same shared component behind every category page, /search, AND the
- * homepage's "Shop the essentials" rail — one card design system, not a
- * bigger homepage variant and a smaller category one.
+ * The storefront's one product card (category pages, search, school
+ * pages and the homepage rows): picture, name, price with MRP and "% off",
+ * then size + Add to Bag on one thumb-height row. Stock is only mentioned
+ * when it matters (a few left, or out of stock).
  */
 export function ProductCard({ product }: { product: ProductWithVariants }) {
   const router = useRouter();
@@ -85,101 +79,97 @@ export function ProductCard({ product }: { product: ProductWithVariants }) {
     return null;
   }
 
-  const ctaLabel = !canOrder ? "Out of Stock" : justAdded ? "Added" : isPending ? "Adding..." : "Add to Bag";
+  const ctaLabel = !canOrder ? "Out of stock" : justAdded ? "Added" : isPending ? "Adding…" : "Add";
+  const offPercent =
+    selectedVariant?.mrpInPaise && selectedVariant.mrpInPaise > selectedVariant.priceInPaise
+      ? Math.round(((selectedVariant.mrpInPaise - selectedVariant.priceInPaise) / selectedVariant.mrpInPaise) * 100)
+      : 0;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card transition-colors hover:border-foreground/15">
-      {/* This image link duplicates the product-name link just below,
-          which already has a proper accessible name. Rather than give
-          both an identical name (a screen reader would announce
-          "Product X" twice in a row for one card), this one is hidden
-          from assistive tech entirely — sighted mouse/touch users can
-          still click the image, keyboard/AT users reach the same
-          destination via the named text link. */}
+    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_8px_24px_-12px_oklch(0.2_0.03_268/0.25)]">
+      {/* Duplicates the name link below, so it is hidden from assistive
+          tech; touch and mouse users can still tap the picture. */}
       <Link
         href={`/product/${product.slug}`}
         aria-hidden="true"
         tabIndex={-1}
-        className="block focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+        className="relative block focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
       >
-        {/* `bg-card` (not the default `bg-muted`) keeps the image slot on
-            the exact same surface as the content below it — the previous
-            visible seam between a darker image panel and a lighter
-            content panel read as two stacked UI regions rather than one
-            considered object. */}
         <ProductThumbnail
           imageUrl={product.imageUrl}
           alt={product.name}
           categorySlug={product.category.slug}
-          className="aspect-square w-full rounded-none bg-card transition-transform duration-300 group-hover:scale-[1.03]"
+          className="aspect-square w-full rounded-none transition-transform duration-300 group-hover:scale-[1.03]"
         />
+        {offPercent > 0 && (
+          <span className="absolute left-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
+            {offPercent}% off
+          </span>
+        )}
       </Link>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <h3 className="line-clamp-1 font-heading text-sm font-medium leading-snug">
-          <Link href={`/product/${product.slug}`} className="hover:underline">
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <h3 className="line-clamp-2 min-h-10 text-sm font-medium leading-5 text-foreground">
+          <Link href={`/product/${product.slug}`} className="hover:text-primary">
             {product.name}
           </Link>
         </h3>
 
         {selectedVariant && (
-          <div className="flex items-center justify-between gap-2">
-            <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
-              <span className="text-sm font-medium tabular-nums text-foreground">
-                {formatPaise(selectedVariant.priceInPaise)}
-              </span>
-              <MrpPrice priceInPaise={selectedVariant.priceInPaise} mrpInPaise={selectedVariant.mrpInPaise} />
-            </span>
-            {hasSizeChoice && (
-              <Select value={selectedVariantId} onValueChange={(id) => setSelectedVariantId(id as string)}>
-                <SelectTrigger
-                  size="sm"
-                  aria-label={`Select size for ${product.name}`}
-                  className="h-7 min-w-0 shrink-0 gap-0.5 rounded-md border-0 bg-transparent px-1.5 text-xs font-medium text-foreground shadow-none hover:bg-muted dark:bg-transparent dark:hover:bg-muted/50"
-                >
-                  <SelectValue>{selectedVariant.size}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {sortedVariants.map((variant) => {
-                    const orderable = isOrderable(variant.stockStatus);
-                    return (
-                      <SelectItem key={variant.id} value={variant.id} disabled={!orderable}>
-                        {variant.size}
-                        {!orderable && " — Out of stock"}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-        )}
-
-        {selectedVariant && (
-          <p className={cn("text-xs font-medium leading-none", STOCK_BADGE_CLASS[selectedVariant.stockStatus])}>
-            {STOCK_STATUS_LABEL[selectedVariant.stockStatus]}
+          <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
+            <span className="text-base font-bold tabular-nums">{formatPaise(selectedVariant.priceInPaise)}</span>
+            <MrpPrice priceInPaise={selectedVariant.priceInPaise} mrpInPaise={selectedVariant.mrpInPaise} />
           </p>
         )}
 
-        <button
-          type="button"
-          aria-label={
-            selectedVariant ? `Add ${product.name} (Size ${selectedVariant.size}) to bag` : `Add ${product.name} to bag`
-          }
-          disabled={!canOrder || isPending}
-          onClick={addToBag}
-          className={cn(
-            "mt-1.5 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98] disabled:pointer-events-none",
-            !canOrder
-              ? "bg-muted text-muted-foreground"
-              : justAdded
-                ? "bg-emerald-600 text-white"
-                : "bg-primary text-primary-foreground hover:bg-primary/90",
+        {selectedVariant && selectedVariant.stockStatus !== "IN_STOCK" && (
+          <p className={cn("mt-0.5 text-xs font-semibold", STOCK_BADGE_CLASS[selectedVariant.stockStatus])}>
+            {selectedVariant.stockStatus === "LOW_STOCK" ? "Only a few left" : STOCK_STATUS_LABEL[selectedVariant.stockStatus]}
+          </p>
+        )}
+
+        <div className="mt-auto flex items-center gap-1.5 pt-2.5">
+          {hasSizeChoice && selectedVariant && (
+            <Select value={selectedVariantId} onValueChange={(id) => setSelectedVariantId(id as string)}>
+              <SelectTrigger
+                aria-label={`Size for ${product.name}`}
+                className="h-9 w-auto min-w-0 max-w-[55%] shrink gap-1 rounded-lg border-border bg-card px-2.5 text-sm font-semibold [&>span]:truncate"
+              >
+                <SelectValue>{selectedVariant.size}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {sortedVariants.map((variant) => {
+                  const orderable = isOrderable(variant.stockStatus);
+                  return (
+                    <SelectItem key={variant.id} value={variant.id} disabled={!orderable}>
+                      Size {variant.size}
+                      {!orderable && " — out of stock"}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           )}
-        >
-          {justAdded && <Check className="size-3.5" aria-hidden />}
-          {ctaLabel}
-        </button>
+          <button
+            type="button"
+            aria-label={
+              selectedVariant ? `Add ${product.name} (Size ${selectedVariant.size}) to bag` : `Add ${product.name} to bag`
+            }
+            disabled={!canOrder || isPending}
+            onClick={addToBag}
+            className={cn(
+              "flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg px-2 text-sm font-semibold transition-[background-color,transform] active:scale-[0.97] disabled:pointer-events-none",
+              !canOrder
+                ? "bg-muted text-muted-foreground"
+                : justAdded
+                  ? "bg-secondary text-foreground"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90",
+            )}
+          >
+            {justAdded && <Check className="size-4" aria-hidden />}
+            <span className="truncate">{ctaLabel}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

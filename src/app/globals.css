@@ -10,6 +10,8 @@
   --font-sans: var(--font-sans);
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-heading: var(--font-heading);
+  --font-display: var(--font-display);
+  --color-deal: var(--deal);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,55 +50,50 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  /* Phase 3.7 Part 7 (final visual direction) — replaces the previous
-     cream/maroon system, which read as flat and template-like in real
-     browser review. "Marvel-inspired energy, premium retail execution":
-     a deep cinematic navy/near-black (reusing `--foreground` as an
-     invertible dark-surface token for the hero band and select
-     high-contrast moments), a powerful controlled red as the one
-     primary/CTA color, warm off-white everyday surfaces, and a bright
-     gold used sparingly as the secondary highlight — never a second
-     competing CTA color. Scoped to storefront only: `.admin-theme`
-     below restores the ORIGINAL values verbatim so the admin panel's
-     appearance is completely unchanged — see that block's own comment. */
-  --background: oklch(0.98 0.005 85);
-  --foreground: oklch(0.16 0.02 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.02 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.02 260);
-  /* Powerful, controlled red — the ONE brand/CTA color. Deep and
-     saturated enough to feel confident and premium, never neon. */
-  --primary: oklch(0.47 0.19 25);
+/* Storefront palette (2026-09-28 redesign) — black, red and grey only,
+   by the owner's choice: a near-black page, dark-grey cards, light-grey
+   text, and Klasiq Red as the one action colour. `--accent` is a light
+   grey (the white button on a red hero), `--deal` is the same red.
+   `.admin-theme` below keeps the admin panel's own values; `.storefront`
+   re-applies these inside admin (the banner preview). */
+:root,
+.storefront {
+  color-scheme: dark;
+  --background: oklch(0.13 0.02 260);
+  --foreground: oklch(0.96 0.006 85);
+  --card: oklch(0.2 0.02 260);
+  --card-foreground: oklch(0.96 0.006 85);
+  --popover: oklch(0.25 0.02 260);
+  --popover-foreground: oklch(0.96 0.006 85);
+  --primary: oklch(0.56 0.2 25);
   --primary-foreground: oklch(0.98 0.012 25);
-  --secondary: oklch(0.95 0.01 260);
-  --secondary-foreground: oklch(0.22 0.04 260);
-  --muted: oklch(0.96 0.006 85);
-  --muted-foreground: oklch(0.46 0.02 260);
-  /* Bright gold — the "used sparingly" secondary highlight (badges,
-     a single hero accent), deliberately never a second CTA color
-     competing with the red primary. */
-  --accent: oklch(0.8 0.15 85);
-  --accent-foreground: oklch(0.24 0.05 70);
-  --destructive: oklch(0.5 0.2 20);
-  --border: oklch(0.9 0.01 260);
-  --input: oklch(0.9 0.01 260);
-  --ring: oklch(0.47 0.19 25 / 45%);
-  --chart-1: oklch(0.47 0.19 25);
-  --chart-2: oklch(0.8 0.15 85);
-  --chart-3: oklch(0.45 0.08 150);
-  --chart-4: oklch(0.6 0.1 230);
-  --chart-5: oklch(0.5 0.02 260);
+  --secondary: oklch(0.25 0.015 260);
+  --secondary-foreground: oklch(0.94 0.006 85);
+  --muted: oklch(0.17 0.015 260);
+  --muted-foreground: oklch(0.72 0.015 260);
+  --accent: oklch(0.96 0.004 260);
+  --accent-foreground: oklch(0.16 0.02 260);
+  --deal: oklch(0.66 0.19 25);
+  --destructive: oklch(0.62 0.2 20);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.56 0.2 25 / 50%);
+  --chart-1: oklch(0.56 0.2 25);
+  --chart-2: oklch(0.72 0.015 260);
+  --chart-3: oklch(0.5 0.015 260);
+  --chart-4: oklch(0.85 0.01 260);
+  --chart-5: oklch(0.4 0.015 260);
   --radius: 0.75rem;
-  --sidebar: oklch(0.98 0.008 85);
-  --sidebar-foreground: oklch(0.24 0.025 45);
-  --sidebar-primary: oklch(0.33 0.11 25);
-  --sidebar-primary-foreground: oklch(0.98 0.008 85);
-  --sidebar-accent: oklch(0.95 0.012 75);
-  --sidebar-accent-foreground: oklch(0.3 0.03 40);
-  --sidebar-border: oklch(0.9 0.015 60);
-  --sidebar-ring: oklch(0.33 0.11 25 / 45%);
+  /* Storefront headings are the sans; the Fraunces wordmark uses font-display. */
+  --font-heading: var(--font-sans);
+  --sidebar: oklch(0.13 0.02 260);
+  --sidebar-foreground: oklch(0.96 0.006 85);
+  --sidebar-primary: oklch(0.56 0.2 25);
+  --sidebar-primary-foreground: oklch(0.98 0.012 25);
+  --sidebar-accent: oklch(0.25 0.015 260);
+  --sidebar-accent-foreground: oklch(0.94 0.006 85);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.56 0.2 25 / 50%);
 }
 
 /**
@@ -112,6 +109,8 @@
  * admin's appearance is pixel-identical to before this part.
  */
 .admin-theme {
+  color-scheme: normal;
+  --font-heading: var(--font-display);
   --background: oklch(0.985 0.008 85);
   --foreground: oklch(0.24 0.025 45);
   --card: oklch(0.995 0.006 85);
@@ -177,6 +176,7 @@
  * zero effect there.
  */
 .dark {
+  --font-heading: var(--font-display);
   --background: oklch(0.13 0.02 260);
   --foreground: oklch(0.96 0.006 85);
   --card: oklch(0.2 0.02 260);
@@ -237,33 +237,6 @@
 @media print {
   @page {
     margin: 1.5cm;
-  }
-}
-
-/* Homepage final-polish pass — two named keyframes used only by the
-   homepage hero (referenced via Tailwind's arbitrary `animate-[name_...]`
-   utility, which needs the `@keyframes` declared somewhere real). Both
-   are covered by the blanket `prefers-reduced-motion` override just
-   below, same as every other transition/animation in the app. */
-@keyframes hero-glow-drift {
-  0%,
-  100% {
-    transform: translate(-50%, 0) scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: translate(-50%, 14px) scale(1.08);
-    opacity: 0.9;
-  }
-}
-@keyframes hero-entrance {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 

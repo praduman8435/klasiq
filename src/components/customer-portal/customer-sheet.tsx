@@ -28,7 +28,7 @@ export function CustomerSheet({
       <SheetContent
         side="bottom"
         className={cn(
-          "store-theme mx-auto max-h-[92dvh] w-full max-w-lg gap-0 overflow-y-auto overscroll-contain rounded-t-3xl border-0 bg-card px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:bottom-4 sm:rounded-3xl",
+          "mx-auto max-h-[92dvh] w-full max-w-lg gap-0 overflow-y-auto overscroll-contain rounded-t-3xl border-0 bg-card px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:bottom-4 sm:rounded-3xl",
           className,
         )}
       >

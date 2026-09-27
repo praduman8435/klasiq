@@ -28,7 +28,7 @@ export default async function BagPage() {
           Your Bag is empty
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your selected school essentials will appear here.
+          Items you add will show up here.
         </p>
         <Button render={<Link href="/" />} nativeButton={false} className="mt-5 h-11">
           Continue Shopping

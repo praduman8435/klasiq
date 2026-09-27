@@ -50,7 +50,7 @@ function BannerRow({ banner, isFirst, isLast }: { banner: AdminBanner; isFirst: 
 
   return (
     <li className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
-      <div className="dark w-full shrink-0 rounded-xl bg-background p-2 sm:w-72">
+      <div className="storefront w-full shrink-0 rounded-xl bg-card p-2 sm:w-72">
         <PromoBannerCard banner={banner} preview className="min-h-32 p-4 [&_h3]:text-base" />
       </div>
 

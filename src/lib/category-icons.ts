@@ -4,8 +4,20 @@ import {
   Shirt,
   ShoppingBag,
   Sparkles,
+  createLucideIcon,
   type LucideIcon,
 } from "lucide-react";
+
+/** Drawn in lucide's own 24px, 2px-stroke grammar — lucide has no sock
+ * or trousers icon, and a T-shirt for both made Socks look like Uniforms. */
+const Sock = createLucideIcon("Sock", [
+  ["path", { d: "M9 2h6v8.5l3.6 3.6a3 3 0 0 1-4.2 4.3l-5.2-5.2A3 3 0 0 1 9 11Z", key: "sock-body" }],
+  ["path", { d: "M9 6h6", key: "sock-cuff" }],
+]);
+const Trousers = createLucideIcon("Trousers", [
+  ["path", { d: "M6 2h12l1 20h-5l-2-12-2 12H5Z", key: "trousers-legs" }],
+  ["path", { d: "M6 6h12", key: "trousers-waist" }],
+]);
 
 /**
  * The ONE shared slug→icon lookup for category imagery across the
@@ -25,7 +37,8 @@ import {
 const CATEGORY_ICON_KEYWORDS: [pattern: RegExp, icon: LucideIcon][] = [
   [/shoe|footwear|sandal|sneaker/, Footprints],
   [/bag|backpack|trolley/, Backpack],
-  [/sock/, Shirt],
+  [/sock/, Sock],
+  [/jean|denim|trouser|pant/, Trousers],
   [/kurti|dress|ethnic/, Sparkles],
   [/uniform|shirt|pant|skirt|sweater|blazer|tie|belt/, Shirt],
 ];
