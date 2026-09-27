@@ -268,6 +268,21 @@ model ProductPhoto {
   @@map("product_photos")
 }
 
+/// A photo of a supplier's paper bill, taken or picked in admin. Private
+/// business paperwork, so unlike ProductPhoto it is only ever served to a
+/// signed-in admin (/admin/bill-photos/{id}); a
+/// SupplierPurchaseBillAttachment's `url` points at that path. Shrunk on
+/// the phone first (long edge 1600 px), so rows stay ~100–300 KB.
+model SupplierBillPhoto {
+  id          String   @id @default(cuid())
+  contentType String
+  byteSize    Int
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  @@map("supplier_bill_photos")
+}
+
 /// A purchasable size/price/stock combination of a Product. Price is
 /// intentionally per-variant (not per-product) because size can affect
 /// price. This is the unit referenced everywhere money or stock matters:

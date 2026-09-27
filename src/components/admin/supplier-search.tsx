@@ -5,11 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { SupplierDirectoryFilter } from "@/server/queries/admin/suppliers";
+import type { SupplierListFilter } from "@/server/queries/admin/supplier-balances";
 
-const FILTER_TABS: { value: SupplierDirectoryFilter; label: string }[] = [
+const FILTER_TABS: { value: SupplierListFilter; label: string }[] = [
   { value: "ALL", label: "All" },
-  { value: "ACTIVE", label: "Active" },
+  { value: "TO_PAY", label: "To pay" },
   { value: "INACTIVE", label: "Inactive" },
 ];
 
@@ -19,12 +19,12 @@ const FILTER_TABS: { value: SupplierDirectoryFilter; label: string }[] = [
  * three directory filter tabs, and changing either resets `page` back to
  * 1 by simply never carrying the old `page` param forward.
  */
-export function SupplierSearch({ activeFilter }: { activeFilter: SupplierDirectoryFilter }) {
+export function SupplierSearch({ activeFilter }: { activeFilter: SupplierListFilter }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inputId = useId();
 
-  function navigate(next: { q?: string; filter?: SupplierDirectoryFilter }) {
+  function navigate(next: { q?: string; filter?: SupplierListFilter }) {
     const params = new URLSearchParams();
     const q = next.q ?? searchParams.get("q") ?? "";
     const filter = next.filter ?? activeFilter;
@@ -34,8 +34,8 @@ export function SupplierSearch({ activeFilter }: { activeFilter: SupplierDirecto
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative max-w-md">
+    <div className="flex flex-col gap-3 lg:flex-row-reverse lg:items-center lg:justify-between">
+      <div className="relative max-w-md lg:w-80">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <label htmlFor={inputId} className="sr-only">
           Search suppliers by name, business name, or mobile number
@@ -43,7 +43,7 @@ export function SupplierSearch({ activeFilter }: { activeFilter: SupplierDirecto
         <Input
           id={inputId}
           type="search"
-          placeholder="Search suppliers"
+          placeholder="Search name, phone or city"
           defaultValue={searchParams.get("q") ?? ""}
           onKeyDown={(e) => {
             if (e.key === "Enter") navigate({ q: e.currentTarget.value });

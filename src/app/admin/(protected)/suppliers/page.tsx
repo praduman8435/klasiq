@@ -2,152 +2,173 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AdminPagination } from "@/components/admin/admin-pagination";
+import { SupplierBalanceCell } from "@/components/admin/supplier-balance";
 import { SupplierSearch } from "@/components/admin/supplier-search";
-import { adminSupplierFiltersSchema } from "@/lib/validation/admin-suppliers";
-import { getSupplierDirectory } from "@/server/queries/admin/suppliers";
+import { formatPaise } from "@/lib/money";
+import { supplierListParamsSchema } from "@/lib/validation/admin-suppliers";
+import { getSupplierList, getSupplierOverview } from "@/server/queries/admin/supplier-balances";
 
 export const metadata: Metadata = { title: "Suppliers" };
 
 type PageProps = { searchParams: Promise<{ q?: string; page?: string; filter?: string }> };
 
-export default async function AdminSuppliersPage({ searchParams }: PageProps) {
-  const query = await searchParams;
-  const parsed = adminSupplierFiltersSchema.safeParse({ q: query.q, page: query.page, filter: query.filter });
-  const { q, page, filter } = parsed.success ? parsed.data : { q: undefined, page: 1, filter: "ALL" as const };
+const DAY = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" });
+const MONTH = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", month: "short" });
 
-  const directory = await getSupplierDirectory({ query: q, filter, page });
-  const { suppliers, totalCount, totalPages, pageSize } = directory;
-  const hasActiveFilters = Boolean(q) || filter !== "ALL";
+/**
+ * Suppliers, the way a shopkeeper keeps them in a khata: who you owe
+ * and how much, the biggest dues first. Tap a supplier for their page
+ * (bill, pay, call, WhatsApp statement).
+ */
+export default async function AdminSuppliersPage({ searchParams }: PageProps) {
+  const params = supplierListParamsSchema.parse(await searchParams);
+  const [overview, list] = await Promise.all([
+    getSupplierOverview(),
+    getSupplierList({ query: params.q, filter: params.filter, page: params.page }),
+  ]);
+  const searching = Boolean(params.q) || params.filter !== "ALL";
 
   return (
-    <div>
-      <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-xl font-semibold tracking-tight">Suppliers</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Wholesalers and supplier accounts</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Wholesalers you buy from</p>
         </div>
-        <Button render={<Link href="/admin/suppliers/new" />} nativeButton={false} className="h-9">
+        <Button render={<Link href="/admin/suppliers/new" />} nativeButton={false} className="h-10">
           <Plus className="size-4" aria-hidden />
-          Add Supplier
+          Add supplier
         </Button>
       </div>
 
-      <SupplierSearch activeFilter={filter} />
+      <section aria-label="Summary" className="grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-card lg:grid-cols-3">
+        <div className="col-span-2 flex items-end justify-between gap-4 px-4 pt-4 pb-3 sm:px-5 lg:col-span-1 lg:block lg:border-r lg:border-border lg:py-4">
+          <div>
+            <p className="text-sm text-muted-foreground">To pay · Dena hai</p>
+            <p
+              className={
+                overview.totalOwedInPaise > 0
+                  ? "mt-1 text-3xl font-semibold tabular-nums text-amber-500"
+                  : "mt-1 text-3xl font-semibold tabular-nums"
+              }
+            >
+              {formatPaise(overview.totalOwedInPaise)}
+            </p>
+          </div>
+          <p className="pb-1 text-right text-sm text-muted-foreground lg:mt-1 lg:pb-0 lg:text-left">
+            {overview.suppliersOwedCount === 0
+              ? "Nothing to pay"
+              : `to ${overview.suppliersOwedCount} supplier${overview.suppliersOwedCount === 1 ? "" : "s"}`}
+          </p>
+        </div>
+        <div className="border-t border-r border-border px-4 py-2.5 sm:px-5 lg:border-t-0 lg:py-4">
+          <p className="text-sm text-muted-foreground">Bought in {MONTH.format(new Date())}</p>
+          <p className="mt-0.5 font-medium tabular-nums lg:mt-1 lg:text-2xl lg:font-semibold">
+            {formatPaise(overview.boughtThisMonthInPaise)}
+          </p>
+        </div>
+        <div className="border-t border-border px-4 py-2.5 sm:px-5 lg:border-t-0 lg:py-4">
+          <p className="text-sm text-muted-foreground">Paid in {MONTH.format(new Date())}</p>
+          <p className="mt-0.5 font-medium tabular-nums lg:mt-1 lg:text-2xl lg:font-semibold">
+            {formatPaise(overview.paidThisMonthInPaise)}
+          </p>
+        </div>
+      </section>
 
-      <div className="mt-4 mb-2">
-        <p className="text-sm text-muted-foreground">
-          {q ? (
-            <>
-              {totalCount} supplier{totalCount === 1 ? "" : "s"} matching &quot;{q}&quot;
-            </>
-          ) : (
-            <>
-              {totalCount} supplier{totalCount === 1 ? "" : "s"}
-            </>
-          )}
-        </p>
-      </div>
+      <SupplierSearch activeFilter={params.filter} />
 
-      {suppliers.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border p-10 text-center">
-          <p className="text-sm font-medium text-foreground">
-            {q
-              ? `No suppliers found for "${q}"`
-              : hasActiveFilters
-                ? "No suppliers match this filter"
-                : "No suppliers yet"}
+      {list.rows.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border p-10 text-center">
+          <p className="text-sm font-medium">
+            {params.q
+              ? `No supplier matches "${params.q}"`
+              : params.filter === "TO_PAY"
+                ? "Nothing to pay right now"
+                : params.filter === "INACTIVE"
+                  ? "No inactive suppliers"
+                  : "No suppliers yet"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {q
-              ? "Try another name, business name, or mobile number."
-              : hasActiveFilters
-                ? "Try a different filter or view all suppliers."
-                : "Add your first supplier to start tracking wholesale purchases."}
+            {searching
+              ? "Try another name, phone number or city."
+              : "Add the wholesalers you buy from. Then note each bill and payment in a few taps, and always know how much to pay."}
           </p>
-          {!hasActiveFilters && (
-            <Button render={<Link href="/admin/suppliers/new" />} nativeButton={false} className="mt-4 h-9">
+          {!searching && (
+            <Button render={<Link href="/admin/suppliers/new" />} nativeButton={false} className="mt-4 h-10">
               <Plus className="size-4" aria-hidden />
-              Add Supplier
+              Add your first supplier
             </Button>
           )}
         </div>
       ) : (
         <>
-          <div className="rounded-lg border border-border bg-card">
-            <div className="hidden items-center gap-4 border-b border-border px-4 py-2 text-xs font-medium text-muted-foreground sm:flex sm:px-5">
-              <span className="flex-1">Supplier</span>
-              <span className="w-32">Mobile</span>
-              <span className="w-28">City</span>
-              <span className="w-20">Status</span>
-              <span className="w-4" />
-            </div>
-            <ul className="divide-y divide-border">
-              {suppliers.map((supplier) => (
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="hidden items-center gap-3 border-b border-border px-5 py-2.5 text-xs font-medium text-muted-foreground lg:flex">
+            <span className="w-10 shrink-0" />
+            <span className="min-w-0 flex-1">Supplier</span>
+            <span className="w-32 shrink-0">Phone</span>
+            <span className="w-32 shrink-0">City</span>
+            <span className="w-28 shrink-0">Last entry</span>
+            <span className="w-36 shrink-0 text-right">Balance</span>
+            <span className="w-4 shrink-0" />
+          </div>
+          <ul className="divide-y divide-border">
+            {list.rows.map((supplier) => {
+              const sub = [
+                supplier.businessName !== supplier.name ? supplier.businessName : null,
+                supplier.city,
+                supplier.lastActivityAt ? `Last entry ${DAY.format(supplier.lastActivityAt)}` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              return (
                 <li key={supplier.id}>
                   <Link
                     href={`/admin/suppliers/${supplier.id}`}
-                    className="group flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+                    className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:px-5"
                   >
+                    <span
+                      aria-hidden
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground"
+                    >
+                      {supplier.name.trim().charAt(0).toUpperCase()}
+                    </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{supplier.name}</p>
+                      <p className="truncate text-xs text-muted-foreground lg:hidden">{sub || "No entries yet"}</p>
                       {supplier.businessName && supplier.businessName !== supplier.name && (
-                        <p className="truncate text-xs text-muted-foreground">{supplier.businessName}</p>
+                        <p className="hidden truncate text-xs text-muted-foreground lg:block">{supplier.businessName}</p>
                       )}
                     </div>
-
-                    {/* Mobile — compact stacked block. */}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:hidden">
-                      {supplier.phone && <span>{supplier.phone}</span>}
-                      {supplier.city && (
-                        <>
-                          {supplier.phone && <span aria-hidden>·</span>}
-                          <span>{supplier.city}</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="sm:hidden">
-                      {!supplier.isActive && (
-                        <Badge variant="outline" className="border-border text-muted-foreground">
-                          Inactive
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Desktop — table-like columns. */}
-                    <span className="hidden w-32 shrink-0 text-sm text-muted-foreground sm:block">
+                    <span className="hidden w-32 shrink-0 truncate text-sm text-muted-foreground tabular-nums lg:block">
                       {supplier.phone ?? "—"}
                     </span>
-                    <span className="hidden w-28 shrink-0 text-sm text-muted-foreground sm:block">
+                    <span className="hidden w-32 shrink-0 truncate text-sm text-muted-foreground lg:block">
                       {supplier.city ?? "—"}
                     </span>
-                    <span className="hidden w-20 shrink-0 sm:block">
-                      {supplier.isActive ? (
-                        <span className="text-sm text-muted-foreground">Active</span>
-                      ) : (
-                        <Badge variant="outline" className="border-border text-muted-foreground">
-                          Inactive
-                        </Badge>
-                      )}
+                    <span className="hidden w-28 shrink-0 text-sm text-muted-foreground lg:block">
+                      {supplier.lastActivityAt ? DAY.format(supplier.lastActivityAt) : "—"}
                     </span>
+                    <SupplierBalanceCell netInPaise={supplier.netInPaise} className="lg:w-36" />
                     <ChevronRight
-                      className="hidden size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 sm:block"
+                      className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5"
                       aria-hidden
                     />
                   </Link>
                 </li>
-              ))}
-            </ul>
+              );
+            })}
+          </ul>
           </div>
 
           <AdminPagination
             basePath="/admin/suppliers"
             itemLabel="supplier"
-            page={page}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            pageSize={pageSize}
+            page={list.page}
+            totalPages={list.totalPages}
+            totalCount={list.totalCount}
+            pageSize={list.pageSize}
           />
         </>
       )}
