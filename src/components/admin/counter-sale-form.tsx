@@ -3,7 +3,7 @@
 import { useEffect, useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Minus, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Minus, Plus, Printer, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   CounterSaleAddressPanel,
@@ -32,6 +32,7 @@ import {
   type VariantSearchResult,
 } from "@/components/admin/counter-sale-product-search";
 import { SendInvoiceWhatsAppButton } from "@/components/admin/send-invoice-whatsapp-button";
+import { CounterSaleCashChange } from "@/components/admin/counter-sale-cash-change";
 import { type CounterSaleAddressInput } from "@/lib/counter-sale-address";
 import { computeDiscountInPaise, type DiscountInput } from "@/lib/discount";
 import { formatPaise, rupeesToPaise } from "@/lib/money";
@@ -238,6 +239,11 @@ export function CounterSaleForm({
   }, []);
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>("CASH");
+  // Address and discount are rarely needed at a kirana counter — tucked
+  // away until asked for (and opened automatically when already in use).
+  const [showAddress, setShowAddress] = useState(false);
+  const [showDiscount, setShowDiscount] = useState(false);
+  const [cashGiven, setCashGiven] = useState("");
 
   const [idempotencyKey, setIdempotencyKey] = useState(generateIdempotencyKey);
   const [formError, setFormError] = useState<string | null>(null);
@@ -301,7 +307,6 @@ export function CounterSaleForm({
         stockQuantity: variant.stockQuantity,
       }),
     );
-    toast.success(`Added ${variant.productName} (${variant.size}).`);
   }
 
   function clearCart() {
@@ -317,6 +322,9 @@ export function CounterSaleForm({
     setAddressFormState(initialAddressFormState());
     setSchoolId("");
     setPaymentMethod("CASH");
+    setShowAddress(false);
+    setShowDiscount(false);
+    setCashGiven("");
     setIdempotencyKey(generateIdempotencyKey());
     setFormError(null);
     setStockIssues(null);
@@ -515,7 +523,7 @@ export function CounterSaleForm({
               </div>
             )}
             <div className="mt-1 flex justify-between text-base font-semibold">
-              <span>Grand Total</span>
+              <span>Total</span>
               <span>{formatPaise(completedSale.totalInPaise)}</span>
             </div>
             {completedSale.isPartialPayment && (
@@ -525,7 +533,7 @@ export function CounterSaleForm({
                   <span>{formatPaise(completedSale.amountReceivedInPaise)}</span>
                 </div>
                 <div className="mt-1 flex justify-between text-sm font-semibold text-amber-500">
-                  <span>Outstanding</span>
+                  <span>Added to khata</span>
                   <span>{formatPaise(completedSale.outstandingInPaise)}</span>
                 </div>
               </>
@@ -538,10 +546,21 @@ export function CounterSaleForm({
             Order Detail and Admin Invoice pages, letting the customer's
             invoice go out immediately while they're still at the
             counter, without leaving this screen. */}
-        <SendInvoiceWhatsAppButton orderNumber={completedSale.orderNumber} className="h-10 w-full max-w-md" />
+        <div className="grid w-full max-w-md grid-cols-2 gap-2">
+          <Button
+            render={<a href={`/admin/orders/${completedSale.orderNumber}/invoice?print=1`} target="_blank" rel="noopener noreferrer" />}
+            nativeButton={false}
+            variant="outline"
+            className="h-10"
+          >
+            <Printer className="size-4" aria-hidden />
+            Print bill
+          </Button>
+          <SendInvoiceWhatsAppButton orderNumber={completedSale.orderNumber} className="h-10 w-full" />
+        </div>
 
         <Button type="button" className="h-11 w-full max-w-md" onClick={startNewSale} autoFocus>
-          Start New Sale
+          Start new sale
         </Button>
       </div>
     );
@@ -549,11 +568,31 @@ export function CounterSaleForm({
 
   const submitDisabled =
     isPending || lines.length === 0 || Boolean(previewDiscountError) || Boolean(previewPaymentError);
-  const completeSaleLabel = isPending ? "Recording sale..." : "Complete Sale";
+  const completeSaleLabel = isPending
+    ? "Saving sale..."
+    : lines.length > 0
+      ? `Complete sale · ${formatPaise(grandTotalInPaise)}`
+      : "Complete sale";
   const customerSummaryLabel = customerLabelForSummary({ mode: customerMode, selectedCustomer });
+  const addressOpen =
+    showAddress ||
+    addressFormState.mode !== "NONE" ||
+    Boolean(addressFormState.addressLine || addressFormState.city || addressFormState.state || addressFormState.pincode);
+  const discountOpen = showDiscount || discountFormState.mode !== "NONE";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5 pb-24 lg:pb-0" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={(event) => {
+        // Ctrl/⌘ + Enter completes the sale from anywhere on the form.
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !submitDisabled) {
+          event.preventDefault();
+          event.currentTarget.requestSubmit();
+        }
+      }}
+      className="flex flex-col gap-5 pb-28 lg:pb-0"
+      noValidate
+    >
       {formError && (
         <div
           role="alert"
@@ -594,9 +633,9 @@ export function CounterSaleForm({
 
             {lines.length === 0 ? (
               <div className="mt-3 rounded-lg border border-dashed border-border p-6 text-center">
-                <p className="text-sm font-medium text-foreground">No items added</p>
+                <p className="text-sm font-medium text-foreground">No items yet</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Search for a product or SKU to begin the sale.
+                  Search by name, brand or SKU. Enter adds the top result.
                 </p>
               </div>
             ) : (
@@ -617,49 +656,47 @@ export function CounterSaleForm({
                 </div>
                 <ul className="mt-1 divide-y divide-border">
                   {lines.map((line) => (
-                    <li key={line.variantId} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {line.productName} &middot; Size {line.size}
+                    <li key={line.variantId} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:flex-nowrap">
+                      <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
+                        <p className="line-clamp-2 text-sm font-medium">
+                          {line.productName} <span className="text-muted-foreground">· Size {line.size}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          SKU {line.sku} &middot; {formatPaise(line.priceInPaise)} each
+                          {formatPaise(line.priceInPaise)} each
                           {line.quantity >= line.stockQuantity && (
-                            <span className="ml-1 font-medium text-amber-500">&middot; max available</span>
+                            <span className="ml-1 font-medium text-amber-500">&middot; no more in stock</span>
                           )}
                         </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2.5">
-                        <div className="flex h-8 items-center rounded-md border border-border">
+                      <div className="ml-auto flex shrink-0 items-center gap-2">
+                        <div className="flex h-10 items-center rounded-lg border border-border">
                           <button
                             type="button"
                             aria-label={`Decrease quantity for ${line.productName} size ${line.size}`}
                             onClick={() => setLines((prev) => updateLineQuantity(prev, line.variantId, -1))}
-                            className="flex h-full w-7 items-center justify-center text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="flex h-full w-10 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
-                            <Minus className="size-3.5" aria-hidden />
+                            <Minus className="size-4" aria-hidden />
                           </button>
-                          <span className="w-7 text-center text-xs font-semibold tabular-nums">
-                            {line.quantity}
-                          </span>
+                          <span className="w-8 text-center text-sm font-semibold tabular-nums">{line.quantity}</span>
                           <button
                             type="button"
                             aria-label={`Increase quantity for ${line.productName} size ${line.size}`}
                             disabled={line.quantity >= line.stockQuantity}
                             onClick={() => setLines((prev) => updateLineQuantity(prev, line.variantId, 1))}
-                            className="flex h-full w-7 items-center justify-center text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+                            className="flex h-full w-10 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
                           >
-                            <Plus className="size-3.5" aria-hidden />
+                            <Plus className="size-4" aria-hidden />
                           </button>
                         </div>
-                        <p className="w-16 shrink-0 text-right text-sm font-medium">
+                        <p className="w-16 shrink-0 text-right text-sm font-semibold tabular-nums">
                           {formatPaise(line.priceInPaise * line.quantity)}
                         </p>
                         <button
                           type="button"
                           aria-label={`Remove ${line.productName} size ${line.size}`}
                           onClick={() => setLines((prev) => removeLineFromCart(prev, line.variantId))}
-                          className="flex size-7 items-center justify-center text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <X className="size-4" aria-hidden />
                         </button>
@@ -687,43 +724,66 @@ export function CounterSaleForm({
 
           <div className="border-t border-border" />
 
-          <section>
-            <h2 className="text-sm font-semibold">
-              Address <span className="font-normal text-muted-foreground">(optional)</span>
-            </h2>
-            <div className="mt-2">
-              <CounterSaleAddressPanel
-                state={addressFormState}
-                onChange={setAddressFormState}
-                savedAddress={
-                  customerMode === "CUSTOMER" && selectedCustomer
-                    ? {
-                        addressLine: selectedCustomer.addressLine,
-                        city: selectedCustomer.addressCity,
-                        state: selectedCustomer.addressState,
-                        pincode: selectedCustomer.addressPincode,
-                      }
-                    : null
-                }
-              />
-            </div>
-          </section>
+          {addressOpen ? (
+            <section>
+              <h2 className="text-sm font-semibold">
+                Address on the bill <span className="font-normal text-muted-foreground">(optional)</span>
+              </h2>
+              <div className="mt-2">
+                  <CounterSaleAddressPanel
+                    state={addressFormState}
+                    onChange={setAddressFormState}
+                    savedAddress={
+                      customerMode === "CUSTOMER" && selectedCustomer
+                        ? {
+                            addressLine: selectedCustomer.addressLine,
+                            city: selectedCustomer.addressCity,
+                            state: selectedCustomer.addressState,
+                            pincode: selectedCustomer.addressPincode,
+                          }
+                        : null
+                    }
+                  />
+              </div>
+            </section>
+          ) : null}
 
-          <div className="border-t border-border" />
+          {discountOpen ? (
+            <section>
+              <h2 className="text-sm font-semibold">Discount</h2>
+              <div className="mt-2">
+                  <CounterSaleDiscountPanel
+                    state={discountFormState}
+                    onChange={setDiscountFormState}
+                    previewDiscountInPaise={previewDiscountInPaise}
+                    previewError={previewDiscountError}
+                  />
+              </div>
+            </section>
+          ) : null}
 
-          <section>
-            <h2 className="text-sm font-semibold">
-              Discount <span className="font-normal text-muted-foreground">(optional)</span>
-            </h2>
-            <div className="mt-2">
-              <CounterSaleDiscountPanel
-                state={discountFormState}
-                onChange={setDiscountFormState}
-                previewDiscountInPaise={previewDiscountInPaise}
-                previewError={previewDiscountError}
-              />
+          {!addressOpen || !discountOpen ? (
+            <div className="flex flex-wrap gap-2">
+              {!discountOpen && (
+                <button
+                  type="button"
+                  onClick={() => setShowDiscount(true)}
+                  className="h-9 rounded-full border border-border px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  + Give discount
+                </button>
+              )}
+              {!addressOpen && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddress(true)}
+                  className="h-9 rounded-full border border-border px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  + Add address to bill
+                </button>
+              )}
             </div>
-          </section>
+          ) : null}
 
           <div className="border-t border-border" />
 
@@ -789,7 +849,7 @@ export function CounterSaleForm({
           <h2 className="text-sm font-semibold">Payment</h2>
 
           <div>
-            <p className="text-xs font-medium text-muted-foreground">Payment method</p>
+            <p className="text-xs font-medium text-muted-foreground">Paid by</p>
             <div className="mt-1.5 grid grid-cols-3 gap-1.5">
               {COUNTER_SALE_PAYMENT_METHOD_VALUES.map((method) => (
                 <button
@@ -811,7 +871,7 @@ export function CounterSaleForm({
           </div>
 
           <div>
-            <p className="text-xs font-medium text-muted-foreground">Amount</p>
+            <p className="text-xs font-medium text-muted-foreground">Paid now?</p>
             <div className="mt-1.5">
               <CounterSalePaymentPanel
                 state={paymentFormState}
@@ -835,13 +895,17 @@ export function CounterSaleForm({
               </div>
             ) : null}
             <div className="mt-1.5 flex justify-between border-t border-border pt-1.5 text-base font-semibold">
-              <span>Grand Total</span>
-              <span>{formatPaise(grandTotalInPaise)}</span>
+              <span>Total</span>
+              <span className="tabular-nums">{formatPaise(grandTotalInPaise)}</span>
             </div>
           </div>
 
+          {paymentMethod === "CASH" && paymentFormState.mode === "FULL" && lines.length > 0 && (
+            <CounterSaleCashChange totalInPaise={grandTotalInPaise} value={cashGiven} onChange={setCashGiven} />
+          )}
+
           <div className="hidden lg:block">
-            <Button type="submit" className="h-11 w-full" disabled={submitDisabled}>
+            <Button type="submit" className="h-12 w-full text-base" disabled={submitDisabled}>
               {completeSaleLabel}
             </Button>
           </div>

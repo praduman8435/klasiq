@@ -13,7 +13,7 @@ export default async function CounterSalePage() {
     <div>
       <div className="mb-5">
         <h1 className="font-heading text-xl font-semibold tracking-tight">Counter Sale</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Record a walk-in sale</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">Bill a walk-in customer</p>
       </div>
       <CounterSaleForm schools={schools} />
     </div>
