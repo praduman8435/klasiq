@@ -6,7 +6,7 @@ import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { requestOtpAction, verifyOtpAction } from "@/server/actions/customer-portal/auth";
+import { requestOtpAction, signInWithoutCodeAction, verifyOtpAction } from "@/server/actions/customer-portal/auth";
 
 type Step = "phone" | "code";
 
@@ -22,7 +22,9 @@ function maskPhone(phone: string): string {
 
 const DEFAULT_RESEND_COOLDOWN_SECONDS = 45;
 
-export function TrackOrdersForm() {
+/** `otpPaused` (from the server's `isOtpPaused()`): sign in with the mobile
+ * number alone, no code step — temporary until WhatsApp OTP is set up. */
+export function TrackOrdersForm({ otpPaused = false }: { otpPaused?: boolean }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const phoneId = useId();
@@ -73,6 +75,19 @@ export function TrackOrdersForm() {
   function handlePhoneSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (isPending || !phone.trim()) return;
+    if (otpPaused) {
+      setError(null);
+      startTransition(async () => {
+        const result = await signInWithoutCodeAction({ phone });
+        if (result.success) {
+          router.push("/track/orders");
+          router.refresh();
+          return;
+        }
+        setError(result.error.message);
+      });
+      return;
+    }
     requestCode();
   }
 
@@ -144,7 +159,7 @@ export function TrackOrdersForm() {
         </div>
 
         <Button type="submit" size="lg" className="mt-2 h-12 w-full text-base" disabled={isPending}>
-          {isPending ? "Sending code..." : "Continue"}
+          {isPending ? (otpPaused ? "Opening..." : "Sending code...") : "Continue"}
         </Button>
       </form>
     );

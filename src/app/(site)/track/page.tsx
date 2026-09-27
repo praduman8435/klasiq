@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BookOpen, Package, RotateCcw } from "lucide-react";
 import { TrackOrdersForm } from "@/components/customer-portal/track-orders-form";
 import { getCustomerSession } from "@/lib/customer-portal/session";
+import { isOtpPaused } from "@/server/customer-portal/otp";
 
 export const metadata: Metadata = {
   title: "Your orders & khata",
@@ -23,6 +24,8 @@ export default async function TrackOrdersPage() {
     redirect("/track/orders");
   }
 
+  const otpPaused = isOtpPaused();
+
   return (
     <div className="mx-auto flex min-h-[60vh] w-full max-w-sm flex-1 flex-col justify-center px-4 py-10 sm:px-6">
       <div className="mb-6 text-center">
@@ -30,10 +33,12 @@ export default async function TrackOrdersPage() {
           Your orders &amp; khata
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Enter the mobile number you shop with. We&apos;ll send a code to check it&apos;s you.
+          {otpPaused
+            ? "Enter the mobile number you shop with."
+            : "Enter the mobile number you shop with. We’ll send a code to check it’s you."}
         </p>
       </div>
-      <TrackOrdersForm />
+      <TrackOrdersForm otpPaused={otpPaused} />
       <ul className="mt-6 grid gap-2.5 border-t border-border pt-5 text-sm">
         {[
           { icon: Package, text: "See where your order is, or cancel it" },

@@ -11,6 +11,18 @@ import { STORE_CONTACT } from "@/lib/constants";
 const PURPOSE = "CUSTOMER_PORTAL_LOGIN" as const;
 
 /**
+ * TEMPORARY: while the live store has no WhatsApp OTP setup, a code can
+ * never reach the customer, so Track Orders signs them in with just their
+ * mobile number instead (see `signInWithoutCodeAction`). This turns itself
+ * off — OTP comes back — the moment WHATSAPP_API_TOKEN,
+ * WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_OTP_TEMPLATE_NAME are all set.
+ * Production only: local development keeps the console-OTP flow.
+ */
+export function isOtpPaused(): boolean {
+  return process.env.NODE_ENV === "production" && !isWhatsAppConfigured();
+}
+
+/**
  * Cryptographically secure OTP generation — `crypto.randomInt` (uniform,
  * rejection-sampled, CSPRNG-backed), never `Math.random()` and never a
  * predictable sequence. Zero-padded so e.g. 42 renders as "000042", not
