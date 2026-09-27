@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { BasketLineItem } from "@/components/basket/basket-line-item";
+import { OfferNudge } from "@/components/basket/offer-nudge";
 import { Button } from "@/components/ui/button";
 import { basketTotalInPaise, getBasket, getBasketSchoolContext } from "@/lib/basket";
 import { formatPaise } from "@/lib/money";
@@ -67,6 +68,7 @@ export default async function BagPage() {
         {itemCountLabel}
         {schoolContext && <> · Shopping for {schoolContext.name}</>}
       </p>
+      <OfferNudge subtotalInPaise={total} className="mt-4 lg:max-w-2xl" />
 
       <div className="mt-3 h-px bg-border" aria-hidden />
 
