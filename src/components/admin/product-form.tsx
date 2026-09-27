@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ProductPhotoPicker } from "@/components/admin/product-photo-picker";
 import { slugify } from "@/lib/slug";
 import { createProductAction, updateProductAction } from "@/server/actions/admin/products";
 
@@ -34,7 +35,6 @@ export function ProductForm({
   const nameId = useId();
   const slugId = useId();
   const descriptionId = useId();
-  const imageId = useId();
 
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
@@ -43,6 +43,7 @@ export function ProductForm({
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? categories[0]?.id ?? "");
   const [schoolId, setSchoolId] = useState<string>(initial?.schoolId ?? "");
   const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? "");
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -54,7 +55,7 @@ export function ProductForm({
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (isPending) return;
+    if (isPending || photoUploading) return;
     setError(null);
 
     startTransition(async () => {
@@ -164,18 +165,13 @@ export function ProductForm({
       <div className="flex flex-col gap-3">
         <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Presentation</h3>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={imageId}>Image URL (optional)</Label>
-          <Input
-            id={imageId}
-            className="h-9"
-            type="url"
-            placeholder="https://..."
+          <Label>Photo (optional)</Label>
+          <ProductPhotoPicker
             value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            onChange={setImageUrl}
+            productName={name}
+            onUploadingChange={setPhotoUploading}
           />
-          <p className="text-xs text-muted-foreground">
-            Paste a link to an already-hosted image. Leave blank to show the placeholder tile.
-          </p>
         </div>
 
         <label className="flex items-center gap-2 text-sm">
@@ -189,8 +185,8 @@ export function ProductForm({
         </label>
       </div>
 
-      <Button type="submit" className="h-9 w-full sm:w-auto" disabled={isPending}>
-        {isPending ? "Saving…" : isEditing ? "Save changes" : "Create product"}
+      <Button type="submit" className="h-9 w-full sm:w-auto" disabled={isPending || photoUploading}>
+        {photoUploading ? "Uploading photo…" : isPending ? "Saving…" : isEditing ? "Save changes" : "Create product"}
       </Button>
     </form>
   );
