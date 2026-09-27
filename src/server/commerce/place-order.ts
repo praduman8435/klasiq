@@ -14,6 +14,7 @@ import { findOrCreateCustomerByPrimaryPhone, updateCustomerContactInfo } from "@
 import { checkCouponForOrder } from "@/server/coupons/coupons";
 import { calculateRouteDistanceMeters } from "@/server/geoapify";
 import { notifyOrderEvent } from "@/server/whatsapp/notification-service";
+import { notifyOwnerOfNewOrder } from "@/server/whatsapp/owner-order-alert";
 
 const MAX_CUSTOMER_RACE_ATTEMPTS = 3;
 
@@ -505,6 +506,19 @@ export async function placeOrderForBasket(
         },
         "ORDER_PLACED",
       );
+      // The shop owner hears about every new online order too.
+      await notifyOwnerOfNewOrder({
+        orderNumber: order.orderNumber,
+        source: order.source,
+        fulfillmentType: order.fulfillmentType,
+        customerName: order.customerName,
+        customerMobile: order.customerMobile,
+        totalInPaise: order.totalInPaise,
+        deliveryAddressLine: order.deliveryAddressLine,
+        deliveryArea: order.deliveryArea,
+        deliveryLandmark: order.deliveryLandmark,
+        schoolName: school?.name ?? null,
+      });
     } catch (err) {
       console.error(
         "placeOrderForBasket: best-effort order-placed notification failed",
