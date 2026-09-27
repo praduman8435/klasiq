@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { PromoCarousel } from "@/components/home/promo-carousel";
 import { SchoolSearch } from "@/components/site/school-search";
 import { ProductCard } from "@/components/product/product-card";
 import { getCategoryIcon } from "@/lib/category-icons";
@@ -10,6 +11,7 @@ import {
   getHeaderCategories,
   pickBrowseFallbackCategory,
 } from "@/server/queries/categories";
+import { getActivePromoBanners } from "@/server/queries/banners";
 
 export const metadata: Metadata = {
   description: BRAND.description,
@@ -29,9 +31,10 @@ export const metadata: Metadata = {
  * gold badge in the hero, nothing else competing for either color.
  */
 export default async function HomePage() {
-  const [categories, featuredProducts] = await Promise.all([
+  const [categories, featuredProducts, banners] = await Promise.all([
     getHeaderCategories(),
     getFeaturedGenericProducts(5),
+    getActivePromoBanners(),
   ]);
   const signatureCategory = pickBrowseFallbackCategory(categories);
 
@@ -92,6 +95,16 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Owner-managed banners (/admin/banners) — only when one is live,
+          so the page is unchanged until the shop adds one. */}
+      {banners.length > 0 && (
+        <div className="px-4 pt-2 sm:px-6 sm:pt-0">
+          <div className="mx-auto max-w-5xl">
+            <PromoCarousel slides={banners} />
+          </div>
+        </div>
+      )}
 
       {/* Final polish pass — this section and the one below it each
           carried their own independent `py-6`, so the boundary between

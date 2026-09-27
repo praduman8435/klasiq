@@ -2290,3 +2290,51 @@ model Coupon {
   @@index([isActive, expiresAt])
   @@map("coupons")
 }
+
+// ---------------------------------------------------------------------------
+// Storefront banners
+// ---------------------------------------------------------------------------
+
+/// Colour treatment of a homepage banner — the three brand tones.
+enum PromoBannerTone {
+  RED
+  INK
+  SOFT
+}
+
+/// The illustration drawn in a banner's corner.
+enum PromoBannerIcon {
+  DELIVERY
+  PICKUP
+  PAYMENT
+  OFFER
+  FESTIVAL
+  SCHOOL
+}
+
+/// A homepage banner, managed from /admin/banners. The storefront shows
+/// every active banner whose optional schedule window includes "now",
+/// ordered by `sortOrder`. Banner copy is the store's own claim, so the
+/// admin form is the only place it's written — never generated.
+model PromoBanner {
+  id        String          @id @default(cuid())
+  title     String
+  body      String?
+  /// Optional call-to-action. Label and link are set together or not at
+  /// all; the link is always an internal storefront path ("/uniforms").
+  ctaLabel  String?
+  ctaHref   String?
+  tone      PromoBannerTone @default(RED)
+  icon      PromoBannerIcon @default(OFFER)
+  isActive  Boolean         @default(true)
+  sortOrder Int             @default(0)
+  /// Optional schedule (inclusive start, exclusive end). Null = no bound.
+  startsAt  DateTime?
+  endsAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("promo_banners")
+}

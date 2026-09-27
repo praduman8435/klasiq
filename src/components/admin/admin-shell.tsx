@@ -8,6 +8,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
   School as SchoolIcon,
   ShoppingBag,
@@ -36,6 +37,7 @@ const ADMIN_NAV = [
   { href: "/admin/suppliers", label: "Suppliers", icon: Truck, exact: false },
   { href: "/admin/categories", label: "Categories", icon: Tags, exact: false },
   { href: "/admin/offers", label: "Offers", icon: TicketPercent, exact: false },
+  { href: "/admin/banners", label: "Banners", icon: Megaphone, exact: false },
 ] as const;
 
 function isNavActive(pathname: string, href: string, exact?: boolean) {
