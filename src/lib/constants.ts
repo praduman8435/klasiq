@@ -48,6 +48,13 @@ export const STORE_CONTACT = {
   phone: "8542843482",
   phoneHref: "tel:8542843482",
   mapsUrl: "https://maps.app.goo.gl/gz4n7NiTXV6Yw3G4A",
+  /** Where customers pay udhaar online (Mera Khata). PLACEHOLDER — replace
+   * with the shop's real UPI ID before going live (or set STORE_UPI_ID on
+   * the server, which overrides this without a code change). Deliberately
+   * not a plausible real ID, so a forgotten placeholder fails instead of
+   * paying a stranger. */
+  upiId: "your-upi-id@upi",
+  whatsapp: "918542843482",
 } as const;
 
 /** "Backed by X and Y" — built from legacyStoreNames so the wording only

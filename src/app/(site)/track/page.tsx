@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BookOpen, Package, RotateCcw } from "lucide-react";
 import { TrackOrdersForm } from "@/components/customer-portal/track-orders-form";
 import { getCustomerSession } from "@/lib/customer-portal/session";
 
 export const metadata: Metadata = {
-  title: "Track your orders",
+  title: "Your orders & khata",
   robots: { index: false, follow: false },
 };
 
@@ -26,13 +27,27 @@ export default async function TrackOrdersPage() {
     <div className="mx-auto flex min-h-[60vh] w-full max-w-sm flex-1 flex-col justify-center px-4 py-10 sm:px-6">
       <div className="mb-6 text-center">
         <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-          Track your order
+          Your orders &amp; khata
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Enter the mobile number used when placing your order.
+          Enter the mobile number you shop with. We&apos;ll send a code to check it&apos;s you.
         </p>
       </div>
       <TrackOrdersForm />
+      <ul className="mt-6 grid gap-2.5 border-t border-border pt-5 text-sm">
+        {[
+          { icon: Package, text: "See where your order is, or cancel it" },
+          { icon: RotateCcw, text: "Order the same things again in one tap" },
+          { icon: BookOpen, text: "Check your udhaar and pay it by UPI" },
+        ].map(({ icon: Icon, text }) => (
+          <li key={text} className="flex items-center gap-3 text-muted-foreground">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="size-4" aria-hidden />
+            </span>
+            {text}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
