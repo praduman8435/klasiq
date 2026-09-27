@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CATEGORY_ICON_KEYS } from "@/lib/category-icon-keys";
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 // Phase 3.6.7 Part 1 — a header position is a small, curated ordinal
@@ -25,6 +26,9 @@ export const categoryFormSchema = z.object({
   /// stored regardless, so toggling displayInHeader back on later
   /// remembers the last position rather than resetting it.
   headerOrder: z.coerce.number().int().min(0).max(MAX_HEADER_ORDER).default(0),
+  /// The storefront icon. null = "Auto" (guessed from the name);
+  /// left out = keep whatever is saved.
+  icon: z.enum(CATEGORY_ICON_KEYS).nullable().optional(),
 });
 
 export const createCategorySchema = categoryFormSchema;

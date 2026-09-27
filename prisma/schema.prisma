@@ -188,6 +188,9 @@ model Category {
   slug        String  @unique
   name        String
   description String?
+  /// The storefront icon, chosen in admin from CATEGORY_ICONS
+  /// (src/lib/category-icons.ts). Null = pick one from the name.
+  icon        String?
   sortOrder   Int     @default(0)
   parentId    String?
 

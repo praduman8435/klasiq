@@ -32,7 +32,12 @@ const STOCK_BADGE_CLASS: Record<string, string> = {
  * then size + Add to Bag on one thumb-height row. Stock is only mentioned
  * when it matters (a few left, or out of stock).
  */
-export function ProductCard({ product }: { product: ProductWithVariants }) {
+export function ProductCard({
+  product,
+}: {
+  /** `school` is set on a school's own uniform item; the card names it. */
+  product: ProductWithVariants & { school?: { slug: string; name: string } | null };
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [justAdded, setJustAdded] = useState(false);
@@ -99,6 +104,7 @@ export function ProductCard({ product }: { product: ProductWithVariants }) {
           imageUrl={product.imageUrl}
           alt={product.name}
           categorySlug={product.category.slug}
+          categoryIcon={product.category.icon}
           className="aspect-square w-full rounded-none transition-transform duration-300 group-hover:scale-[1.03]"
         />
         {offPercent > 0 && (
@@ -114,6 +120,12 @@ export function ProductCard({ product }: { product: ProductWithVariants }) {
             {product.name}
           </Link>
         </h3>
+        {product.school && (
+          <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
+            <span className="sr-only">For </span>
+            {product.school.name}
+          </p>
+        )}
 
         {selectedVariant && (
           <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5">

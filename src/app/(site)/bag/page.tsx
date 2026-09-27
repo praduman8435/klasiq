@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 import { BasketLineItem } from "@/components/basket/basket-line-item";
 import { OfferNudge } from "@/components/basket/offer-nudge";
 import { Button } from "@/components/ui/button";
@@ -20,19 +20,23 @@ export default async function BagPage() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto flex max-w-md flex-col items-center px-4 py-14 text-center sm:px-6">
-        <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <ShoppingBag className="size-5" aria-hidden />
-        </span>
-        <h1 className="mt-3 font-heading text-xl font-semibold">
-          Your Bag is empty
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Items you add will show up here.
-        </p>
-        <Button render={<Link href="/" />} nativeButton={false} className="mt-5 h-11">
-          Continue Shopping
-        </Button>
+      <div className="mx-auto max-w-md px-4 py-14 sm:px-6">
+        <div className="flex flex-col items-center rounded-3xl bg-card px-6 py-12 text-center ">
+          <ShoppingBag className="size-7" strokeWidth={1.5} aria-hidden />
+          <h1 className="mt-3 text-2xl font-bold leading-none">
+            Your bag is empty
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Items you add will appear here.
+          </p>
+          <Button
+            render={<Link href="/" />}
+            nativeButton={false}
+            className="mt-5 h-11"
+          >
+            Continue Shopping
+          </Button>
+        </div>
       </div>
     );
   }
@@ -61,19 +65,15 @@ export default async function BagPage() {
     // (~90px, tightened from an earlier ~101px pass per this round's
     // "80-90px total" target) plus a margin.
     <div className="mx-auto max-w-5xl px-4 py-6 pb-28 sm:px-6 sm:pb-6">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-        Your Bag
-      </h1>
-      <p className="mt-0.5 text-sm text-muted-foreground">
+      <h1 className="text-3xl font-bold leading-none sm:text-4xl">Your bag</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
         {itemCountLabel}
         {schoolContext && <> · Shopping for {schoolContext.name}</>}
       </p>
       <OfferNudge subtotalInPaise={total} className="mt-4 lg:max-w-2xl" />
 
-      <div className="mt-3 h-px bg-border" aria-hidden />
-
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
-        <ul className="flex-1 divide-y divide-border lg:max-w-xl">
+      <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
+        <ul className="flex-1 divide-y divide-border rounded-2xl border border-border bg-card px-3 sm:px-4 lg:max-w-2xl">
           {items.map((item) => (
             <BasketLineItem
               key={item.id}
@@ -91,7 +91,9 @@ export default async function BagPage() {
                   product: {
                     name: item.productVariant.product.name,
                     imageUrl: item.productVariant.product.imageUrl,
-                    categorySlugForPlaceholder: item.productVariant.product.category.slug,
+                    categorySlugForPlaceholder:
+                      item.productVariant.product.category.slug,
+                    categoryIconForPlaceholder: item.productVariant.product.category.icon,
                     isActive: item.productVariant.product.isActive,
                     school: item.productVariant.product.school,
                   },
@@ -111,23 +113,25 @@ export default async function BagPage() {
             "Delivery/pickup and payment are chosen at checkout" sentence
             replaced with a plain summary row — the fact itself, not a
             sentence explaining it. */}
-        <div className="border-t pt-4 lg:sticky lg:top-24 lg:w-[340px] lg:shrink-0 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
-          <h2 className="font-heading text-base font-semibold">Order summary</h2>
+        <div className="rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-40 lg:w-[340px] lg:shrink-0">
+          <h2 className="text-xl font-bold leading-none">Order summary</h2>
           <div className="mt-3 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Subtotal</span>
             <span>{formatPaise(total)}</span>
           </div>
           <div className="mt-1.5 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Delivery</span>
-            <span className="text-muted-foreground">Calculated at checkout</span>
+            <span className="text-muted-foreground">
+              Calculated at checkout
+            </span>
           </div>
           {/* Matches Checkout's own Subtotal/Delivery/Total summary
               convention exactly (see checkout-form.tsx) — delivery isn't
               known yet at this stage, so Total is the same computed
               `total` as Subtotal, not a separate calculation. */}
-          <div className="mt-2 flex items-center justify-between border-t pt-2 text-base font-semibold">
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-lg font-bold">
             <span>Total</span>
-            <span>{formatPaise(total)}</span>
+            <span className="tabular-nums">{formatPaise(total)}</span>
           </div>
 
           <Button
@@ -150,26 +154,27 @@ export default async function BagPage() {
       </div>
 
       {/* Mobile-only sticky checkout bar — the SOLE checkout mechanism
-          below `sm` (see the hidden in-content button above). Final
-          polish — the side-by-side Subtotal/Checkout layout measured too
-          horizontally cramped at 294px; stacking Subtotal on its own row
-          above a genuinely full-width button gives the primary action
-          real weight instead of competing with the price for the same
-          row's width. The button now says "Proceed to Checkout" — a
-          critique flagged the previous shorter "Checkout" label as an
-          inconsistency with the desktop in-content button; since the bar
-          is no longer sharing a row with the subtotal, there's no longer
-          a horizontal-space reason to abbreviate it. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 px-4 pt-2 backdrop-blur supports-backdrop-filter:bg-card/80 sm:hidden">
-        <div className="pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Total</span>
-            <span className="font-heading font-semibold tabular-nums">{formatPaise(total)}</span>
-          </div>
-          <Button render={<Link href="/checkout" />} nativeButton={false} className="mt-1.5 h-12 w-full">
-            Proceed to Checkout
-          </Button>
-        </div>
+          below `sm` (the in-content button above is hidden there). The
+          same red cart bar as the browse pages' `MobileBagBar`, so the
+          path bag → checkout keeps one consistent control in the thumb
+          zone: count and total on the left, one tap to checkout. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
+        <Link
+          href="/checkout"
+          className="flex h-14 items-center gap-3 rounded-2xl bg-primary pl-4 pr-4 text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0_0_0/70%)] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"
+        >
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block text-xs font-semibold text-primary-foreground/85">{itemCountLabel}</span>
+            <span className="block text-base font-bold tabular-nums">
+              <span className="sr-only">Total </span>
+              {formatPaise(total)}
+            </span>
+          </span>
+          <span className="flex items-center gap-1 text-base font-bold">
+            Checkout
+            <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden />
+          </span>
+        </Link>
       </div>
     </div>
   );

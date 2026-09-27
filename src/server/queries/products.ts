@@ -33,7 +33,7 @@ export async function getProductBySlug(slug: string) {
   const product = await db.product.findUnique({
     where: { slug },
     include: {
-      category: { select: { slug: true, name: true } },
+      category: { select: { slug: true, name: true, icon: true } },
       school: { select: { slug: true, name: true } },
       variants: {
         where: { isActive: true },

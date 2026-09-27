@@ -4,7 +4,7 @@ import { CategoryProductGrid } from "@/components/product/category-product-grid"
 import { ProductSearchForm } from "@/components/product/product-search-form";
 import { productSearchQuerySchema } from "@/lib/validation/product-search";
 import { SchoolCard } from "@/components/school/school-card";
-import { searchGenericProducts } from "@/server/queries/categories";
+import { searchListingProducts } from "@/server/queries/categories";
 import { searchSchools } from "@/server/queries/schools";
 
 type PageProps = { searchParams: Promise<{ q?: string }> };
@@ -39,7 +39,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const query = parsed.success ? parsed.data.q : undefined;
 
   const [products, schools] = query
-    ? await Promise.all([searchGenericProducts(query), searchSchools(query, 6)])
+    ? await Promise.all([searchListingProducts(query), searchSchools(query, 6)])
     : [[], []];
 
   return (

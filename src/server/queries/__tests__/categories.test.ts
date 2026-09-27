@@ -73,11 +73,11 @@ describe("getHeaderCategories — section 6's 'SELECT ... WHERE DisplayInHeader 
     expect(ours.map((c) => c.slug)).toEqual([a.slug, b.slug]);
   });
 
-  it("returns only slug and name — never an internal id", async () => {
+  it("returns only slug, name and the chosen icon — never an internal id", async () => {
     await createCategory({ displayInHeader: true, headerOrder: 501 });
     const categories = await getHeaderCategories();
     for (const category of categories) {
-      expect(Object.keys(category).sort()).toEqual(["name", "slug"]);
+      expect(Object.keys(category).sort()).toEqual(["icon", "name", "slug"]);
     }
   });
 });

@@ -48,7 +48,7 @@ export function MobileNav({
   bagCount,
   serviceableAreaNote,
 }: {
-  categories: { slug: string; name: string }[];
+  categories: { slug: string; name: string; icon: string | null }[];
   bagCount: number;
   serviceableAreaNote: string;
 }) {
@@ -108,7 +108,7 @@ export function MobileNav({
                     aria-current={isCurrent ? "page" : undefined}
                     className={cn(ROW, isCurrent && "bg-secondary")}
                   >
-                    <RowIcon icon={getCategoryIcon(category.slug || category.name)} active={isCurrent} />
+                    <RowIcon icon={getCategoryIcon(category.slug || category.name, category.icon)} active={isCurrent} />
                     <span className="min-w-0 flex-1 truncate">{category.name}</span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                   </Link>

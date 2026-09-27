@@ -3,7 +3,7 @@
 import { useEffect, useId, useReducer, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, Check } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -296,10 +296,10 @@ export function CheckoutForm({
           submit on the right), single stacked column unchanged below
           `lg`. Purely a layout change — every field, handler, and piece
           of state above is untouched. */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
-      <div className="flex flex-1 flex-col gap-6 lg:max-w-xl">
-      <section aria-labelledby="contact-heading" className="flex flex-col gap-2.5">
-        <h2 id="contact-heading" className="font-heading text-lg font-semibold">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
+      <div className="flex flex-1 flex-col gap-4 lg:max-w-2xl">
+      <section aria-labelledby="contact-heading" className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <h2 id="contact-heading" className="text-lg font-bold">
           Contact
         </h2>
         <div className="flex flex-col gap-1.5">
@@ -366,8 +366,8 @@ export function CheckoutForm({
         )}
       </section>
 
-      <section aria-labelledby="fulfillment-heading" className="flex flex-col gap-2.5">
-        <h2 id="fulfillment-heading" className="font-heading text-lg font-semibold">
+      <section aria-labelledby="fulfillment-heading" className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <h2 id="fulfillment-heading" className="text-lg font-bold">
           Delivery
         </h2>
         {/* A compact rectangular segmented control (not the pill-tab
@@ -492,8 +492,8 @@ export function CheckoutForm({
         )}
       </section>
 
-      <section aria-labelledby="payment-heading" className="flex flex-col gap-2.5">
-        <h2 id="payment-heading" className="font-heading text-lg font-semibold">
+      <section aria-labelledby="payment-heading" className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <h2 id="payment-heading" className="text-lg font-bold">
           Payment
         </h2>
         {/* A compact "payment method" card with an explicit selected
@@ -518,16 +518,11 @@ export function CheckoutForm({
       </section>
       </div>
 
-      {/* Right column — no card-in-card, matching the Bag's own "one
-          continuous surface" redesign: the product list and the totals
-          block share one hairline-divided flow instead of two separate
-          bordered `bg-card` boxes. A top border on mobile (stacked below
-          the left column) becomes a left border on desktop, the same
-          "subtle tonal separation, not a second card" treatment the Bag
-          already established. */}
-      <div className="flex flex-col gap-4 border-t pt-5 lg:sticky lg:top-24 lg:w-[340px] lg:shrink-0 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+      {/* Right column: the order summary card, the same card the Bag's
+          own summary uses, sticky beside the form on desktop. */}
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5 lg:sticky lg:top-40 lg:w-[360px] lg:shrink-0">
       <section aria-labelledby="summary-heading" className="flex flex-col gap-3">
-        <h2 id="summary-heading" className="font-heading text-base font-semibold">
+        <h2 id="summary-heading" className="text-lg font-bold">
           Order summary
         </h2>
         <ul className="divide-y divide-border">
@@ -634,33 +629,31 @@ export function CheckoutForm({
       </div>
       </div>
 
-      {/* Mobile-only sticky "Place Order" bar — this button is still
-          `type="submit"` inside this same `<form>`, so it triggers the
-          identical `handleSubmit` as the (hidden-on-mobile) in-content
-          button above; a `position:fixed` descendant of a `<form>`
-          remains part of that form for submission purposes. Total shown
-          on its own row above a full-width button, the same stacked
-          layout the Bag's own sticky bar uses. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 px-4 pt-2 backdrop-blur supports-backdrop-filter:bg-card/80 sm:hidden">
-        <div className="pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Total</span>
-            <span className="font-heading font-semibold tabular-nums">
+      {/* Mobile-only sticky "Place Order" bar, the same red bar as the
+          Bag's Checkout bar: total on the left, the action on the right.
+          Still `type="submit"` inside this same `<form>`, so it runs the
+          identical `handleSubmit` as the in-content button above. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
+        <button
+          type="submit"
+          disabled={isPending || !canSubmit || isRefreshingQuote}
+          className="flex h-14 w-full items-center gap-3 rounded-2xl bg-primary px-4 text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0_0_0/70%)] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring disabled:opacity-60"
+        >
+          <span className="min-w-0 flex-1 text-left leading-tight">
+            <span className="block text-xs font-semibold text-primary-foreground/85">Total</span>
+            <span className="block text-base font-bold tabular-nums">
               {deliveryFeeInPaise === null ? "—" : formatPaise(totalInPaise)}
             </span>
-          </div>
-          <Button
-            type="submit"
-            className="mt-1.5 h-12 w-full"
-            disabled={isPending || !canSubmit || isRefreshingQuote}
-          >
+          </span>
+          <span className="flex items-center gap-1 text-base font-bold">
             {isPending
-              ? "Placing your order..."
+              ? "Placing order…"
               : fulfillmentType === "LOCAL_DELIVERY" && !canSubmit
-                ? "Select a delivery location to continue"
-                : "Place Order"}
-          </Button>
-        </div>
+                ? "Choose delivery place"
+                : "Place order"}
+            {!isPending && canSubmit && <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden />}
+          </span>
+        </button>
       </div>
     </form>
   );

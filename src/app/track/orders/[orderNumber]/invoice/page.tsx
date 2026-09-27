@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { InvoiceActions } from "@/components/invoice/invoice-actions";
-import { InvoiceView } from "@/components/invoice/invoice-view";
+import { InvoiceDocument } from "@/components/invoice/invoice-document";
+import { parseInvoiceDesign } from "@/lib/invoice-model";
 import { getCustomerSession } from "@/lib/customer-portal/session";
 import { getInvoiceForAuthenticatedCustomer } from "@/server/queries/customer-portal/invoice";
 
-type PageProps = { params: Promise<{ orderNumber: string }> };
+type PageProps = { params: Promise<{ orderNumber: string }>; searchParams: Promise<{ design?: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { orderNumber } = await params;
@@ -30,35 +31,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * 404s here exactly like one that doesn't exist at all, mirroring
  * `TrackOrderDetailPage`'s own identical `notFound()` shape.
  */
-export default async function TrackInvoicePage({ params }: PageProps) {
+export default async function TrackInvoicePage({ params, searchParams }: PageProps) {
   const session = await getCustomerSession();
   if (!session) redirect("/track");
   if (!session.customer) notFound();
 
   const { orderNumber } = await params;
+  const { design } = await searchParams;
   const invoice = await getInvoiceForAuthenticatedCustomer(orderNumber, session.customer.id);
   if (!invoice) notFound();
 
   return (
-    // Dark Klasiq chrome around the invoice, matching every other
-    // customer-portal screen — but `InvoiceView` itself stays exactly as
-    // it was: a fixed light "paper" document, deliberately never
-    // theme-aware (see that component's own doc comment) and shared
-    // unchanged with the Admin invoice page. This wrapper is the ONLY
-    // thing that changed; the document a customer prints or downloads is
-    // byte-for-byte the same as before. `dark` is hardcoded (not
-    // `isDarkRoute`-conditional) — this standalone route has no light
-    // variant to fall back to, unlike pages inside `(site)`.
-    <div className="dark min-h-screen bg-background px-4 py-10 text-foreground print:bg-white print:p-0">
+    // The storefront's own colours around the bill; the bill itself is the
+    // same light "paper" document the shop prints and sends on WhatsApp
+    // (InvoiceDocument), so the customer sees exactly what the shop sees.
+    <div className="min-h-screen bg-background px-3 py-6 text-foreground sm:px-6 sm:py-10 print:bg-white print:p-0">
       <InvoiceActions
         backHref={`/track/orders/${orderNumber}`}
-        backLabel="Back to Order"
+        backLabel="Back to order"
         downloadHref={`/api/track/orders/${orderNumber}/invoice`}
         downloadFileName={`Invoice-${orderNumber}.pdf`}
       />
-      <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-lg shadow-black/30 print:rounded-none print:shadow-none">
-        <InvoiceView invoice={invoice} />
-      </div>
+      <InvoiceDocument invoice={invoice} design={parseInvoiceDesign(design)} />
 
       <div className="mx-auto mt-4 w-full max-w-2xl print:hidden">
         <Button
@@ -67,7 +61,7 @@ export default async function TrackInvoicePage({ params }: PageProps) {
           variant="ghost"
           className="h-10 w-full text-muted-foreground sm:w-auto"
         >
-          Continue Shopping
+          Continue shopping
         </Button>
       </div>
     </div>

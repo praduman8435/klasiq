@@ -6,21 +6,22 @@ import { cn } from "@/lib/utils";
 
 /**
  * The row of round category tiles at the top of the homepage, shopping-app
- * style. "Schools" comes first, so a parent looking for a uniform is one
- * tap from the school list. Scrolls sideways on phones; centred on desktop.
+ * style: the shop's categories first, then "Schools", so the site reads
+ * as a family store while a parent is still one tap from the school list.
+ * Scrolls sideways on phones; centred on desktop.
  */
-export function CategoryCircles({ categories }: { categories: { slug: string; name: string }[] }) {
+export function CategoryCircles({ categories }: { categories: { slug: string; name: string; icon: string | null }[] }) {
   const items = [
-    { href: "/schools", name: "Schools", icon: SchoolIcon, tint: "bg-primary text-primary-foreground" },
     ...categories.map((category) => {
       const tint = getCategoryTint(category.slug || category.name);
       return {
         href: `/${category.slug}`,
         name: category.name,
-        icon: getCategoryIcon(category.slug || category.name),
+        icon: getCategoryIcon(category.slug || category.name, category.icon),
         tint: cn(tint.bg, tint.fg),
       };
     }),
+    { href: "/schools", name: "Schools", icon: SchoolIcon, tint: "bg-secondary text-foreground/85" },
   ];
 
   return (

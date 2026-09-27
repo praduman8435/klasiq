@@ -9,9 +9,10 @@
  *   tiles, Fraunces wordmark only.
  * STORY: a parent sees "the whole family's clothes, here", trusts cash on
  *   delivery / pickup / 30 years, finds their school or browses a row.
- * FIRST VIEWPORT: pinned search (schools + products), a row of round
- *   category tiles led by Schools, then the red hero with its drawing
- *   and two buttons: Shop now, Find your school.
+ * FIRST VIEWPORT: pinned search (products, categories, schools), a row
+ *   of round category tiles (Schools last), then the red hero with its
+ *   drawing and one button: Shop now. Not school-only: the family shop
+ *   leads; schools stay one tap away.
  * FORM: the category standard, by the owner's choice (seed cf0e2a27).
  * FINISH: unreviewed and undocumented is unfinished; this build ends with
  *   the finish review, the verdict, and DESIGN.md
@@ -89,18 +90,12 @@ export default async function HomePage() {
             <p className="max-w-md text-pretty text-base leading-6 text-white sm:text-lg">
               {categoryLine} Home delivery, or pick up from our shop.
             </p>
-            <div className="mt-1 grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap">
+            <div className="mt-1 flex">
               <Link
                 href={rails.length > 0 ? "#shop" : categories[0] ? `/${categories[0].slug}` : "/search"}
-                className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl bg-accent px-4 text-sm font-bold text-accent-foreground transition-transform active:scale-[0.97] sm:px-5 sm:text-base"
+                className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl bg-accent px-6 text-sm font-bold text-accent-foreground transition-transform active:scale-[0.97] sm:px-5 sm:text-base"
               >
                 Shop now
-              </Link>
-              <Link
-                href="#schools"
-                className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl bg-black/25 px-3 text-sm font-semibold text-white ring-1 ring-white/40 transition-colors hover:bg-black/35 sm:px-5 sm:text-base"
-              >
-                Find your school
               </Link>
             </div>
           </div>
@@ -156,6 +151,14 @@ export default async function HomePage() {
         </section>
       )}
 
+
+      <div id="shop" className="flex scroll-mt-32 flex-col gap-2 sm:gap-3">
+        {fullRails.map(({ category, products }) => (
+          <ProductRail key={category.slug} title={category.name} href={`/${category.slug}`} products={products} />
+        ))}
+        {moreProducts.length > 0 && <ProductRail title="More to shop" products={moreProducts} />}
+      </div>
+
       <section id="schools" aria-labelledby="home-schools" className="scroll-mt-32 bg-card py-6 sm:py-8">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -195,13 +198,6 @@ export default async function HomePage() {
           )}
         </div>
       </section>
-
-      <div id="shop" className="flex scroll-mt-32 flex-col gap-2 sm:gap-3">
-        {fullRails.map(({ category, products }) => (
-          <ProductRail key={category.slug} title={category.name} href={`/${category.slug}`} products={products} />
-        ))}
-        {moreProducts.length > 0 && <ProductRail title="More to shop" products={moreProducts} />}
-      </div>
 
     </div>
   );

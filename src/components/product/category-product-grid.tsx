@@ -18,7 +18,7 @@ export function CategoryProductGrid({
 }: {
   title: string;
   description?: string;
-  products: ProductWithVariants[];
+  products: (ProductWithVariants & { school?: { slug: string; name: string } | null })[];
   emptyState?: ReactNode;
   headerExtra?: ReactNode;
   /** Shown between the header and the products (search puts schools here). */

@@ -24,6 +24,7 @@ export function ProductThumbnail({
   imageUrl,
   alt,
   categorySlug,
+  categoryIcon,
   className,
   compact = false,
   large = false,
@@ -31,6 +32,7 @@ export function ProductThumbnail({
   imageUrl?: string | null;
   alt: string;
   categorySlug: string;
+  categoryIcon?: string | null;
   className?: string;
   compact?: boolean;
   /** Use on the Product Detail page's much larger image slot — see
@@ -43,6 +45,7 @@ export function ProductThumbnail({
     return (
       <ProductPlaceholderImage
         categorySlug={categorySlug}
+        categoryIcon={categoryIcon}
         className={className}
         compact={compact}
         large={large}

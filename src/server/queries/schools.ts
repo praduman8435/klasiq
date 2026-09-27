@@ -64,7 +64,7 @@ export async function getSchoolAssignedProducts(params: {
       product: {
         include: {
           variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
-          category: { select: { slug: true, name: true } },
+          category: { select: { slug: true, name: true, icon: true } },
         },
       },
     },

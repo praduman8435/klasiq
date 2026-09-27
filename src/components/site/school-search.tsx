@@ -3,25 +3,58 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Loader2, School as SchoolIcon, Search } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Loader2, School as SchoolIcon, Search } from "lucide-react";
+import { ProductThumbnail } from "@/components/product/product-thumbnail";
+import { getCategoryIcon } from "@/lib/category-icons";
+import { formatPaise } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import type { SearchSuggestions } from "@/server/queries/search";
 
-type SchoolResult = {
-  slug: string;
-  name: string;
-  city: string | null;
-  logoUrl: string | null;
-};
+type SchoolResult = SearchSuggestions["schools"][number];
 
 type MenuRect = { top: number; left: number; width: number };
 
-type Option = { kind: "school"; school: SchoolResult } | { kind: "products"; query: string };
+type Option =
+  | { kind: "category"; category: SearchSuggestions["categories"][number] }
+  | { kind: "school"; school: SchoolResult }
+  | { kind: "product"; product: SearchSuggestions["products"][number] }
+  | { kind: "all"; query: string };
+
+const EMPTY: SearchSuggestions = { categories: [], schools: [], products: [] };
+
+function optionHref(option: Option): string {
+  switch (option.kind) {
+    case "category":
+      return `/${option.category.slug}`;
+    case "school":
+      return `/school/${option.school.slug}`;
+    case "product":
+      return `/product/${option.product.slug}`;
+    case "all":
+      return `/search?q=${encodeURIComponent(option.query)}`;
+  }
+}
+
+function optionKey(option: Option): string {
+  switch (option.kind) {
+    case "category":
+      return `c-${option.category.slug}`;
+    case "school":
+      return `s-${option.school.slug}`;
+    case "product":
+      return `p-${option.product.slug}`;
+    case "all":
+      return "all";
+  }
+}
+
+const GROUP_LABEL = { category: "Categories", school: "Schools", product: "Products" } as const;
 
 /**
- * The storefront search box. Schools always come first — typing two
- * letters of a school's name shows it — and with `withProducts` (the
- * header) the last row, and Enter, search the whole catalogue instead, so
- * one box finds both "Children Sr. Sec. School" and "black shoes".
+ * The storefront search box. With `withProducts` (the header) it suggests
+ * everything as you type — categories, schools and products with their
+ * price — and Enter searches the whole shop. Without it (the school
+ * finder), it suggests schools only.
  *
  * The dropdown portals to `document.body` and is positioned from the
  * input's live rect: rendered in-tree, it lost to later horizontally
@@ -46,7 +79,7 @@ export function SchoolSearch({
   const router = useRouter();
   const listId = useId();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SchoolResult[]>([]);
+  const [results, setResults] = useState<SearchSuggestions>(EMPTY);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -63,31 +96,38 @@ export function SchoolSearch({
     const timeout = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/schools/search?q=${encodeURIComponent(trimmed)}`, {
-          signal: controller.signal,
-        });
+        const url = withProducts
+          ? `/api/search/suggest?q=${encodeURIComponent(trimmed)}`
+          : `/api/schools/search?q=${encodeURIComponent(trimmed)}`;
+        const res = await fetch(url, { signal: controller.signal });
         if (!res.ok) throw new Error("search failed");
-        const data = (await res.json()) as { schools: SchoolResult[] };
-        setResults(data.schools);
+        const data = await res.json();
+        setResults(
+          withProducts ? (data as SearchSuggestions) : { ...EMPTY, schools: (data as { schools: SchoolResult[] }).schools },
+        );
         setActiveIndex(-1);
       } catch (error) {
-        if ((error as Error).name !== "AbortError") setResults([]);
+        if ((error as Error).name !== "AbortError") setResults(EMPTY);
       } finally {
         setIsLoading(false);
       }
-    }, 200);
+    }, 180);
 
     return () => {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [trimmed]);
+  }, [trimmed, withProducts]);
 
+  const searched = trimmed.length >= 2;
   const options: Option[] = [
-    ...(trimmed.length >= 2 ? results.map((school) => ({ kind: "school" as const, school })) : []),
-    ...(withProducts && trimmed ? [{ kind: "products" as const, query: trimmed }] : []),
+    ...(searched ? results.categories.map((category) => ({ kind: "category" as const, category })) : []),
+    ...(searched ? results.schools.map((school) => ({ kind: "school" as const, school })) : []),
+    ...(searched ? results.products.map((product) => ({ kind: "product" as const, product })) : []),
+    ...(withProducts && trimmed ? [{ kind: "all" as const, query: trimmed }] : []),
   ];
-  const showDropdown = isOpen && (withProducts ? trimmed.length > 0 : trimmed.length >= 2);
+  const nothingFound = searched && !isLoading && options.every((option) => option.kind === "all");
+  const showDropdown = isOpen && (withProducts ? trimmed.length > 0 : searched);
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -122,8 +162,8 @@ export function SchoolSearch({
   function choose(option: Option) {
     setIsOpen(false);
     setQuery("");
-    setResults([]);
-    router.push(option.kind === "school" ? `/school/${option.school.slug}` : `/search?q=${encodeURIComponent(option.query)}`);
+    setResults(EMPTY);
+    router.push(optionHref(option));
     onNavigate?.();
   }
 
@@ -136,7 +176,7 @@ export function SchoolSearch({
       event.preventDefault();
       const active = options[activeIndex];
       if (active) return choose(active);
-      if (withProducts && trimmed) return choose({ kind: "products", query: trimmed });
+      if (withProducts && trimmed) return choose({ kind: "all", query: trimmed });
       if (options.length === 1) return choose(options[0]);
       return;
     }
@@ -150,7 +190,7 @@ export function SchoolSearch({
     }
   }
 
-  const schoolsSearched = trimmed.length >= 2 && !isLoading;
+  const activeOption = activeIndex >= 0 ? options[activeIndex] : undefined;
 
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
@@ -167,7 +207,8 @@ export function SchoolSearch({
         aria-expanded={showDropdown}
         aria-controls={listId}
         aria-autocomplete="list"
-        aria-label={withProducts ? "Search for a school or a product" : "Search for your school"}
+        aria-activedescendant={activeOption ? `${listId}-${optionKey(activeOption)}` : undefined}
+        aria-label={withProducts ? "Search products, categories and schools" : "Search for your school"}
         autoComplete="off"
         enterKeyHint="search"
         autoFocus={autoFocus}
@@ -178,16 +219,16 @@ export function SchoolSearch({
           setIsOpen(true);
           setActiveIndex(-1);
           if (value.trim().length < 2) {
-            setResults([]);
+            setResults(EMPTY);
             setIsLoading(false);
           }
         }}
         onFocus={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder ?? (withProducts ? "Search school, uniform, shoes…" : "Type your school's name…")}
+        placeholder={placeholder ?? (withProducts ? "Search shirts, jeans, shoes, schools…" : "Type your school's name…")}
         className={cn(
           "w-full min-w-0 appearance-none text-foreground outline-none transition-[box-shadow,background-color,border-color] placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring [&::-webkit-search-cancel-button]:hidden",
-          size === "hero" && "h-13 rounded-2xl border border-border bg-card pl-12 pr-4 text-base shadow-[0_1px_2px_oklch(0.2_0.03_268/0.06)]",
+          size === "hero" && "h-13 rounded-2xl border border-border bg-card pl-12 pr-4 text-base",
           size === "compact" && "h-11 rounded-xl border border-border bg-card pl-10 pr-3 text-base",
           size === "header" &&
             "h-10 rounded-xl border border-transparent bg-muted pl-10 pr-3 text-base focus-visible:border-primary/40 focus-visible:bg-card",
@@ -204,60 +245,34 @@ export function SchoolSearch({
             role="listbox"
             aria-label="Search suggestions"
             style={{ top: menuRect.top, left: menuRect.left, width: menuRect.width }}
-            className="fixed z-50 max-h-[min(24rem,60vh)] overflow-y-auto overflow-x-hidden rounded-2xl border border-border bg-popover py-1.5 shadow-[0_12px_32px_-8px_oklch(0.2_0.03_268/0.25)]"
+            className="fixed z-50 max-h-[min(28rem,65vh)] overflow-y-auto overflow-x-hidden rounded-2xl border border-border bg-popover py-1.5 shadow-[0_16px_40px_-12px_oklch(0_0_0/0.7)]"
           >
-            {trimmed.length >= 2 && isLoading && (
+            {searched && isLoading && options.length <= 1 && (
               <li className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                Finding schools…
+                Searching…
               </li>
             )}
-            {schoolsSearched && results.length > 0 && (
-              <li role="presentation" className="px-4 pb-1 pt-2 text-xs font-semibold text-muted-foreground">
-                Schools
-              </li>
-            )}
-            {options.map((option, index) => (
-              <li key={option.kind === "school" ? option.school.slug : "products"} role="option" aria-selected={index === activeIndex}>
-                <button
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => choose(option)}
-                  className={cn(
-                    "flex min-h-12 w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors",
-                    index === activeIndex ? "bg-secondary" : "hover:bg-muted",
-                    option.kind === "products" && results.length > 0 && "border-t border-border",
-                  )}
-                >
-                  {option.kind === "school" ? (
-                    <>
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
-                        <SchoolIcon className="size-4.5" aria-hidden />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="line-clamp-2 font-medium text-foreground">{option.school.name}</span>
-                        {option.school.city && (
-                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">{option.school.city}</span>
-                        )}
-                      </span>
-                      <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
-                        <Search className="size-4" aria-hidden />
-                      </span>
-                      <span className="min-w-0 flex-1 truncate">
-                        See products for <span className="font-semibold">&ldquo;{option.query}&rdquo;</span>
-                      </span>
-                    </>
-                  )}
-                </button>
-              </li>
-            ))}
-            {schoolsSearched && results.length === 0 && !withProducts && (
+            {options.map((option, index) => {
+              const previous = options[index - 1];
+              const groupLabel = option.kind !== "all" && previous?.kind !== option.kind ? GROUP_LABEL[option.kind] : null;
+              return (
+                <SuggestionRow
+                  key={optionKey(option)}
+                  id={`${listId}-${optionKey(option)}`}
+                  option={option}
+                  active={index === activeIndex}
+                  groupLabel={groupLabel}
+                  divided={option.kind === "all" && index > 0}
+                  onChoose={() => choose(option)}
+                />
+              );
+            })}
+            {nothingFound && (
               <li className="px-4 py-3 text-sm text-muted-foreground">
-                No school found with that name. Try a shorter part of the name, or call the store.
+                {withProducts
+                  ? "No quick matches. Press Enter to search everything."
+                  : "No school found with that name. Try a shorter part of the name, or call the store."}
               </li>
             )}
           </ul>,
@@ -265,4 +280,106 @@ export function SchoolSearch({
         )}
     </div>
   );
+}
+
+function SuggestionRow({
+  id,
+  option,
+  active,
+  groupLabel,
+  divided,
+  onChoose,
+}: {
+  id: string;
+  option: Option;
+  active: boolean;
+  groupLabel: string | null;
+  divided: boolean;
+  onChoose: () => void;
+}) {
+  return (
+    <>
+      {groupLabel && (
+        <li role="presentation" className="px-4 pb-1 pt-2.5 text-xs font-semibold text-muted-foreground">
+          {groupLabel}
+        </li>
+      )}
+      <li id={id} role="option" aria-selected={active} className={cn(divided && "mt-1 border-t border-border pt-1")}>
+        <button
+          type="button"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={onChoose}
+          className={cn(
+            "flex min-h-12 w-full items-center gap-3 px-4 py-2 text-left text-sm transition-colors",
+            active ? "bg-secondary" : "hover:bg-muted",
+          )}
+        >
+          <OptionBody option={option} />
+        </button>
+      </li>
+    </>
+  );
+}
+
+function OptionBody({ option }: { option: Option }) {
+  switch (option.kind) {
+    case "category": {
+      const Icon = getCategoryIcon(option.category.slug, option.category.icon);
+      return (
+        <>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground/85">
+            {/* A fixed, module-level lucide icon picked by key, never a component defined during render. */}
+            {/* eslint-disable-next-line react-hooks/static-components */}
+            <Icon className="size-4.5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 truncate font-medium">{option.category.name}</span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        </>
+      );
+    }
+    case "school":
+      return (
+        <>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground/85">
+            <SchoolIcon className="size-4.5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="line-clamp-1 font-medium">{option.school.name}</span>
+            {option.school.city && <span className="block truncate text-xs text-muted-foreground">{option.school.city}</span>}
+          </span>
+          <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        </>
+      );
+    case "product":
+      return (
+        <>
+          <ProductThumbnail
+            imageUrl={option.product.imageUrl}
+            alt=""
+            categorySlug={option.product.category.slug}
+            categoryIcon={option.product.category.icon}
+            compact
+            className="size-10 shrink-0 rounded-lg"
+          />
+          <span className="min-w-0 flex-1">
+            <span className="line-clamp-1 font-medium">{option.product.name}</span>
+            <span className="block truncate text-xs text-muted-foreground">
+              {option.product.schoolName ?? option.product.category.name}
+            </span>
+          </span>
+          <span className="shrink-0 text-sm font-bold tabular-nums">{formatPaise(option.product.fromPriceInPaise)}</span>
+        </>
+      );
+    case "all":
+      return (
+        <>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+            <Search className="size-4" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 truncate">
+            See all results for <span className="font-semibold">&ldquo;{option.query}&rdquo;</span>
+          </span>
+        </>
+      );
+  }
 }

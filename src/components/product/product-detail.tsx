@@ -187,6 +187,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
           imageUrl={product.imageUrl}
           alt={product.name}
           categorySlug={product.category.slug}
+            categoryIcon={product.category.icon}
           large
           className="aspect-[4/3] w-full overflow-hidden rounded-2xl border transition-transform duration-500 ease-out hover:scale-[1.015] sm:aspect-square"
         />

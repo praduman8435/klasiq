@@ -1,15 +1,33 @@
 import {
   Backpack,
+  Baby,
   Footprints,
+  Gem,
+  Gift,
+  GraduationCap,
+  PencilRuler,
   Shirt,
   ShoppingBag,
-  Sparkles,
+  Tag,
+  Watch,
   createLucideIcon,
   type LucideIcon,
 } from "lucide-react";
+import { isCategoryIconKey, type CategoryIconKey } from "@/lib/category-icon-keys";
 
-/** Drawn in lucide's own 24px, 2px-stroke grammar — lucide has no sock
- * or trousers icon, and a T-shirt for both made Socks look like Uniforms. */
+// Drawn in lucide's own 24px, 2px-stroke grammar, for clothes lucide
+// doesn't have. Uniform is a shirt with a tie, so it never looks like the
+// plain Shirt category next to it.
+const Uniform = createLucideIcon("Uniform", [
+  [
+    "path",
+    {
+      d: "M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z",
+      key: "uniform-shirt",
+    },
+  ],
+  ["path", { d: "M12 6.5 10.9 8.2 12 15.5l1.1-7.3Z", key: "uniform-tie" }],
+]);
 const Sock = createLucideIcon("Sock", [
   ["path", { d: "M9 2h6v8.5l3.6 3.6a3 3 0 0 1-4.2 4.3l-5.2-5.2A3 3 0 0 1 9 11Z", key: "sock-body" }],
   ["path", { d: "M9 6h6", key: "sock-cuff" }],
@@ -18,37 +36,73 @@ const Trousers = createLucideIcon("Trousers", [
   ["path", { d: "M6 2h12l1 20h-5l-2-12-2 12H5Z", key: "trousers-legs" }],
   ["path", { d: "M6 6h12", key: "trousers-waist" }],
 ]);
+const Kurta = createLucideIcon("Kurta", [
+  ["path", { d: "M8 2h8l4.5 4.5-2.5 2.5L17 8v14H7V8L6 9 3.5 6.5Z", key: "kurta-body" }],
+  ["path", { d: "M10 2l2 4 2-4", key: "kurta-neck" }],
+  ["path", { d: "M12 6v5", key: "kurta-placket" }],
+]);
+const Dress = createLucideIcon("Dress", [
+  ["path", { d: "M9 2v3l1 3-5 14h14L14 8l1-3V2", key: "dress-body" }],
+  ["path", { d: "M10 8h4", key: "dress-waist" }],
+]);
 
-/**
- * The ONE shared slug→icon lookup for category imagery across the
- * storefront (product placeholder images, homepage category tiles). Kept
- * in a single place after Phase 3.7 Part 7's audit found the placeholder
- * image and the homepage tiles each keeping their own independent,
- * hardcoded map — both had drifted out of sync with the real category
- * slugs (`school-bags` lingered after the category was renamed to
- * `bags`; a newer `kurtis` category was in neither map), so an unmapped
- * category silently fell back to a generic shirt icon or, on the
- * homepage, vanished from the tile grid entirely. Matching by keyword
- * (not just an exact slug) means a category the admin renames or adds
- * later (see `docs/PHASE_3_6_7_REPORT.md` dynamic-category architecture)
- * still gets a reasonable icon without a code change, rather than only
- * ever working for a fixed, closed list of slugs.
- */
-const CATEGORY_ICON_KEYWORDS: [pattern: RegExp, icon: LucideIcon][] = [
-  [/shoe|footwear|sandal|sneaker/, Footprints],
-  [/bag|backpack|trolley/, Backpack],
-  [/sock/, Sock],
-  [/jean|denim|trouser|pant/, Trousers],
-  [/kurti|dress|ethnic/, Sparkles],
-  [/uniform|shirt|pant|skirt|sweater|blazer|tie|belt/, Shirt],
+const ICONS: Record<CategoryIconKey, LucideIcon> = {
+  uniform: Uniform,
+  shirt: Shirt,
+  trousers: Trousers,
+  kurta: Kurta,
+  dress: Dress,
+  shoes: Footprints,
+  socks: Sock,
+  bag: Backpack,
+  handbag: ShoppingBag,
+  stationery: PencilRuler,
+  baby: Baby,
+  jewellery: Gem,
+  watch: Watch,
+  gift: Gift,
+  school: GraduationCap,
+  sale: Tag,
+};
+
+/** Used when the admin leaves the icon on "Auto": matched by keyword on
+ * the category's slug or name, so a renamed or new category still gets a
+ * sensible icon without anyone choosing one. */
+const CATEGORY_ICON_KEYWORDS: [pattern: RegExp, icon: CategoryIconKey][] = [
+  [/uniform/, "uniform"],
+  [/shoe|footwear|sandal|sneaker|chappal/, "shoes"],
+  [/sock/, "socks"],
+  [/school-?bag|backpack|trolley/, "bag"],
+  [/bag|purse|wallet/, "handbag"],
+  [/jean|denim|trouser|pant|lower/, "trousers"],
+  [/kurt|ethnic|suit/, "kurta"],
+  [/dress|frock|gown|skirt/, "dress"],
+  [/shirt|top|tee|sweater|blazer|jacket/, "shirt"],
+  [/station|book|pen|copy/, "stationery"],
+  [/baby|kid|infant/, "baby"],
+  [/jewel|jewell|bangle|earring/, "jewellery"],
+  [/watch/, "watch"],
+  [/gift|toy/, "gift"],
 ];
 
-/** Falls back to a generic shopping-bag icon for a category this list
- * doesn't recognize at all, rather than mislabeling it as a shirt. */
-export function getCategoryIcon(categorySlugOrName: string): LucideIcon {
+export function guessCategoryIconKey(categorySlugOrName: string): CategoryIconKey {
   const value = categorySlugOrName.toLowerCase();
-  for (const [pattern, icon] of CATEGORY_ICON_KEYWORDS) {
-    if (pattern.test(value)) return icon;
+  for (const [pattern, key] of CATEGORY_ICON_KEYWORDS) {
+    if (pattern.test(value)) return key;
   }
-  return ShoppingBag;
+  return "handbag";
+}
+
+/**
+ * The ONE category → icon lookup for the storefront (category tiles, the
+ * menu, product placeholders): the icon the admin picked, else a guess
+ * from the slug or name.
+ */
+export function getCategoryIcon(categorySlugOrName: string, chosenIcon?: string | null): LucideIcon {
+  if (isCategoryIconKey(chosenIcon)) return ICONS[chosenIcon];
+  return ICONS[guessCategoryIconKey(categorySlugOrName)];
+}
+
+export function getIconByKey(key: CategoryIconKey): LucideIcon {
+  return ICONS[key];
 }

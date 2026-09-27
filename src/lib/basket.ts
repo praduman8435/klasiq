@@ -95,7 +95,7 @@ export async function getBasket() {
             include: {
               product: {
                 include: {
-                  category: { select: { slug: true } },
+                  category: { select: { slug: true, icon: true } },
                   school: { select: { name: true, slug: true } },
                 },
               },

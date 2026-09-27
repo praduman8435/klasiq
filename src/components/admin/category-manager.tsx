@@ -6,6 +6,12 @@ import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CategoryIconPicker } from "@/components/admin/category-icon-picker";
+import {
+  isCategoryIconKey,
+  type CategoryIconKey,
+} from "@/lib/category-icon-keys";
+import { getCategoryIcon } from "@/lib/category-icons";
 import { slugify } from "@/lib/slug";
 import {
   createCategoryAction,
@@ -18,6 +24,7 @@ type Category = {
   name: string;
   slug: string;
   description: string | null;
+  icon: string | null;
   displayInHeader: boolean;
   headerOrder: number;
   _count: { products: number };
@@ -43,7 +50,10 @@ function HeaderVisibilityFields({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <label htmlFor={`${idPrefix}-display-in-header`} className="flex items-center gap-1.5 text-xs font-medium">
+      <label
+        htmlFor={`${idPrefix}-display-in-header`}
+        className="flex items-center gap-1.5 text-xs font-medium"
+      >
         <input
           id={`${idPrefix}-display-in-header`}
           type="checkbox"
@@ -53,7 +63,10 @@ function HeaderVisibilityFields({
         />
         Display in header
       </label>
-      <label htmlFor={`${idPrefix}-header-order`} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <label
+        htmlFor={`${idPrefix}-header-order`}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground"
+      >
         Order
         <Input
           id={`${idPrefix}-header-order`}
@@ -68,14 +81,25 @@ function HeaderVisibilityFields({
   );
 }
 
-function CategoryEditForm({ category, onDone }: { category: Category; onDone: () => void }) {
+function CategoryEditForm({
+  category,
+  onDone,
+}: {
+  category: Category;
+  onDone: () => void;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState(category.name);
   const [slug, setSlug] = useState(category.slug);
   const [description, setDescription] = useState(category.description ?? "");
-  const [displayInHeader, setDisplayInHeader] = useState(category.displayInHeader);
+  const [displayInHeader, setDisplayInHeader] = useState(
+    category.displayInHeader,
+  );
   const [headerOrder, setHeaderOrder] = useState(category.headerOrder);
+  const [icon, setIcon] = useState<CategoryIconKey | null>(
+    isCategoryIconKey(category.icon) ? category.icon : null,
+  );
 
   function handleSave() {
     if (isPending) return;
@@ -87,6 +111,7 @@ function CategoryEditForm({ category, onDone }: { category: Category; onDone: ()
         description,
         displayInHeader,
         headerOrder,
+        icon,
       });
       if (result.success) {
         toast.success("Category updated.");
@@ -101,8 +126,18 @@ function CategoryEditForm({ category, onDone }: { category: Category; onDone: ()
   return (
     <div className="flex flex-col gap-2 rounded-lg bg-secondary/40 p-2">
       <div className="flex flex-wrap items-center gap-2">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="h-8 w-40 text-xs" />
-        <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="Slug" className="h-8 w-40 text-xs" />
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+          className="h-8 w-40 text-xs"
+        />
+        <Input
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder="Slug"
+          className="h-8 w-40 text-xs"
+        />
         <Input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -114,8 +149,15 @@ function CategoryEditForm({ category, onDone }: { category: Category; onDone: ()
           this is a plain, independent input, not derived from Name, so
           nothing here can silently change a category's URL. */}
       <p className="text-[11px] text-muted-foreground">
-        Changing the slug changes this category&apos;s storefront URL — leave it as-is when only renaming.
+        Changing the slug changes this category&apos;s storefront URL — leave it
+        as-is when only renaming.
       </p>
+      <CategoryIconPicker
+        value={icon}
+        onChange={setIcon}
+        categoryName={name || slug}
+        idPrefix={`edit-${category.id}`}
+      />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <HeaderVisibilityFields
           displayInHeader={displayInHeader}
@@ -125,10 +167,21 @@ function CategoryEditForm({ category, onDone }: { category: Category; onDone: ()
           idPrefix={`edit-${category.id}`}
         />
         <div className="flex items-center gap-2">
-          <Button type="button" size="sm" disabled={isPending} onClick={handleSave}>
+          <Button
+            type="button"
+            size="sm"
+            disabled={isPending}
+            onClick={handleSave}
+          >
             Save
           </Button>
-          <Button type="button" size="sm" variant="ghost" disabled={isPending} onClick={onDone}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={isPending}
+            onClick={onDone}
+          >
             Cancel
           </Button>
         </div>
@@ -166,23 +219,32 @@ function CategoryRow({ category }: { category: Category }) {
   if (editing) {
     return (
       <li className="py-2">
-        <CategoryEditForm category={category} onDone={() => setEditing(false)} />
+        <CategoryEditForm
+          category={category}
+          onDone={() => setEditing(false)}
+        />
       </li>
     );
   }
 
   return (
     <li className="flex items-center justify-between gap-3 py-3 text-sm">
-      <div>
-        <p className="font-medium">{category.name}</p>
-        <p className="text-xs text-muted-foreground">
-          /{category.slug} &middot; {category._count.products} product
-          {category._count.products === 1 ? "" : "s"}
-          {category.description ? ` · ${category.description}` : ""}
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {category.displayInHeader ? `In header · position ${category.headerOrder}` : "Hidden from header"}
-        </p>
+      <div className="flex min-w-0 items-center gap-3">
+        <RowIcon category={category} />
+        <div className="min-w-0">
+          <p className="font-medium">{category.name}</p>
+          <p className="text-xs text-muted-foreground">
+            /{category.slug} &middot; {category._count.products} product
+            {category._count.products === 1 ? "" : "s"}
+            {category.description ? ` · ${category.description}` : ""}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {category.displayInHeader
+              ? `In header · position ${category.headerOrder}`
+              : "Hidden from header"}
+            {category.icon ? "" : " · icon: auto"}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-1">
         <button
@@ -208,6 +270,17 @@ function CategoryRow({ category }: { category: Category }) {
   );
 }
 
+function RowIcon({ category }: { category: Category }) {
+  const Icon = getCategoryIcon(category.slug || category.name, category.icon);
+  return (
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground/80">
+      {/* A fixed, module-level lucide icon picked by key, never a component defined during render. */}
+      {/* eslint-disable-next-line react-hooks/static-components */}
+      <Icon className="size-4.5" aria-hidden />
+    </span>
+  );
+}
+
 export function CategoryManager({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -216,6 +289,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
   const [slugTouched, setSlugTouched] = useState(false);
   const [displayInHeader, setDisplayInHeader] = useState(false);
   const [headerOrder, setHeaderOrder] = useState(0);
+  const [icon, setIcon] = useState<CategoryIconKey | null>(null);
 
   function handleNameChange(value: string) {
     setName(value);
@@ -228,6 +302,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
     setSlugTouched(false);
     setDisplayInHeader(false);
     setHeaderOrder(0);
+    setIcon(null);
   }
 
   function handleAdd(event: React.FormEvent) {
@@ -239,6 +314,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
         slug: slug.trim(),
         displayInHeader,
         headerOrder,
+        icon,
       });
       if (result.success) {
         toast.success("Category created.");
@@ -279,6 +355,12 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
             className="sm:max-w-xs"
           />
         </div>
+        <CategoryIconPicker
+          value={icon}
+          onChange={setIcon}
+          categoryName={name || slug}
+          idPrefix="new-category"
+        />
         <div className="flex flex-wrap items-center justify-between gap-2">
           <HeaderVisibilityFields
             displayInHeader={displayInHeader}
@@ -287,7 +369,11 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
             onHeaderOrderChange={setHeaderOrder}
             idPrefix="new-category"
           />
-          <Button type="submit" variant="outline" disabled={isPending || !name.trim() || !slug.trim()}>
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={isPending || !name.trim() || !slug.trim()}
+          >
             Add category
           </Button>
         </div>

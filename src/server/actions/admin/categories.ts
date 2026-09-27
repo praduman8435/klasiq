@@ -127,6 +127,7 @@ export async function createCategoryAction(
       description: parsed.data.description || null,
       displayInHeader: parsed.data.displayInHeader,
       headerOrder: parsed.data.headerOrder,
+      icon: parsed.data.icon ?? null,
       sortOrder: (maxSortOrder._max.sortOrder ?? -1) + 1,
     },
   });
@@ -188,6 +189,7 @@ export async function updateCategoryAction(
       description: parsed.data.description || null,
       displayInHeader: parsed.data.displayInHeader,
       headerOrder: parsed.data.headerOrder,
+      ...(parsed.data.icon !== undefined ? { icon: parsed.data.icon } : {}),
     },
   });
 

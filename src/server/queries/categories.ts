@@ -1,4 +1,6 @@
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { LISTABLE_PRODUCT } from "@/server/queries/search";
 
 /**
  * Phase 3.6.7 Part 1 — section 6's "the storefront header must become:
@@ -16,7 +18,7 @@ export async function getHeaderCategories() {
   return db.category.findMany({
     where: { displayInHeader: true },
     orderBy: [{ headerOrder: "asc" }, { name: "asc" }],
-    select: { slug: true, name: true },
+    select: { slug: true, name: true, icon: true },
   });
 }
 
@@ -89,7 +91,7 @@ async function findGenericProducts(params: { categorySlug?: string; query?: stri
     orderBy: { name: "asc" },
     include: {
       variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
-      category: { select: { slug: true, name: true } },
+      category: { select: { slug: true, name: true, icon: true } },
     },
     take: params.limit ?? GENERIC_PRODUCT_RESULT_LIMIT,
   });
@@ -154,4 +156,78 @@ export async function getFeaturedGenericProducts(limit = 5) {
     }
   }
   return diverse;
+}
+
+const LISTING_INCLUDE = {
+  variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
+  category: { select: { slug: true, name: true, icon: true } },
+  school: { select: { slug: true, name: true } },
+} satisfies Prisma.ProductInclude;
+
+export type ListingProduct = Prisma.ProductGetPayload<{ include: typeof LISTING_INCLUDE }>;
+
+function nameMatches(query?: string): Prisma.ProductWhereInput {
+  const trimmed = query?.trim();
+  if (!trimmed) return {};
+  return {
+    OR: [
+      { name: { contains: trimmed, mode: "insensitive" } },
+      { description: { contains: trimmed, mode: "insensitive" } },
+      { school: { name: { contains: trimmed, mode: "insensitive" } } },
+    ],
+  };
+}
+
+/**
+ * Everything a category page shows: general products AND every school's
+ * own uniform items (labelled with their school on the card), so the
+ * Uniforms page really has every uniform. `schoolSlug` narrows to one
+ * school — its own items plus the general items assigned to it.
+ */
+export async function getCategoryListingProducts(
+  categorySlug: string,
+  options: { query?: string; schoolSlug?: string } = {},
+): Promise<ListingProduct[]> {
+  return db.product.findMany({
+    where: {
+      AND: [
+        LISTABLE_PRODUCT,
+        { category: { slug: categorySlug } },
+        nameMatches(options.query),
+        options.schoolSlug
+          ? { OR: [{ school: { slug: options.schoolSlug } }, { assignments: { some: { school: { slug: options.schoolSlug } } } }] }
+          : {},
+      ],
+    },
+    orderBy: [{ schoolId: { sort: "asc", nulls: "first" } }, { name: "asc" }],
+    include: LISTING_INCLUDE,
+    take: GENERIC_PRODUCT_RESULT_LIMIT * 2,
+  });
+}
+
+/** The schools that have uniform items in a category (their own, or
+ * general items assigned to them) — the chips on the category page. */
+export async function getCategorySchools(categorySlug: string) {
+  return db.school.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { uniformProducts: { some: { isActive: true, category: { slug: categorySlug } } } },
+        { assignments: { some: { product: { isActive: true, category: { slug: categorySlug } } } } },
+      ],
+    },
+    orderBy: [{ isDemo: "asc" }, { name: "asc" }],
+    select: { slug: true, name: true },
+  });
+}
+
+/** The /search page: every listable product, school items included. */
+export async function searchListingProducts(query: string): Promise<ListingProduct[]> {
+  if (!query.trim()) return [];
+  return db.product.findMany({
+    where: { AND: [LISTABLE_PRODUCT, nameMatches(query)] },
+    orderBy: [{ schoolId: { sort: "asc", nulls: "first" } }, { name: "asc" }],
+    include: LISTING_INCLUDE,
+    take: GENERIC_PRODUCT_RESULT_LIMIT,
+  });
 }

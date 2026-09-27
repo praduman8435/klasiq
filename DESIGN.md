@@ -210,7 +210,7 @@ This replaces the earlier "Classic, Modernized" world: its light parchment, Marq
 The palette is black, red and grey only: five near-black-to-graphite surface steps in a faintly cool grey (hue 260), a warm light-grey text colour, and one red in two lightnesses.
 
 ### Primary
-- **Klasiq Red** (`klasiq-red`): the fill red. Used for primary buttons (Add, Add Complete Set), the hero panel, the red promo-banner tone, the "Schools" category circle, the "% off" badge, the bag count badge, the active desktop category underline, and the carousel's active dot. It always carries Klasiq Red Ink on top.
+- **Klasiq Red** (`klasiq-red`): the fill red. Used for primary buttons (Add, Add Complete Set), the hero panel, the red promo-banner tone, the "% off" badge, the bag count badge, the active desktop category underline, and the carousel's active dot. It always carries Klasiq Red Ink on top.
 - **Klasiq Red Ink** (`klasiq-red-ink`): the near-white text and icons on any Klasiq Red fill.
 - **Deal Red** (`deal-red`): the lighter red, used for small red *text and icons* on dark surfaces, such as "View all" links, "See all schools", footer and drawer icon tiles, the trust-strip icons, and "Only a few left". At 0.56 lightness, Klasiq Red is too dark to read as small type on charcoal. Deal Red is the same hue, lifted until it reads.
 
@@ -266,7 +266,7 @@ The surface ramp is deliberate. Night Black (0.13) is lower than Recess Grey (0.
 
 **The header** (sticky, z-30). On phones it has two pinned rows. The first holds the menu button, the wordmark, Orders and Bag (56px tall). The second is the full-width search box. From `md` the search moves inline and the header is a single 64px row. From `lg` the category links appear inline between the wordmark and search.
 
-**Homepage order.** Category circles (Schools first), then the red hero, a trust strip (cash on delivery, delivery, pickup, "30 saal ka bharosa"), the promo-banner carousel, "Offers for you" coupon tickets, the schools section (six school cards plus "See all N schools"), one product rail per category, and a final "More to shop" section. Any category with fewer than three products is merged into "More to shop" instead of getting a thin rail of its own.
+**Homepage order.** Category circles (the shop's categories, then Schools last), then the red hero, a trust strip (cash on delivery, delivery, pickup, "30 saal ka bharosa"), the promo-banner carousel, "Offers for you" coupon tickets, one product rail per category, a final "More to shop" section, and then the schools section (six school cards plus "See all N schools"). The site is a family store first, not school-only (owner's rule): schools stay one tap away but never lead the page. Any category with fewer than three products is merged into "More to shop" instead of getting a thin rail of its own.
 
 **Sideways rows.** Sideways rows scroll with a hidden scrollbar and snap on phones, then become grids from `sm`. Product rails show 4 columns at `sm` and 5 at `lg`, and banners show 2–3 columns. The product grid on category and search pages is 2 columns on phones, 3 at `sm`, 4 at `lg` and 5 at `xl`, with 10px gaps on phones and 16px from `sm`.
 
@@ -312,7 +312,7 @@ Full circles are used for category tiles (60px, 72px from `sm`), icon discs (36�
 Buttons are compact, bold and tactile. They press to 97% scale (`active:scale-[0.97]`).
 - **Primary** (`button-primary`): Klasiq Red fill with near-white ink, 12px radius, 600 weight at 14px. On product cards it is 36px tall and fills the space beside the size select, and its label stays literally "Add" so it survives two-column phone grids (`aria-label` carries the full action). Hover goes to 90% red. After adding, it shows "Added" with a check on Raised Graphite for about 1.4s. When out of stock it turns Recess Grey with Pewter text and can't be pressed.
 - **On-red** (`button-on-red`): Light Grey with dark ink, 44px tall, bold, used for "Shop now" on the hero and for CTAs on red banners.
-- **Ghost on red** (`button-ghost-on-red`): 12% white fill with a 30% white ring, 44px tall. Used for "Find your school" on the hero. On hover it rises to 20% white.
+- **Ghost on red** (`button-ghost-on-red`): 25% black fill with a 40% white ring, 44px tall. Kept for a secondary action on red; the hero itself now has only "Shop now".
 - **Outline** (`button-outline`): Hairline border, Deal Red bold label and chevron, full width, 48px tall ("See all N schools"). On hover it fills with Raised Graphite.
 - **Text link** ("View all"): Deal Red 14px/600 with a chevron, at least 40px tall, with a Raised Graphite hover fill.
 - **Focus:** every control shows a 3px ring in 50% Klasiq Red on `:focus-visible`.
@@ -342,10 +342,10 @@ Buttons are compact, bold and tactile. They press to 97% scale (`active:scale-[0
 - **Footer** (the kirana-shop pattern): a Card Charcoal band. On the left is a brand block with the wordmark, the store description and the "backed by" line in Pewter. On the right is a short column of icon rows: phone number, Get directions, Track an order, Find your school. Each row has a 32px Raised Graphite icon tile with a Deal Red icon and 14px semibold text, and turns red on hover. A copyright line closes it. Search is not repeated in the footer.
 
 ### Category Circles (signature)
-A sideways row of round tiles at the very top of the homepage. It is centred on desktop and snaps on phones. Each tile is a 60px circle (72px from `sm`) with a 28–32px line icon at stroke 1.75 and a two-line 12px semibold label under it. "Schools" always comes first and is the only red circle. Every other category is Raised Graphite with a Chalk icon. On hover a tile lifts 2px, and on press it shrinks to 95%.
+A sideways row of round tiles at the very top of the homepage. It is centred on desktop and snaps on phones. Each tile is a 60px circle (72px from `sm`) with a 28–32px line icon at stroke 1.75 and a two-line 12px semibold label under it. Every tile, "Schools" included, is Raised Graphite with a Chalk icon, and "Schools" comes last. Each category's icon is the one chosen in Admin → Categories (the icon picker, `CATEGORY_ICONS`), or "Auto", guessed from its name; Uniforms has its own shirt-and-tie drawing so it never matches Shirts. On hover a tile lifts 2px, and on press it shrinks to 95%.
 
 ### Red Hero (signature)
-A Klasiq Red panel with a 26.4px radius, inside a Card Charcoal band. On the left are the Display headline, a line in 85% white listing the real category names, and two buttons: On-red "Shop now" and Ghost-on-red "Find your school" (a two-column grid on phones). On the right is a flat drawing (`HeroArt`) of a school shirt with a striped tie, a school bag, a kurti and a shoe, in black, grey and red only on soft white discs. On phones the drawing sits under the copy at 62% width. From `sm` it is anchored bottom-right at 88% of the panel's height. It is decorative and hidden from assistive tech.
+A Klasiq Red panel with a 26.4px radius, inside a Card Charcoal band. On the left are the Display headline, a line in full white listing the real category names, and one button: On-red "Shop now". On the right is a flat drawing (`HeroArt`) of a school shirt with a striped tie, a school bag, a kurti and a shoe, in black, grey and red only on soft white discs. On phones the drawing sits under the copy at 62% width. From `sm` it is anchored bottom-right at 88% of the panel's height. It is decorative and hidden from assistive tech.
 
 ### Promo Banner Card
 The owner-managed homepage banners, shared exactly with the admin preview, which wraps them in `.storefront`. Each is a 2xl card at least 160px tall with 20px padding, a 20px bold title and 14px body copy. A large icon disc is tucked into the top-right corner, and the CTA sits at the bottom left (36px, 12px radius, trailing arrow). There are three tones and no others:
@@ -388,3 +388,9 @@ Below `sm`, a fixed bottom bar (Card Charcoal at 95% with backdrop blur and a Ha
 - **Don't** widen the product card toward a detail-page layout to fix a spacing complaint. The fix belongs inside the compact card.
 - **Don't** give a category with fewer than three products its own rail. It goes into "More to shop".
 - **Don't** repeat search in the footer, or grow the footer beyond the brand block and a short list of icon rows.
+
+### Search Suggestions (header)
+Typing two letters in the header search opens a dropdown grouped as Categories (icon tile + name), Schools (crest disc + town) and Products (thumbnail, name, the school's name for a school's own item, and the from-price on the right), ending with "See all results for …". Enter searches everything. School-only uniform items are included everywhere products are listed (category pages, search, suggestions) and carry their school's name; category pages that have school items show a row of school chips ("All", then each school) to narrow the list.
+
+### Bag and Checkout (after the kirana shop)
+Both are stacks of Card Charcoal cards (2xl radius, hairline border): the bag's item list and summary; checkout's Contact, Delivery and Payment steps and a sticky Order summary card on desktop. The quantity stepper is a solid red pill. On phones each page ends in the same fixed red bar: 56px tall, 2xl radius, the item count or "Total" and the amount on the left, and the action ("Checkout" / "Place order") with an arrow on the right.

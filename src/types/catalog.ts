@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 export type ProductWithVariants = Prisma.ProductGetPayload<{
-  include: { variants: true; category: { select: { slug: true; name: true } } };
+  include: { variants: true; category: { select: { slug: true; name: true; icon: true } } };
 }>;
 
 export type RecommendedSetWithItems = Prisma.RecommendedUniformSetGetPayload<{

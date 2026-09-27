@@ -18,11 +18,14 @@ import { cn } from "@/lib/utils";
  */
 export function ProductPlaceholderImage({
   categorySlug,
+  categoryIcon,
   className,
   compact = false,
   large = false,
 }: {
   categorySlug: string;
+  /** The icon chosen in admin for the category, if any. */
+  categoryIcon?: string | null;
   className?: string;
   /** Use for small thumbnails (e.g. checkout order summary rows) where a
    * large icon doesn't fit cleanly. */
@@ -33,7 +36,7 @@ export function ProductPlaceholderImage({
    * that much larger; caught during the homepage final-polish critique. */
   large?: boolean;
 }) {
-  const Icon = getCategoryIcon(categorySlug);
+  const Icon = getCategoryIcon(categorySlug, categoryIcon);
   const tint = getCategoryTint(categorySlug);
 
   return (
