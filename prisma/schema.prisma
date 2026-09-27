@@ -278,6 +278,10 @@ model ProductVariant {
   size              String
   sku               String      @unique
   priceInPaise      Int
+  /// The printed MRP, when the size has one (optional — most uniforms
+  /// don't carry a printed MRP). When set, priceInPaise must not exceed it;
+  /// the storefront shows it struck through only when it's higher.
+  mrpInPaise        Int?
   stockQuantity     Int         @default(0)
   lowStockThreshold Int         @default(5)
   stockStatus       StockStatus @default(IN_STOCK)

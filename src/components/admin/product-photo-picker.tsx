@@ -185,8 +185,7 @@ export function ProductPhotoPicker({
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Photos are cropped to a square from the centre, so keep the product in the middle. Save the product
-          afterwards to keep the photo.
+          Keep the product in the middle; the photo is cropped to a square. It&apos;s kept when you save.
         </p>
         {error && (
           <p role="alert" className="text-sm text-destructive">

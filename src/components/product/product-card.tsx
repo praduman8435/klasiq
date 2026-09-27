@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ProductThumbnail } from "@/components/product/product-thumbnail";
 import { formatPaise } from "@/lib/money";
+import { MrpPrice } from "@/components/product/mrp-price";
 import { STOCK_STATUS_LABEL, isOrderable } from "@/lib/stock";
 import { cn } from "@/lib/utils";
 import { addToBasket } from "@/server/actions/basket";
@@ -123,8 +124,11 @@ export function ProductCard({ product }: { product: ProductWithVariants }) {
 
         {selectedVariant && (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium tabular-nums text-foreground">
-              {formatPaise(selectedVariant.priceInPaise)}
+            <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+              <span className="text-sm font-medium tabular-nums text-foreground">
+                {formatPaise(selectedVariant.priceInPaise)}
+              </span>
+              <MrpPrice priceInPaise={selectedVariant.priceInPaise} mrpInPaise={selectedVariant.mrpInPaise} />
             </span>
             {hasSizeChoice && (
               <Select value={selectedVariantId} onValueChange={(id) => setSelectedVariantId(id as string)}>

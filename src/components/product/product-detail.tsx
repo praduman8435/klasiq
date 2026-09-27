@@ -8,6 +8,7 @@ import { Check, ChevronRight, Minus, Plus, Store, Truck, Wallet } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { ProductThumbnail } from "@/components/product/product-thumbnail";
 import { formatPaise } from "@/lib/money";
+import { MrpPrice } from "@/components/product/mrp-price";
 import { FULFILLMENT_CONFIG } from "@/lib/fulfillment-config";
 import { STOCK_STATUS_LABEL, isOrderable } from "@/lib/stock";
 import { cn } from "@/lib/utils";
@@ -227,6 +228,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                   <span className="font-heading text-3xl font-semibold tabular-nums tracking-tight text-foreground">
                     {formatPaise(selectedVariant.priceInPaise)}
                   </span>
+                  <MrpPrice priceInPaise={selectedVariant.priceInPaise} mrpInPaise={selectedVariant.mrpInPaise} className="text-sm" />
                   <span className={cn("text-sm font-medium", STOCK_BADGE_CLASS[selectedVariant.stockStatus])}>
                     {STOCK_STATUS_LABEL[selectedVariant.stockStatus]}
                   </span>

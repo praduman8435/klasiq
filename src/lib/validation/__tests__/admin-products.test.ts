@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { productFormSchema, variantFormSchema } from "@/lib/validation/admin-products";
+import { checkPriceAgainstMrp, createProductSchema, productFormSchema, variantFormSchema } from "@/lib/validation/admin-products";
 
 describe("productFormSchema", () => {
   function base(overrides: Partial<Record<string, unknown>> = {}) {
@@ -80,7 +80,51 @@ describe("variantFormSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects a missing SKU", () => {
-    expect(variantFormSchema.safeParse(base({ sku: "" })).success).toBe(false);
+  it("allows a blank SKU (one is generated) but caps its length", () => {
+    expect(variantFormSchema.safeParse(base({ sku: "" })).success).toBe(true);
+    expect(variantFormSchema.safeParse(base({ sku: undefined })).success).toBe(true);
+    expect(variantFormSchema.safeParse(base({ sku: "X".repeat(61) })).success).toBe(false);
+  });
+
+  it("accepts an MRP, a null MRP (clear it), or no MRP at all", () => {
+    expect(variantFormSchema.safeParse(base({ mrpInRupees: 380 })).success).toBe(true);
+    expect(variantFormSchema.safeParse(base({ mrpInRupees: null })).success).toBe(true);
+    const omitted = variantFormSchema.safeParse(base());
+    expect(omitted.success && omitted.data.mrpInRupees).toBeUndefined();
+  });
+
+  it("rejects a zero or negative MRP", () => {
+    expect(variantFormSchema.safeParse(base({ mrpInRupees: 0 })).success).toBe(false);
+    expect(variantFormSchema.safeParse(base({ mrpInRupees: -10 })).success).toBe(false);
+  });
+});
+
+describe("createProductSchema", () => {
+  const product = { name: "White Shirt", categoryId: "cat_123", schoolId: null, isActive: true };
+
+  it("makes the web address optional (it's generated from the name)", () => {
+    expect(createProductSchema.safeParse({ ...product, slug: "" }).success).toBe(true);
+    expect(createProductSchema.safeParse(product).success).toBe(true);
+  });
+
+  it("takes the first size with the product, and needs a price for it", () => {
+    expect(createProductSchema.safeParse({ ...product, firstSize: { size: "28", priceInRupees: 350, stockQuantity: 5 } }).success).toBe(true);
+    expect(createProductSchema.safeParse({ ...product, firstSize: { size: "28", priceInRupees: 0 } }).success).toBe(false);
+    expect(createProductSchema.safeParse({ ...product, firstSize: { size: "", priceInRupees: 350 } }).success).toBe(false);
+  });
+});
+
+describe("checkPriceAgainstMrp", () => {
+  it("allows a price below or equal to MRP", () => {
+    expect(checkPriceAgainstMrp(35000, 38000)).toBeNull();
+    expect(checkPriceAgainstMrp(38000, 38000)).toBeNull();
+  });
+
+  it("rejects a price above MRP, even by one paisa", () => {
+    expect(checkPriceAgainstMrp(38001, 38000)).toMatch(/MRP/);
+  });
+
+  it("allows any price when there is no MRP", () => {
+    expect(checkPriceAgainstMrp(999999, null)).toBeNull();
   });
 });
