@@ -883,6 +883,9 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
     <>
       <ellipse cx="122" cy="610" rx="66" ry="8" fill="rgba(0,0,0,0.45)" />
       <GirlHeadBack p={p} />
+      {/* A healthy, ordinary build: the body is drawn about 10% fuller
+          than the slim base shapes, while the head and hair keep their size. */}
+      <g transform="matrix(1.1 0 0 1 -12 0)">
       {/* legs, socks, shoes */}
       <path d={LEG_LEFT} fill={`url(#${p}-skin)`} />
       <path d={LEG_RIGHT} fill={`url(#${p}-skin)`} />
@@ -1178,6 +1181,7 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
         </>
       )}
 
+      </g>
       <GirlHead p={p} />
     </>
   );
