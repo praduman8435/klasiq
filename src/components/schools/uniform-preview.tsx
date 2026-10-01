@@ -154,20 +154,12 @@ function FigureDefs({ p, parts }: { p: string; parts: ChosenParts }) {
   );
 }
 
-/** Where a part set to None would go: a faint dashed outline only. */
-function Ghost({ d, transform }: { d: string; transform?: string }) {
-  return (
-    <path
-      d={d}
-      transform={transform}
-      fill="rgba(255,255,255,0.035)"
-      stroke="rgba(255,255,255,0.32)"
-      strokeWidth="1.2"
-      strokeDasharray="4 4"
-      strokeLinejoin="round"
-    />
-  );
-}
+/** What a child wears when a part is set to None: a plain vest or banyan
+ * (no shirt), plain knee-length base shorts (no pant or skirt), bare
+ * feet (no shoes). Soft heather greys, so it never reads as a chosen
+ * uniform piece. */
+const BASE_TOP = "#d6d9de";
+const BASE_SHORTS = "#80858f";
 
 /** A piece of cloth: its colour, then side shading and a soft top light. */
 function Cloth({
@@ -507,8 +499,25 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
         </>
       ) : (
         <>
-          <Ghost d={LEG_LEFT} />
-          <Ghost d={LEG_RIGHT} />
+          <path
+            d="M84 398 L110 398 C110 440 109 500 108 540 L107 588 L88 588 L86 540 C85 500 84 440 84 398 Z"
+            fill={`url(#${p}-skin)`}
+          />
+          <path
+            d="M130 398 L156 398 C158 440 160 500 162 540 L166 586 L148 588 L144 540 C140 500 134 440 130 398 Z"
+            fill={`url(#${p}-skin)`}
+          />
+          <ellipse cx="97" cy="452" rx="6" ry="4" fill="rgba(0,0,0,0.07)" />
+          <ellipse cx="144" cy="452" rx="6" ry="4" fill="rgba(0,0,0,0.07)" />
+          <Cloth
+            d="M78 276 L162 276 C164 300 165 332 165 372 L166 404 L130 406 L121 326 L119 326 L110 406 L76 404 L76 372 C75 332 76 302 78 276 Z"
+            fill={BASE_SHORTS}
+            p={p}
+          />
+          <path
+            d="M78 276 L162 276 L162 286 L78 286 Z"
+            fill="rgba(0,0,0,0.14)"
+          />
         </>
       )}
       {parts.shoes ? (
@@ -526,8 +535,14 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
         </>
       ) : (
         <>
-          <Ghost d={SHOE_LEFT} />
-          <Ghost d={SHOE_RIGHT} />
+          <path
+            d="M88 584 L108 584 C110 592 110 600 107 604 C104 607 98 607 92 606 L78 605 C72 604 71 599 75 595 C79 591 84 587 88 584 Z"
+            fill={`url(#${p}-skin)`}
+          />
+          <path
+            d="M148 584 L165 584 C171 588 176 593 177 598 C178 603 174 606 168 606 L152 606 C147 606 146 600 147 593 Z"
+            fill={`url(#${p}-skin)`}
+          />
         </>
       )}
 
@@ -622,7 +637,28 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
           />
         </>
       ) : (
-        <Ghost d={hasSweater || hasBlazer ? B_SHIRT_BODY : B_SHIRT} />
+        <>
+          {/* no shirt: skin, then a plain vest */}
+          <path d={B_SHIRT_BODY} fill={`url(#${p}-skin)`} />
+          {!hasSweater && !hasBlazer && (
+            <>
+              <path
+                d="M70 122 C60 128 56 146 55 168 L53 208 L72 212 L75 180 C74 160 73 140 72 124 Z"
+                fill={`url(#${p}-skin)`}
+              />
+              <path
+                d="M70 122 C60 128 56 146 55 168 L53 208 L72 212 L75 180 C74 160 73 140 72 124 Z"
+                fill={`url(#${p}-skin)`}
+                transform={MIRROR}
+              />
+            </>
+          )}
+          <Cloth
+            d="M90 116 C94 128 104 140 120 140 C136 140 146 128 150 116 L160 121 C161 140 162 160 163 182 L162 280 L78 280 L77 182 C78 160 79 140 80 121 Z"
+            fill={BASE_TOP}
+            p={p}
+          />
+        </>
       )}
       {parts.pant ? (
         <>
@@ -880,8 +916,14 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
         </>
       ) : (
         <>
-          <Ghost d={SHOE_LEFT} />
-          <Ghost d={SHOE_RIGHT} />
+          <path
+            d="M95 584 L110 584 C112 592 112 599 109 603 C106 606 100 606 95 605 L84 604 C79 603 78 599 81 595 C85 591 90 587 95 584 Z"
+            fill={`url(#${p}-skin)`}
+          />
+          <path
+            d="M143 584 L157 584 C163 588 167 593 168 598 C169 602 165 605 160 605 L147 605 C143 605 142 599 143 593 Z"
+            fill={`url(#${p}-skin)`}
+          />
         </>
       )}
 
@@ -947,7 +989,28 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
           />
         </>
       ) : (
-        <Ghost d={hasSweater || hasBlazer ? G_SHIRT_BODY : G_SHIRT} />
+        <>
+          {/* no shirt: skin, then a plain vest top */}
+          <path d={G_SHIRT_BODY} fill={`url(#${p}-skin)`} />
+          {!hasSweater && !hasBlazer && (
+            <>
+              <path
+                d="M78 124 C68 130 64 148 63 170 L60 206 L78 210 L82 180 C81 160 80 142 80 126 Z"
+                fill={`url(#${p}-skin)`}
+              />
+              <path
+                d="M78 124 C68 130 64 148 63 170 L60 206 L78 210 L82 180 C81 160 80 142 80 126 Z"
+                fill={`url(#${p}-skin)`}
+                transform={MIRROR}
+              />
+            </>
+          )}
+          <Cloth
+            d="M95 117 C99 127 108 133 120 133 C132 133 141 127 145 117 L156 122 C157 140 158 160 158 180 L155 268 L85 268 L82 180 C82 160 83 140 84 122 Z"
+            fill={BASE_TOP}
+            p={p}
+          />
+        </>
       )}
       {parts.tie && (
         <>
@@ -1030,7 +1093,17 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
           />
         </>
       ) : (
-        <Ghost d="M86 258 L154 258 L178 410 C140 416 100 416 62 410 Z" />
+        <>
+          <Cloth
+            d="M86 258 L154 258 C156 290 158 330 158 372 L159 406 L126 408 L121 300 L119 300 L114 408 L81 406 L82 372 C82 330 84 290 86 258 Z"
+            fill={BASE_SHORTS}
+            p={p}
+          />
+          <path
+            d="M86 258 L154 258 L154.4 268 L85.6 268 Z"
+            fill="rgba(0,0,0,0.14)"
+          />
+        </>
       )}
       {parts.belt && (
         <>

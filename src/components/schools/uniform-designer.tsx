@@ -302,8 +302,15 @@ function Swatch({ selected, onClick, label, children }: { selected: boolean; onC
   );
 }
 
+const NEEDED_BY = ["This month", "In 1–3 months", "Next session", "Not sure yet"];
+
+/**
+ * The quote request, kept short: the school and how to reach you are all
+ * that's required; role and timing are one-tap chips; the note is tucked
+ * away until wanted. Saved with the current design.
+ */
 function QuoteForm({ selection }: { selection: DesignSelection }) {
-  const ids = { school: useId(), name: useId(), role: useId(), phone: useId(), city: useId(), count: useId(), classes: useId(), when: useId(), message: useId() };
+  const ids = { school: useId(), city: useId(), count: useId(), classes: useId(), name: useId(), phone: useId(), message: useId() };
   const [values, setValues] = useState({
     schoolName: "",
     contactName: "",
@@ -316,6 +323,7 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
     message: "",
     website: "",
   });
+  const [showNote, setShowNote] = useState(false);
   const [error, setError] = useState<{ message: string; field?: string } | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -323,19 +331,21 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
 
   if (done) {
     return (
-      <div role="status" className="rounded-2xl border border-border bg-card p-6 text-center">
-        <CheckCircle2 className="mx-auto size-10 text-deal" aria-hidden />
-        <h2 className="mt-3 text-xl font-bold">Request sent. Dhanyavaad!</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your request number is <span className="font-semibold text-foreground">{done}</span>. We&apos;ll call you on{" "}
-          {values.phone} soon with a quote.
+      <div role="status" className="rounded-3xl border border-border bg-card px-5 py-8 text-center">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-secondary">
+          <CheckCircle2 className="size-6 text-deal" aria-hidden />
+        </span>
+        <h2 className="mt-3 text-lg font-bold">Request sent. Dhanyavaad!</h2>
+        <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+          Request <span className="font-semibold text-foreground">{done}</span>. We&apos;ll call you on {values.phone} with the
+          price for your school.
         </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <a href={STORE_CONTACT.phoneHref} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border px-4 text-sm font-semibold">
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <a href={STORE_CONTACT.phoneHref} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground">
             <Phone className="size-4" aria-hidden />
             Call us now
           </a>
-          <Link href="/for-schools" className="inline-flex h-10 items-center rounded-xl border border-border px-4 text-sm font-semibold">
+          <Link href="/for-schools" className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium text-muted-foreground hover:text-foreground">
             Back to the sample book
           </Link>
         </div>
@@ -344,8 +354,13 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
   }
 
   const field =
-    "h-11 w-full rounded-xl border border-border bg-background px-3.5 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring";
+    "h-11 w-full rounded-xl border border-transparent bg-muted px-3.5 text-base outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-white/30 focus-visible:bg-background aria-invalid:border-destructive";
   const invalid = (name: string) => error?.field === name;
+  const chip = (active: boolean) =>
+    cn(
+      "h-9 rounded-full border px-3.5 text-sm transition-colors",
+      active ? "border-white/80 bg-white/10 font-semibold text-white" : "border-border text-foreground/70 hover:text-foreground",
+    );
 
   return (
     <form
@@ -360,97 +375,130 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
           else setError(result.error);
         });
       }}
-      className="rounded-2xl border border-border bg-card p-5 sm:p-6"
+      className="rounded-3xl border border-border bg-card p-4 sm:p-6"
     >
-      <h2 className="text-xl font-bold">Get a quote for your school</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Send this design with a few details. We&apos;ll call you with the price for your school, no obligation.
-      </p>
+      <h2 className="text-lg font-bold">Get a quote</h2>
+      <p className="mt-0.5 text-sm text-muted-foreground">No payment now. We&apos;ll call you with the price for your school.</p>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <Field id={ids.school} label="School name" required>
-          <input id={ids.school} value={values.schoolName} onChange={(e) => set("schoolName", e.target.value)} aria-invalid={invalid("schoolName")} className={field} />
-        </Field>
-        <Field id={ids.name} label="Your name" required>
-          <input id={ids.name} value={values.contactName} onChange={(e) => set("contactName", e.target.value)} aria-invalid={invalid("contactName")} className={field} autoComplete="name" />
-        </Field>
-        <Field id={ids.role} label="You are the">
-          <select id={ids.role} value={values.role} onChange={(e) => set("role", e.target.value)} className={field}>
-            <option value="">Choose…</option>
-            {ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field id={ids.phone} label="Mobile number" required>
-          <input
-            id={ids.phone}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="98765 43210"
-            value={values.phone}
-            onChange={(e) => set("phone", e.target.value)}
-            aria-invalid={invalid("phone")}
-            className={field}
-          />
-        </Field>
-        <Field id={ids.city} label="City / town">
-          <input id={ids.city} value={values.city} onChange={(e) => set("city", e.target.value)} className={field} />
-        </Field>
-        <Field id={ids.count} label="About how many students?">
-          <input id={ids.count} type="number" inputMode="numeric" min={1} value={values.studentCount} onChange={(e) => set("studentCount", e.target.value)} aria-invalid={invalid("studentCount")} className={field} />
-        </Field>
-        <Field id={ids.classes} label="Classes">
-          <input id={ids.classes} placeholder="e.g. Nursery to Class 8" value={values.classes} onChange={(e) => set("classes", e.target.value)} className={field} />
-        </Field>
-        <Field id={ids.when} label="Needed by">
-          <input id={ids.when} placeholder="e.g. before April" value={values.neededBy} onChange={(e) => set("neededBy", e.target.value)} className={field} />
-        </Field>
-        <div className="sm:col-span-2">
-          <Field id={ids.message} label="Anything else? (sizes, logo, house T-shirts…)">
-            <textarea
-              id={ids.message}
-              rows={3}
-              value={values.message}
-              onChange={(e) => set("message", e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-base outline-none focus-visible:ring-3 focus-visible:ring-ring"
+      <fieldset className="mt-5">
+        <legend className="text-xs font-semibold text-muted-foreground">School</legend>
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <Field id={ids.school} label="School name" required>
+            <input id={ids.school} value={values.schoolName} onChange={(e) => set("schoolName", e.target.value)} aria-invalid={invalid("schoolName")} className={field} />
+          </Field>
+          <Field id={ids.city} label="Town">
+            <input id={ids.city} value={values.city} onChange={(e) => set("city", e.target.value)} className={field} />
+          </Field>
+          <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:grid-cols-2">
+            <Field id={ids.count} label="Students">
+              <input
+                id={ids.count}
+                type="number"
+                inputMode="numeric"
+                min={1}
+                placeholder="About"
+                value={values.studentCount}
+                onChange={(e) => set("studentCount", e.target.value)}
+                aria-invalid={invalid("studentCount")}
+                className={field}
+              />
+            </Field>
+            <Field id={ids.classes} label="Classes">
+              <input id={ids.classes} placeholder="Nursery–8" value={values.classes} onChange={(e) => set("classes", e.target.value)} className={field} />
+            </Field>
+          </div>
+        </div>
+        <p className="mt-3 text-sm font-medium">Needed by</p>
+        <div role="radiogroup" aria-label="Needed by" className="mt-2 flex flex-wrap gap-2">
+          {NEEDED_BY.map((option) => (
+            <button key={option} type="button" role="radio" aria-checked={values.neededBy === option} onClick={() => set("neededBy", values.neededBy === option ? "" : option)} className={chip(values.neededBy === option)}>
+              {option}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="mt-6">
+        <legend className="text-xs font-semibold text-muted-foreground">You</legend>
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <Field id={ids.name} label="Your name" required>
+            <input id={ids.name} value={values.contactName} onChange={(e) => set("contactName", e.target.value)} aria-invalid={invalid("contactName")} className={field} autoComplete="name" />
+          </Field>
+          <Field id={ids.phone} label="Mobile number" required>
+            <input
+              id={ids.phone}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="98765 43210"
+              value={values.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              aria-invalid={invalid("phone")}
+              className={field}
             />
           </Field>
         </div>
-        <input
-          type="text"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden
-          value={values.website}
-          onChange={(e) => set("website", e.target.value)}
-          className="absolute -left-[9999px] size-px opacity-0"
-          name="website"
-        />
-      </div>
+        <p className="mt-3 text-sm font-medium">I am the</p>
+        <div role="radiogroup" aria-label="I am the" className="mt-2 flex flex-wrap gap-2">
+          {ROLES.map((role) => (
+            <button key={role} type="button" role="radio" aria-checked={values.role === role} onClick={() => set("role", values.role === role ? "" : role)} className={chip(values.role === role)}>
+              {role}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      {showNote ? (
+        <div className="mt-6">
+          <Field id={ids.message} label="Note">
+            <textarea
+              id={ids.message}
+              rows={3}
+              autoFocus
+              placeholder="Sizes, logo, house T-shirts…"
+              value={values.message}
+              onChange={(e) => set("message", e.target.value)}
+              className="w-full rounded-xl border border-transparent bg-muted px-3.5 py-2.5 text-base outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30 focus-visible:bg-background"
+            />
+          </Field>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setShowNote(true)} className="mt-5 text-sm font-medium text-deal hover:underline">
+          + Add a note (sizes, logo, house T-shirts)
+        </button>
+      )}
+
+      <input
+        type="text"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden
+        value={values.website}
+        onChange={(e) => set("website", e.target.value)}
+        className="absolute -left-[9999px] size-px opacity-0"
+        name="website"
+      />
 
       {error && (
-        <p role="alert" className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+        <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
           {error.message}
         </p>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
+      <div className="mt-6 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex h-11 items-center rounded-xl bg-primary px-6 text-base font-bold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {isPending ? "Sending…" : "Send request"}
+          {!isPending && <ArrowRight className="size-4" aria-hidden />}
         </button>
         <a
           href={`https://wa.me/${STORE_CONTACT.whatsapp}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-11 items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          className="inline-flex h-10 items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <MessageCircle className="size-4" aria-hidden />
           Or chat on WhatsApp
@@ -462,10 +510,10 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
 
 function Field({ id, label, required = false, children }: { id: string; label: string; required?: boolean; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-semibold">
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium">
         {label}
-        {required && <span className="text-deal"> *</span>}
+        {required && <span className="text-muted-foreground"> *</span>}
       </label>
       {children}
     </div>

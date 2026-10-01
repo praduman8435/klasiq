@@ -33,7 +33,8 @@ export const SAMPLE_PATTERN_LABEL: Record<SamplePattern, string> = {
 
 /** The parts the designer lets a school choose, in picker order, and the
  * URL key each is saved under. Every part can be set to None (not part of
- * the uniform); the preview then shows only a faint outline where it goes. `optional:
+ * the uniform); the child is then shown in a plain base vest or shorts, or
+ * bare feet, never a chosen-looking piece. `optional:
  * false` parts start on a sample on a fresh visit. */
 export const DESIGN_PARTS = [
   { kind: "SHIRT", key: "shirt", optional: false },
