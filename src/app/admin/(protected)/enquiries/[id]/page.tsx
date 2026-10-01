@@ -114,7 +114,9 @@ export default async function AdminEnquiryPage({ params }: { params: Promise<{ i
         </div>
 
         <div className="storefront self-start rounded-2xl border border-border bg-card p-4 text-foreground lg:sticky lg:top-6">
-          <UniformPreview parts={parts} idPrefix={`enq-${enquiry.id}`} />
+          <div className="h-96 rounded-xl bg-[radial-gradient(ellipse_at_50%_30%,oklch(0.32_0.02_260),oklch(0.16_0.02_260)_70%)] p-3">
+            <UniformPreview parts={parts} idPrefix={`enq-${enquiry.id}`} />
+          </div>
         </div>
       </div>
     </div>
