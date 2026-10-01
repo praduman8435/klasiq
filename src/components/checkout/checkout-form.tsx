@@ -633,7 +633,7 @@ export function CheckoutForm({
           Bag's Checkout bar: total on the left, the action on the right.
           Still `type="submit"` inside this same `<form>`, so it runs the
           identical `handleSubmit` as the in-content button above. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
+      <div data-sticky-bar className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
         <button
           type="submit"
           disabled={isPending || !canSubmit || isRefreshingQuote}

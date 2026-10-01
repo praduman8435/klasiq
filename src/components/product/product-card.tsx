@@ -91,7 +91,7 @@ export function ProductCard({
       : 0;
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_8px_24px_-12px_oklch(0.2_0.03_268/0.25)]">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_8px_24px_-12px_oklch(0.2_0.03_268/0.25)]">
       {/* Duplicates the name link below, so it is hidden from assistive
           tech; touch and mouse users can still tap the picture. */}
       <Link

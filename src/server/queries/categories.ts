@@ -231,3 +231,70 @@ export async function searchListingProducts(query: string): Promise<ListingProdu
     take: GENERIC_PRODUCT_RESULT_LIMIT,
   });
 }
+
+const RECOMMENDATION_LIMIT = 10;
+
+/** "Similar products" on a product page: the same category, this product
+ * left out. General items first, then school items. */
+export async function getSimilarProducts(product: { id: string; categoryId: string }): Promise<ListingProduct[]> {
+  return db.product.findMany({
+    where: { AND: [LISTABLE_PRODUCT, { categoryId: product.categoryId }, { id: { not: product.id } }] },
+    orderBy: [{ schoolId: { sort: "asc", nulls: "first" } }, { name: "asc" }],
+    include: LISTING_INCLUDE,
+    take: RECOMMENDATION_LIMIT,
+  });
+}
+
+/** "More for <school>" on a school item's page: that school's own items
+ * and the general items assigned to it, from every category. */
+export async function getMoreForSchool(schoolId: string, excludeId: string): Promise<ListingProduct[]> {
+  return db.product.findMany({
+    where: {
+      AND: [
+        LISTABLE_PRODUCT,
+        { id: { not: excludeId } },
+        { OR: [{ schoolId }, { assignments: { some: { schoolId } } }] },
+      ],
+    },
+    orderBy: { name: "asc" },
+    include: LISTING_INCLUDE,
+    take: RECOMMENDATION_LIMIT,
+  });
+}
+
+/** "You may also like": general items from OTHER categories, taken one
+ * category at a time so the row mixes shoes, shirts, bags and so on. */
+export async function getYouMayAlsoLike(
+  product: { id: string; categoryId: string },
+  excludeIds: string[] = [],
+): Promise<ListingProduct[]> {
+  const pool = await db.product.findMany({
+    where: {
+      AND: [
+        LISTABLE_PRODUCT,
+        { schoolId: null },
+        { categoryId: { not: product.categoryId } },
+        { id: { notIn: [product.id, ...excludeIds] } },
+      ],
+    },
+    orderBy: [{ category: { headerOrder: "asc" } }, { name: "asc" }],
+    include: LISTING_INCLUDE,
+    take: RECOMMENDATION_LIMIT * 4,
+  });
+  const byCategory = new Map<string, ListingProduct[]>();
+  for (const item of pool) {
+    const list = byCategory.get(item.categoryId) ?? [];
+    list.push(item);
+    byCategory.set(item.categoryId, list);
+  }
+  const queues = [...byCategory.values()];
+  const mixed: ListingProduct[] = [];
+  while (mixed.length < RECOMMENDATION_LIMIT && queues.some((queue) => queue.length > 0)) {
+    for (const queue of queues) {
+      const next = queue.shift();
+      if (next) mixed.push(next);
+      if (mixed.length >= RECOMMENDATION_LIMIT) break;
+    }
+  }
+  return mixed;
+}

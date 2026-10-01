@@ -118,9 +118,9 @@ export default async function CheckoutPage() {
     // Full dark redesign — matches the Bag/PDP "one continuous surface"
     // precedent (no card-in-card) and this round's compact-consumer-app
     // spacing discipline throughout `CheckoutForm` itself. Bottom padding
-    // + `pb-28` clear the mobile-only sticky "Place Order" bar the form
+    // + the footer clear the mobile-only sticky "Place Order" bar the form
     // renders internally, the same pattern as the Bag's own sticky bar.
-    <div className="mx-auto max-w-5xl px-4 py-6 pb-28 sm:px-6 sm:pb-6">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <h1 className="text-3xl font-bold leading-none sm:text-4xl">
         Checkout
       </h1>

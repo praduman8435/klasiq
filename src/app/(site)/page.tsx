@@ -2,7 +2,7 @@
  * DIRECTION CONTRACT (homepage redesign, 2026-09-28)
  * THESIS: the whole family's shop in one scroll — uniforms, shoes, bags,
  *   kurtis and jeans side by side — with every school one tap away;
- *   refuses the dark "cinematic" hero with a lone school search box.
+ *   refuses a big fixed hero and a lone school search box.
  * OWN-WORLD: Myntra/Flipkart-grade shopping app in black, red and grey
  *   only (owner's rule): near-black page, dark-grey cards, Klasiq Red for
  *   actions, light grey for the button on red, round grey category
@@ -10,8 +10,8 @@
  * STORY: a parent sees "the whole family's clothes, here", trusts cash on
  *   delivery / pickup / 30 years, finds their school or browses a row.
  * FIRST VIEWPORT: pinned search (products, categories, schools), a row
- *   of round category tiles (Schools last), then the red hero with its
- *   drawing and one button: Shop now. Not school-only: the family shop
+ *   of round category tiles (Schools last), then the owner's banners
+ *   (Admin → Banners); no fixed hero, by the owner's choice. Not school-only: the family shop
  *   leads; schools stay one tap away. The trust strip closes the page.
  * FORM: the category standard, by the owner's choice (seed cf0e2a27).
  * FINISH: unreviewed and undocumented is unfinished; this build ends with
@@ -21,7 +21,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Banknote, BadgeCheck, Store, Truck, ChevronRight } from "lucide-react";
 import { CategoryCircles } from "@/components/home/category-circles";
-import { HeroArt } from "@/components/home/hero-art";
 import { ProductRail } from "@/components/home/product-rail";
 import { PromoCarousel } from "@/components/home/promo-carousel";
 import { SchoolCard } from "@/components/school/school-card";
@@ -64,9 +63,6 @@ export default async function HomePage() {
   const fullRails = rails.filter((rail) => rail.products.length >= MIN_RAIL_PRODUCTS);
   const moreProducts = rails.filter((rail) => rail.products.length < MIN_RAIL_PRODUCTS).flatMap((rail) => rail.products);
 
-  const categoryLine = categories.length
-    ? `${new Intl.ListFormat("en-IN", { type: "conjunction" }).format(categories.map((c) => c.name))}.`
-    : BRAND.tagline;
 
   const promises = [
     { icon: Banknote, title: "Cash on delivery", detail: "Pay when it arrives" },
@@ -78,30 +74,9 @@ export default async function HomePage() {
   ];
 
   return (
-    <div className="flex flex-col gap-2 sm:gap-3">
+    <div className="flex flex-col divide-y divide-border">
       <CategoryCircles categories={categories} />
 
-      <section aria-labelledby="home-hero" className="bg-card px-3 pb-3 sm:px-6 sm:pb-5">
-        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-primary text-primary-foreground">
-          <div className="relative z-10 flex flex-col gap-4 px-5 pb-2 pt-6 sm:max-w-[58%] sm:px-10 sm:py-12 lg:py-14">
-            <h1 id="home-hero" className="text-balance text-3xl font-extrabold leading-[1.1] tracking-[-0.02em] sm:text-4xl lg:text-5xl">
-              Poore parivaar ki shopping, ek hi jagah
-            </h1>
-            <p className="max-w-md text-pretty text-base leading-6 text-white sm:text-lg">
-              {categoryLine} Home delivery, or pick up from our shop.
-            </p>
-            <div className="mt-1 flex">
-              <Link
-                href={rails.length > 0 ? "#shop" : categories[0] ? `/${categories[0].slug}` : "/search"}
-                className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl bg-accent px-6 text-sm font-bold text-accent-foreground transition-transform active:scale-[0.97] sm:px-5 sm:text-base"
-              >
-                Shop now
-              </Link>
-            </div>
-          </div>
-          <HeroArt className="pointer-events-none -mt-2 ml-auto mr-2 w-[62%] max-w-60 sm:absolute sm:bottom-3 sm:right-6 sm:mt-0 sm:h-[88%] sm:w-auto sm:max-w-none lg:right-12" />
-        </div>
-      </section>
 
       {banners.length > 0 && (
         <div className="bg-card px-4 py-4 sm:px-6">
@@ -136,7 +111,7 @@ export default async function HomePage() {
       )}
 
 
-      <div id="shop" className="flex scroll-mt-32 flex-col gap-2 sm:gap-3">
+      <div id="shop" className="flex scroll-mt-32 flex-col divide-y divide-border">
         {fullRails.map(({ category, products }) => (
           <ProductRail key={category.slug} title={category.name} href={`/${category.slug}`} products={products} />
         ))}

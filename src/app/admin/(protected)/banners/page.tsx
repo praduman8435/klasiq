@@ -30,7 +30,7 @@ export default async function AdminBannersPage() {
         <div>
           <h1 className="font-heading text-xl font-semibold tracking-tight">Banners</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            The swipeable row under the school search on the homepage · {liveCount} live now
+            The swipeable row at the top of the homepage, under the category tiles · {liveCount} live now
           </p>
         </div>
         <Button render={<Link href="/admin/banners/new" />} nativeButton={false} className="h-9">

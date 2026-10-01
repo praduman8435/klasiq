@@ -4,21 +4,21 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, ChevronRight, Minus, Plus, Store, Truck, Wallet } from "lucide-react";
+import { Banknote, Check, ChevronRight, Minus, Plus, Store, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductThumbnail } from "@/components/product/product-thumbnail";
 import { formatPaise } from "@/lib/money";
 import { MrpPrice } from "@/components/product/mrp-price";
 import { FULFILLMENT_CONFIG } from "@/lib/fulfillment-config";
-import { STOCK_STATUS_LABEL, isOrderable } from "@/lib/stock";
+import { isOrderable } from "@/lib/stock";
 import { cn } from "@/lib/utils";
 import { addToBasket } from "@/server/actions/basket";
 import type { ProductDetail as ProductDetailData } from "@/server/queries/products";
 
-const STOCK_BADGE_CLASS: Record<string, string> = {
-  IN_STOCK: "text-emerald-600 dark:text-emerald-400",
-  LOW_STOCK: "text-amber-600 dark:text-amber-400",
-  OUT_OF_STOCK: "text-muted-foreground line-through",
+const STOCK_NOTE: Record<string, { text: string; className: string } | null> = {
+  IN_STOCK: null,
+  LOW_STOCK: { text: "Only a few left", className: "text-deal" },
+  OUT_OF_STOCK: { text: "Out of stock", className: "text-muted-foreground" },
 };
 
 /**
@@ -166,10 +166,14 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
   }, [addError]);
 
   const hasVariants = sortedVariants.length > 0;
+  const offPercent =
+    selectedVariant?.mrpInPaise && selectedVariant.mrpInPaise > selectedVariant.priceInPaise
+      ? Math.round(((selectedVariant.mrpInPaise - selectedVariant.priceInPaise) / selectedVariant.mrpInPaise) * 100)
+      : 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:py-10 sm:pb-10 lg:py-12">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-muted-foreground">
+    <div className="mx-auto max-w-6xl pb-6 sm:px-6 sm:py-8 lg:py-10">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 px-4 py-3 text-xs text-muted-foreground sm:px-0 sm:pt-0 sm:text-sm">
         <Link href="/" className="underline-offset-2 hover:text-foreground hover:underline">
           Home
         </Link>
@@ -182,14 +186,14 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
         </Link>
       </nav>
 
-      <div className="mt-6 grid gap-10 sm:grid-cols-2 lg:gap-16">
+      <div className="grid sm:mt-2 sm:grid-cols-2 sm:gap-10 lg:gap-14">
         <ProductThumbnail
           imageUrl={product.imageUrl}
           alt={product.name}
           categorySlug={product.category.slug}
             categoryIcon={product.category.icon}
           large
-          className="aspect-[4/3] w-full overflow-hidden rounded-2xl border transition-transform duration-500 ease-out hover:scale-[1.015] sm:aspect-square"
+          className="aspect-square w-full overflow-hidden sm:sticky sm:top-36 sm:rounded-2xl sm:border sm:border-border"
         />
 
         {/* `min-w-0` is required, not decorative: a grid/flex item's
@@ -199,18 +203,12 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             without it, a product with enough sizes to need scrolling
             instead silently widens this whole column (and the page)
             past the viewport. */}
-        <div className="flex min-w-0 flex-col">
-          <h1 className="text-balance font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-            {product.name}
-          </h1>
+        <div className="flex min-w-0 flex-col px-4 pt-5 sm:px-0 sm:pt-0">
+          <p className="text-xs font-semibold text-muted-foreground">{product.category.name}</p>
+          <h1 className="mt-1 text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl">{product.name}</h1>
           {product.school && (
             <p className="mt-1.5 text-xs font-medium text-muted-foreground">
               Exclusive to {product.school.name}
-            </p>
-          )}
-          {product.description && (
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-              {product.description}
             </p>
           )}
 
@@ -225,18 +223,23 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
           ) : (
             <>
               {selectedVariant && (
-                <p className="mt-5 flex items-baseline gap-2.5">
-                  <span className="font-heading text-3xl font-semibold tabular-nums tracking-tight text-foreground">
-                    {formatPaise(selectedVariant.priceInPaise)}
-                  </span>
-                  <MrpPrice priceInPaise={selectedVariant.priceInPaise} mrpInPaise={selectedVariant.mrpInPaise} className="text-sm" />
-                  <span className={cn("text-sm font-medium", STOCK_BADGE_CLASS[selectedVariant.stockStatus])}>
-                    {STOCK_STATUS_LABEL[selectedVariant.stockStatus]}
-                  </span>
-                </p>
+                <div className="mt-4">
+                  <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                    <span className="text-3xl font-bold tabular-nums tracking-tight">
+                      {formatPaise(selectedVariant.priceInPaise)}
+                    </span>
+                    <MrpPrice priceInPaise={selectedVariant.priceInPaise} mrpInPaise={selectedVariant.mrpInPaise} className="text-sm" />
+                    {offPercent > 0 && <span className="text-sm font-bold text-deal">{offPercent}% off</span>}
+                  </p>
+                  {STOCK_NOTE[selectedVariant.stockStatus] && (
+                    <p className={cn("mt-1 text-sm font-semibold", STOCK_NOTE[selectedVariant.stockStatus]!.className)}>
+                      {STOCK_NOTE[selectedVariant.stockStatus]!.text}
+                    </p>
+                  )}
+                </div>
               )}
 
-              <div className="mt-6 h-px bg-border" aria-hidden />
+              <div className="mt-5 h-px bg-border" aria-hidden />
 
               {/* `min-w-0` overrides `<fieldset>`'s own browser-default
                   `min-width: min-content` — without it, the fieldset
@@ -244,8 +247,10 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                   width regardless of any flex/grid `min-w-0` upstream,
                   reintroducing the exact page-level horizontal overflow
                   the scrollable row was meant to prevent. */}
-              <fieldset className="mt-6 min-w-0">
-                <legend className="text-sm font-medium text-foreground">Size</legend>
+              <fieldset className="mt-5 min-w-0">
+                <legend className="text-sm font-bold text-foreground">
+                  Size{selectedVariant ? <span className="font-medium text-muted-foreground">: {selectedVariant.size}</span> : null}
+                </legend>
                 {/* `role="radiogroup"`/`radio` (not `aria-pressed`, which
                     describes an independent on/off toggle) — this is a
                     single choice among many, and a screen reader should
@@ -282,10 +287,10 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                           onClick={() => selectVariant(variant.id)}
                           onKeyDown={(event) => handleSizeKeyDown(event, index)}
                           className={cn(
-                            "min-h-11 min-w-11 shrink-0 rounded-full border-2 px-4 text-sm font-medium outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                            "min-h-11 min-w-12 shrink-0 rounded-xl border px-4 text-sm font-semibold outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
                             isSelected
                               ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-transparent text-foreground hover:bg-muted",
+                              : "border-border bg-card text-foreground hover:bg-secondary",
                             !orderable && "text-muted-foreground line-through opacity-50",
                           )}
                         >
@@ -303,8 +308,8 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                 </div>
               </fieldset>
 
-              <div className="mt-6 flex items-center gap-2.5">
-                <div className="flex h-11 shrink-0 items-center rounded-full border">
+              <div className="mt-5 flex items-center gap-2.5">
+                <div className="flex h-11 shrink-0 items-center rounded-xl border border-border bg-card">
                   <button
                     type="button"
                     aria-label="Decrease quantity"
@@ -367,77 +372,90 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                 </p>
               )}
 
-              <ul className="mt-6 flex flex-col gap-2 text-sm text-muted-foreground">
-                {FULFILLMENT_CONFIG.pickupEnabled && (
-                  <li className="flex items-center gap-2">
-                    <Store className="size-4 shrink-0 text-foreground/60" aria-hidden />
-                    Store Pickup available
-                  </li>
-                )}
+              <ul className="mt-6 divide-y divide-border rounded-2xl border border-border bg-card">
                 {FULFILLMENT_CONFIG.deliveryEnabled && (
-                  <li className="flex items-center gap-2">
-                    <Truck className="size-4 shrink-0 text-foreground/60" aria-hidden />
-                    Local Delivery available
-                  </li>
+                  <InfoRow icon={Truck} title="Home delivery">
+                    Free above {formatPaise(FULFILLMENT_CONFIG.freeDeliveryThresholdInPaise)}, or within{" "}
+                    {(FULFILLMENT_CONFIG.freeDeliveryRadiusMeters / 1000).toLocaleString("en-IN")} km of the shop
+                  </InfoRow>
                 )}
-                <li className="flex items-center gap-2">
-                  <Wallet className="size-4 shrink-0 text-foreground/60" aria-hidden />
-                  Pay at store or cash on delivery
-                </li>
+                {FULFILLMENT_CONFIG.pickupEnabled && (
+                  <InfoRow icon={Store} title="Store pickup">
+                    Free. Collect from our shop
+                  </InfoRow>
+                )}
+                <InfoRow icon={Banknote} title="Cash on delivery">
+                  Pay when you get it, at home or at the shop
+                </InfoRow>
               </ul>
+
+              {product.description && (
+                <section aria-labelledby="product-details-heading" className="mt-6">
+                  <h2 id="product-details-heading" className="text-base font-bold">
+                    Product details
+                  </h2>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                    {product.description}
+                  </p>
+                </section>
+              )}
             </>
           )}
         </div>
       </div>
 
-      {/* Mobile-only sticky purchase bar — the SOLE purchase mechanism
-          below `sm` (the in-page Add to Bag/Buy Now buttons above are
-          hidden on mobile specifically to avoid showing two competing
-          pairs of purchase actions at once, a real duplication an
-          earlier pass had). Carries price + both actions so nothing is
-          lost by hiding the in-page pair; both reuse the exact same
-          `addToBag()` call and disabled logic, so there is only one
-          source of truth for state regardless of which button is
-          pressed. Page bottom padding (`pb-[calc(5rem+...)]` above) is
-          sized to this bar's own rendered height plus a small margin,
-          not a guessed constant, so real content always clears it. */}
+      {/* Phones: the sticky Buy now / Add to Bag bar is the only purchase control
+          (the in-page buttons are hidden below `sm`); both call the same
+          `addToBag()`. `data-sticky-bar` gives the footer room for it (globals.css). */}
       {hasVariants && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-card/80 sm:hidden">
-          <div className="flex items-center gap-2 pb-[env(safe-area-inset-bottom)]">
-            {selectedVariant && (
-              <p className="shrink-0 font-heading text-lg font-semibold tabular-nums">
-                {formatPaise(selectedVariant.priceInPaise)}
-              </p>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 shrink-0 px-4"
-              disabled={!canOrder || isPending}
-              onClick={() => addToBag(() => router.push("/bag"))}
-            >
-              Buy Now
-            </Button>
-            <Button
-              type="button"
-              className="h-11 min-w-0 flex-1"
-              disabled={!canOrder || isPending}
-              onClick={() => addToBag()}
-            >
-              {justAdded ? (
-                <span className="flex items-center gap-1.5">
-                  <Check className="size-4" aria-hidden />
-                  Added
-                </span>
-              ) : isPending ? (
-                "Adding…"
-              ) : (
-                "Add to Bag"
-              )}
-            </Button>
+        <>
+          <div data-sticky-bar className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pt-2.5 backdrop-blur supports-backdrop-filter:bg-background/85 sm:hidden">
+            <div className="flex gap-2 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
+              <button
+                type="button"
+                className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border bg-card text-base font-bold transition-colors active:bg-secondary disabled:opacity-50"
+                disabled={!canOrder || isPending}
+                onClick={() => addToBag(() => router.push("/bag"))}
+              >
+                Buy now
+              </button>
+              <button
+                type="button"
+                className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-base font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
+                disabled={!canOrder || isPending}
+                onClick={() => addToBag()}
+              >
+                {justAdded ? (
+                  <>
+                    <Check className="size-4" aria-hidden />
+                    Added
+                  </>
+                ) : isPending ? (
+                  "Adding…"
+                ) : !canOrder ? (
+                  "Out of stock"
+                ) : (
+                  "Add to Bag"
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
+  );
+}
+
+function InfoRow({ icon: Icon, title, children }: { icon: typeof Truck; title: string; children: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-3 px-4 py-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-deal">
+        <Icon className="size-4.5" aria-hidden />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-bold">{title}</span>
+        <span className="block text-xs text-muted-foreground">{children}</span>
+      </span>
+    </li>
   );
 }

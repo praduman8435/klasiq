@@ -61,10 +61,10 @@ export default async function BagPage() {
     // visible (briefly overlapping) across roughly 85% of the page's
     // scrollable range when both were shown at once. "Continue shopping"
     // stays visible everywhere; it's not a duplicate of anything in the
-    // sticky bar. `pb-28` accounts for the bar's own measured height
+    // sticky bar. The footer (data-sticky-bar, globals.css) accounts for the bar height
     // (~90px, tightened from an earlier ~101px pass per this round's
     // "80-90px total" target) plus a margin.
-    <div className="mx-auto max-w-5xl px-4 py-6 pb-28 sm:px-6 sm:pb-6">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <h1 className="text-3xl font-bold leading-none sm:text-4xl">Your bag</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         {itemCountLabel}
@@ -158,7 +158,7 @@ export default async function BagPage() {
           same red cart bar as the browse pages' `MobileBagBar`, so the
           path bag → checkout keeps one consistent control in the thumb
           zone: count and total on the left, one tap to checkout. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
+      <div data-sticky-bar className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
         <Link
           href="/checkout"
           className="flex h-14 items-center gap-3 rounded-2xl bg-primary pl-4 pr-4 text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0_0_0/70%)] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"

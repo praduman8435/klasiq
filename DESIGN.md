@@ -144,11 +144,6 @@ components:
     textColor: "{colors.klasiq-red-ink}"
     rounded: "{rounded.full}"
     size: "60px"
-  hero-panel:
-    backgroundColor: "{colors.klasiq-red}"
-    textColor: "{colors.klasiq-red-ink}"
-    rounded: "{rounded.3xl}"
-    padding: "24px 20px 8px"
   promo-banner-red:
     backgroundColor: "{colors.klasiq-red}"
     textColor: "{colors.klasiq-red-ink}"
@@ -191,7 +186,7 @@ components:
 
 **Creative North Star: "The Family Counter, In Your Pocket"**
 
-Klasiq is a thirty-year-old family shop, and its storefront is built like the shopping apps its customers already use every day. The owner chose that category standard on purpose: a Myntra/Flipkart-grade app with a pinned search bar, a row of round category tiles, a bold red hero, swipeable offer banners, and sideways rows of product cards. Being familiar is the point. A parent should know how to use this shop within a second, and the brand shows itself through its palette, its wordmark and its voice (Hinglish headlines, "30 saal ka bharosa") rather than an unusual layout.
+Klasiq is a thirty-year-old family shop, and its storefront is built like the shopping apps its customers already use every day. The owner chose that category standard on purpose: a Myntra/Flipkart-grade app with a pinned search bar, a row of round category tiles, swipeable offer banners the owner manages, and sideways rows of product cards. There is no fixed hero (the owner removed it, 2026-10-01). Being familiar is the point. A parent should know how to use this shop within a second, and the brand shows itself through its palette, its wordmark and its voice (Hinglish headlines, "30 saal ka bharosa") rather than an unusual layout.
 
 The world is dark and uses black, red and grey only. That is the owner's rule. The page is near-black, every section sits on it as a dark-grey band, text is a warm light grey, and Klasiq Red is the one colour that means act, sale or brand. Density is retail-native: compact product cards, 8px gaps between bands, and every control at thumb height. Uniforms, shoes, bags, kurtis and jeans sit side by side in the same grey system, so no category looks like an afterthought, and "Schools" always leads the category row so the school-fit promise stays one tap away.
 
@@ -199,7 +194,7 @@ This replaces the earlier "Classic, Modernized" world: its light parchment, Marq
 
 **Key Characteristics:**
 - Near-black page, dark-grey card bands, light-grey text, one red. There is no fourth hue.
-- The category-standard shopping-app layout, by the owner's choice: pinned header search, category circles, red hero, banner carousel, product rails.
+- The category-standard shopping-app layout, by the owner's choice: pinned header search, category circles, banner carousel, product rails; no fixed hero.
 - Plus Jakarta Sans for everything, including headings. Fraunces appears only in the "Klasiq." wordmark.
 - Depth comes from tonal steps (page, band, raised grey). Shadow appears only as a response to hover or press, or on true overlays.
 - Soft rounded rectangles for containers, full circles for category tiles and icon discs.
@@ -210,7 +205,7 @@ This replaces the earlier "Classic, Modernized" world: its light parchment, Marq
 The palette is black, red and grey only: five near-black-to-graphite surface steps in a faintly cool grey (hue 260), a warm light-grey text colour, and one red in two lightnesses.
 
 ### Primary
-- **Klasiq Red** (`klasiq-red`): the fill red. Used for primary buttons (Add, Add Complete Set), the hero panel, the red promo-banner tone, the "% off" badge, the bag count badge, the active desktop category underline, and the carousel's active dot. It always carries Klasiq Red Ink on top.
+- **Klasiq Red** (`klasiq-red`): the fill red. Used for primary buttons (Add, Add Complete Set), the red promo-banner tone, the "% off" badge, the bag count badge, the active desktop category underline, and the carousel's active dot. It always carries Klasiq Red Ink on top.
 - **Klasiq Red Ink** (`klasiq-red-ink`): the near-white text and icons on any Klasiq Red fill.
 - **Deal Red** (`deal-red`): the lighter red, used for small red *text and icons* on dark surfaces, such as "View all" links, "See all schools", footer and drawer icon tiles, the trust-strip icons, and "Only a few left". At 0.56 lightness, Klasiq Red is too dark to read as small type on charcoal. Deal Red is the same hue, lifted until it reads.
 
@@ -246,10 +241,10 @@ The surface ramp is deliberate. Night Black (0.13) is lower than Recess Grey (0.
 **Character:** A single geometric-humanist sans handles every job. Hierarchy comes from weight (500 → 800) and tight tracking, not from a second family, which matches the shopping-app standard. The Fraunces wordmark, with its red full stop, is the one moment of heritage.
 
 ### Hierarchy
-- **Display** (800, 30px → 36px at `sm` → 48px at `lg`, line-height 1.1, -0.02em, balanced): the hero headline only ("Poore parivaar ki shopping, ek hi jagah").
+- **Display** (800, 30px → 36px at `sm` → 48px at `lg`, line-height 1.1, -0.02em, balanced): reserved; nothing on the storefront uses it since the hero was removed.
 - **Headline** (700, 24px → 30px at `sm`, -0.025em): page titles, such as a category page `<h1>`, "Find your school" and search results.
 - **Title** (700, 18px → 20px at `sm`, -0.025em): section and rail headings ("Offers for you", a category rail's name). The home schools heading runs one step larger (20px → 24px). Card titles such as promo banners and recommended sets use 18–20px bold.
-- **Body** (400, 16px/24px): hero subcopy and running text. Inputs are always 16px so phones don't zoom on focus.
+- **Body** (400, 16px/24px): running text. Inputs are always 16px so phones don't zoom on focus.
 - **Body Small** (500–600, 14px/20px): product names (500, two-line clamp with a reserved two-line height), school names (600), row labels and button labels.
 - **Price** (700, 16px, tabular numerals): the selling price. MRP sits beside it at 12px Pewter, struck through, and only when it is genuinely higher.
 - **Label** (600, 12px/16px, sentence case): category-circle names, header icon labels ("Orders", "Bag") on phones, badges, the stock note and the dropdown group label.
@@ -258,7 +253,7 @@ The surface ramp is deliberate. Night Black (0.13) is lower than Recess Grey (0.
 ### Named Rules
 **The Wordmark-Only Serif Rule.** Fraunces is loaded for the wordmark alone. Every heading, on every storefront surface, is Plus Jakarta Sans (`--font-heading: var(--font-sans)` in `:root, .storefront`). A serif heading is a regression to the retired world.
 
-**The Weight Ladder Rule.** Hierarchy steps through weight and size: 800 for the hero only, 700 for page, section and card titles plus prices, 600 for labels and controls, 500 for product names, and 400 for body. Nothing is set uppercase with wide tracking.
+**The Weight Ladder Rule.** Hierarchy steps through weight and size: 800 reserved for display, 700 for page, section and card titles plus prices, 600 for labels and controls, 500 for product names, and 400 for body. Nothing is set uppercase with wide tracking.
 
 ## Layout
 
@@ -266,7 +261,7 @@ The surface ramp is deliberate. Night Black (0.13) is lower than Recess Grey (0.
 
 **The header** (sticky, z-30). On phones it has two pinned rows. The first holds the menu button, the wordmark, Orders and Bag (56px tall). The second is the full-width search box. From `md` the search moves inline and the header is a single 64px row. From `lg` the category links appear inline between the wordmark and search.
 
-**Homepage order.** Category circles (the shop's categories, then Schools last), then the red hero, the promo-banner carousel, "Offers for you" coupon tickets, one product rail per category, a final "More to shop" section, the schools section (six school cards plus "See all N schools"), and last the trust strip (cash on delivery, delivery, pickup, "30 saal ka bharosa") just above the footer, by the owner's choice. The site is a family store first, not school-only (owner's rule): schools stay one tap away but never lead the page. Any category with fewer than three products is merged into "More to shop" instead of getting a thin rail of its own.
+**Homepage order.** Category circles (the shop's categories, then Schools last), then the promo-banner carousel (the first thing under the tiles), "Offers for you" coupon tickets, one product rail per category, a final "More to shop" section, the schools section (six school cards plus "See all N schools"), and last the trust strip (cash on delivery, delivery, pickup, "30 saal ka bharosa") just above the footer, by the owner's choice. The site is a family store first, not school-only (owner's rule): schools stay one tap away but never lead the page. Any category with fewer than three products is merged into "More to shop" instead of getting a thin rail of its own.
 
 **Sideways rows.** Sideways rows scroll with a hidden scrollbar and snap on phones, then become grids from `sm`. Product rails show 4 columns at `sm` and 5 at `lg`, and banners show 2–3 columns. The product grid on category and search pages is 2 columns on phones, 3 at `sm`, 4 at `lg` and 5 at `xl`, with 10px gaps on phones and 16px from `sm`.
 
@@ -281,7 +276,7 @@ The surface ramp is deliberate. Night Black (0.13) is lower than Recess Grey (0.
 
 **The No-Tab-Bar Rule.** Phones have no bottom tab bar, by the owner's decision. The pinned header (menu, Orders, Bag, search) and the left drawer carry all navigation. The only fixed bottom bars are the purchase bars on Product Detail, Bag and Checkout.
 
-**The Thumb-Height Rule.** Header icons, drawer rows, footer rows, search results and school cards are at least 44px tall (search and footer rows 44–48px, school cards 80px). Hero buttons are 44px. On product cards, the size select and Add button are 36px, a density choice so cards stay compact.
+**The Thumb-Height Rule.** Header icons, drawer rows, footer rows, search results and school cards are at least 44px tall (search and footer rows 44–48px, school cards 80px). On product cards, the size select and Add button are 36px, a density choice so cards stay compact.
 
 ## Elevation & Depth
 
@@ -290,7 +285,6 @@ Depth is tonal first. A surface reads as raised because it sits one lightness st
 ### Shadow Vocabulary
 - **Card hover** (`box-shadow: 0 8px 24px -12px oklch(0.2 0.03 268 / 0.25)`): product cards on hover, paired with a 1.03 image zoom. It is a quiet, near-black ambient shadow.
 - **Overlay** (`box-shadow: 0 12px 32px -8px oklch(0.2 0.03 268 / 0.25)`): the search suggestion dropdown on Popover Graphite.
-- **On-red lift** (`box-shadow: 0 6px 16px -6px oklch(0.1 0.02 260 / 0.6)`): the Light Grey button on the red hero only.
 
 ### Named Rules
 **The Tone-Before-Shadow Rule.** If a surface needs to look raised while at rest, step it up the grey ramp or give it a Hairline border. Shadows are reserved for hover, overlays, and the one button on red.
@@ -300,9 +294,8 @@ Depth is tonal first. A surface reads as raised because it sits one lightness st
 All shapes are soft rounded rectangles, plus circles. The base radius is 12px (`--radius: 0.75rem`), and containers scale up from it:
 - **9.6px** (`md`): the "% off" badge.
 - **12px** (`lg`): product-card controls, "View all", footer and drawer icon tiles, and banner CTAs.
-- **16.8px** (`xl`): header icon buttons, hero buttons, drawer rows, the header search and "See all schools".
+- **16.8px** (`xl`): header icon buttons, drawer rows, the header search and "See all schools".
 - **21.6px** (`2xl`): cards of every kind (product, school, banner, recommended set, coupon ticket), empty-state panels, the large search field and the suggestion dropdown.
-- **26.4px** (`3xl`): the red hero panel.
 
 Full circles are used for category tiles (60px, 72px from `sm`), icon discs (36–40px), the bag count badge and carousel dots (the active dot stretches to a 20px pill). The coupon ticket is the one dashed shape: a 2xl card with a dashed 60%-red border and a mono code chip with a red ring. School crests are shield silhouettes. Borders are always 1px Hairline, with no border-plus-shadow stacking at rest.
 
@@ -311,8 +304,8 @@ Full circles are used for category tiles (60px, 72px from `sm`), icon discs (36�
 ### Buttons
 Buttons are compact, bold and tactile. They press to 97% scale (`active:scale-[0.97]`).
 - **Primary** (`button-primary`): Klasiq Red fill with near-white ink, 12px radius, 600 weight at 14px. On product cards it is 36px tall and fills the space beside the size select, and its label stays literally "Add" so it survives two-column phone grids (`aria-label` carries the full action). Hover goes to 90% red. After adding, it shows "Added" with a check on Raised Graphite for about 1.4s. When out of stock it turns Recess Grey with Pewter text and can't be pressed.
-- **On-red** (`button-on-red`): Light Grey with dark ink, 44px tall, bold, used for "Shop now" on the hero and for CTAs on red banners.
-- **Ghost on red** (`button-ghost-on-red`): 25% black fill with a 40% white ring, 44px tall. Kept for a secondary action on red; the hero itself now has only "Shop now".
+- **On-red** (`button-on-red`): Light Grey with dark ink, 44px tall, bold, used for CTAs on red banners.
+- **Ghost on red** (`button-ghost-on-red`): 25% black fill with a 40% white ring, 44px tall. Kept for a secondary action on red.
 - **Outline** (`button-outline`): Hairline border, Deal Red bold label and chevron, full width, 48px tall ("See all N schools"). On hover it fills with Raised Graphite.
 - **Text link** ("View all"): Deal Red 14px/600 with a chevron, at least 40px tall, with a Raised Graphite hover fill.
 - **Focus:** every control shows a 3px ring in 50% Klasiq Red on `:focus-visible`.
@@ -344,8 +337,8 @@ Buttons are compact, bold and tactile. They press to 97% scale (`active:scale-[0
 ### Category Circles (signature)
 A sideways row of round tiles at the very top of the homepage. It is centred on desktop and snaps on phones. Each tile is a 60px circle (72px from `sm`) with a 28–32px line icon at stroke 1.75 and a two-line 12px semibold label under it. Every tile, "Schools" included, is Raised Graphite with a Chalk icon, and "Schools" comes last. Each category's icon is the one chosen in Admin → Categories (the icon picker, `CATEGORY_ICONS`), or "Auto", guessed from its name; Uniforms has its own shirt-and-tie drawing so it never matches Shirts. On hover a tile lifts 2px, and on press it shrinks to 95%.
 
-### Red Hero (signature)
-A Klasiq Red panel with a 26.4px radius, inside a Card Charcoal band. On the left are the Display headline, a line in full white listing the real category names, and one button: On-red "Shop now". On the right is a flat drawing (`HeroArt`) of a school shirt with a striped tie, a school bag, a kurti and a shoe, in black, grey and red only on soft white discs. On phones the drawing sits under the copy at 62% width. From `sm` it is anchored bottom-right at 88% of the panel's height. It is decorative and hidden from assistive tech.
+### Product Page
+Phones: the photo runs edge to edge under a small breadcrumb; then the category name, the product name (700), the price (700, 30px) with MRP and a red "% off", a stock note only when stock is low or out, square-cornered size chips (selected = solid red), a delivery card (home delivery, store pickup, cash on delivery, each an icon-disc row from real config), and "Product details". Desktop: photo left (sticky), the same column right, with an in-page quantity stepper, Add to Bag and Buy Now. Below the product come product rails: "Similar products" (same category), "More for <school>" on a school's item, and "You may also like" (other categories, mixed one at a time).
 
 ### Promo Banner Card
 The owner-managed homepage banners, shared exactly with the admin preview, which wraps them in `.storefront`. Each is a 2xl card at least 160px tall with 20px padding, a 20px bold title and 14px body copy. A large icon disc is tucked into the top-right corner, and the CTA sits at the bottom left (36px, 12px radius, trailing arrow). There are three tones and no others:
@@ -373,7 +366,7 @@ Below `sm`, a fixed bottom bar (Card Charcoal at 95% with backdrop blur and a Ha
 - **Do** keep the storefront to black, red and grey: Night Black page, Card Charcoal bands, Raised Graphite tiles, Chalk text and Klasiq Red (see The Three-Colour Rule).
 - **Do** fill with Klasiq Red and write with Deal Red. Small red text and icons on dark use `deal-red` (see The Two Reds Rule).
 - **Do** use Light Grey with dark ink for the action on a red field (see The Grey-on-Red Rule).
-- **Do** follow the category standard: pinned search, round category tiles led by Schools, red hero, banners, product rails. It is the owner's deliberate choice, and familiarity is the feature.
+- **Do** follow the category standard: pinned search, round category tiles (Schools last), banners, product rails. It is the owner's deliberate choice, and familiarity is the feature.
 - **Do** set every heading in Plus Jakarta Sans, and keep Fraunces for the "Klasiq." wordmark only (see The Wordmark-Only Serif Rule).
 - **Do** separate homepage sections as Card Charcoal bands with 8px of page between them (see The Band Rule).
 - **Do** keep product cards compact (picture, name, price with MRP, a stock note only when it matters, size and Add in one row), with the Add label kept literally "Add".

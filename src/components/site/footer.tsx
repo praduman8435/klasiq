@@ -16,7 +16,7 @@ const ICON_TILE = "flex size-8 shrink-0 items-center justify-center rounded-lg b
  */
 export function SiteFooter({ storeName }: { storeName: string }) {
   return (
-    <footer className="mt-8 border-t border-border bg-card">
+    <footer className="border-t border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:grid-cols-[1.4fr_1fr] sm:px-6 sm:py-10">
         <div>
           <BrandWordmark />

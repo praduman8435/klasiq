@@ -248,6 +248,15 @@
    anyone with `prefers-reduced-motion: reduce` set — the same broadly-used
    pattern recommended by the WCAG/MDN reduced-motion guidance. Scroll
    behavior is included so an anchor-link jump doesn't smooth-scroll either. */
+/* Pages with a fixed bottom buy bar on phones (product, bag, checkout)
+   mark it `data-sticky-bar`; the footer then gets matching room so its
+   last line is never hidden behind the bar. */
+@media (max-width: 39.99rem) {
+  body:has([data-sticky-bar]) footer {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
