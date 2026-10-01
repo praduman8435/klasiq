@@ -57,6 +57,11 @@ const SAMPLES: Demo[] = [
   { code: "DEMO-SO1", name: "White socks", kind: "SOCKS", colourHex: "#f4f5f7", description: "Cotton-rich, ribbed." },
   { code: "DEMO-SO2", name: "Navy socks", kind: "SOCKS", colourHex: "#1f2a44", description: "Cotton-rich, ribbed." },
   { code: "DEMO-SO3", name: "Grey socks", kind: "SOCKS", colourHex: "#6b707c", description: "Cotton-rich, ribbed." },
+  // Shoes
+  { code: "DEMO-FW1", name: "Black school shoes", kind: "SHOES", colourHex: "#15171c", description: "Lace-up, polishable, non-slip sole." },
+  { code: "DEMO-FW2", name: "Brown leather", kind: "SHOES", colourHex: "#5a3a24", description: "Brown lace-up for senior classes." },
+  { code: "DEMO-FW3", name: "White canvas sneakers", kind: "SHOES", colourHex: "#eceef1", description: "For PT days and sports." },
+  { code: "DEMO-FW4", name: "Black sneakers", kind: "SHOES", colourHex: "#22252c", description: "Velcro or lace-up, all-day comfort." },
   // House / sports T-shirts (sample book only)
   { code: "DEMO-TS1", name: "Red house T-shirt", kind: "TSHIRT", colourHex: "#c0392b", description: "Dri-fit, for sports day and house events." },
   { code: "DEMO-TS2", name: "Blue house T-shirt", kind: "TSHIRT", colourHex: "#2e64c9", description: "Dri-fit, for sports day and house events." },

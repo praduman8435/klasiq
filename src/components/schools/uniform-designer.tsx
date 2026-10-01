@@ -26,6 +26,7 @@ const PART_LABEL: Record<DesignPartKey, string> = {
   sweater: "Sweater",
   blazer: "Blazer",
   socks: "Socks",
+  shoes: "Shoes",
 };
 
 const isPhone = () => typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
@@ -101,10 +102,9 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
     const autoSelected =
       view === "auto" && (value === "boy" ? "bg-white text-black sm:bg-transparent sm:text-white/80" : value === "both" ? "sm:bg-white sm:text-black" : "");
     return cn(
-      "h-8 rounded-full px-3.5 text-xs font-bold transition-colors",
-      selected ? "bg-white text-black" : "text-white/80 hover:text-white",
+      "h-7 rounded-full px-3 text-xs font-semibold transition-colors",
+      selected ? "bg-white text-black" : "text-white/75 hover:text-white",
       autoSelected,
-      value === "both" && "hidden sm:inline-flex sm:items-center",
     );
   };
 
@@ -126,10 +126,10 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
               type="button"
               onClick={share}
               aria-label={copied ? "Link copied" : "Share this design"}
-              className="absolute right-3 top-3 z-10 flex h-10 items-center gap-1.5 rounded-full bg-black/45 px-3.5 text-xs font-bold text-white backdrop-blur hover:bg-black/60"
+              className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center gap-1.5 rounded-full bg-black/45 text-xs font-semibold text-white backdrop-blur hover:bg-black/60 sm:w-auto sm:px-3"
             >
               {copied ? <Check className="size-4" aria-hidden /> : <Share2 className="size-4" aria-hidden />}
-              {copied ? "Copied" : "Share"}
+              <span className="hidden sm:inline">{copied ? "Copied" : "Share"}</span>
             </button>
             <div className="relative h-[45vh] min-h-72 max-h-[30rem] px-2 pb-2 pt-14 sm:h-[36rem] sm:max-h-none lg:h-[40rem]">
               <UniformPreview
@@ -144,7 +144,7 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
 
         {/* Picker */}
         <div className="flex min-w-0 flex-col gap-3 sm:gap-5 lg:pt-1">
-          <div role="tablist" aria-label="Uniform parts" className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 [&::-webkit-scrollbar]:hidden">
+          <div role="tablist" aria-label="Uniform parts" className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-1.5 sm:px-0 [&::-webkit-scrollbar]:hidden">
             {DESIGN_PARTS.map((part) => {
               const chosen = parts[part.key];
               const isActive = part.key === active;
@@ -157,11 +157,11 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
                   aria-controls="part-options"
                   onClick={() => openPart(part.key)}
                   className={cn(
-                    "flex h-11 shrink-0 items-center gap-2 rounded-full border pl-1.5 pr-3.5 text-sm font-semibold transition-colors sm:h-12 sm:rounded-2xl",
-                    isActive ? "border-white bg-white text-black" : "border-border bg-card text-foreground/90 hover:bg-secondary",
+                    "flex h-9 shrink-0 items-center gap-1.5 rounded-full border pl-1 pr-3 text-sm font-medium transition-colors",
+                    isActive ? "border-white/80 bg-white/10 text-white" : "border-transparent text-foreground/65 hover:text-foreground",
                   )}
                 >
-                  <span className={cn("size-8 shrink-0 overflow-hidden rounded-full border", isActive ? "border-black/10" : "border-border")}>
+                  <span className="size-6 shrink-0 overflow-hidden rounded-full border border-border">
                     {chosen ? <SampleSwatch sample={chosen} className="size-full" /> : <span className="block size-full bg-muted" />}
                   </span>
                   {PART_LABEL[part.key]}
@@ -183,7 +183,7 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
               <div
                 role="radiogroup"
                 aria-label={PART_LABEL[active]}
-                className="-mx-4 mt-2 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+                className="-mx-4 mt-2 flex snap-x gap-3 overflow-x-auto px-4 pb-1 pt-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-3 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
               >
                 <Swatch selected={!parts[active]} onClick={() => choose(undefined)} label="None">
                   <span className="flex size-full items-center justify-center bg-muted text-xs font-bold text-muted-foreground">None</span>
@@ -199,20 +199,20 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
 
           <a
             href="#review"
-            className="hidden h-12 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-bold text-primary-foreground sm:inline-flex"
+            className="hidden h-10 w-fit items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground sm:inline-flex"
           >
             Review &amp; get a quote
-            <ArrowRight className="size-4.5" aria-hidden />
+            <ArrowRight className="size-4" aria-hidden />
           </a>
         </div>
       </div>
 
       {/* Review & quote */}
       <section id="review" aria-labelledby="review-heading" className="mt-8 scroll-mt-28 sm:mt-12">
-        <h2 id="review-heading" className="text-xl font-bold tracking-tight sm:text-2xl">
+        <h2 id="review-heading" className="text-lg font-bold tracking-tight">
           Your uniform
         </h2>
-        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <ul className="mt-2 grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
           {DESIGN_PARTS.map((part) => {
             const chosen = parts[part.key];
             return (
@@ -223,15 +223,13 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
                     openPart(part.key);
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-2xl border border-border bg-card p-2 text-left hover:bg-secondary"
+                  className="flex min-h-11 w-full items-center gap-3 border-b border-border text-left text-sm"
                 >
-                  <span className="size-10 shrink-0 overflow-hidden rounded-xl border border-border">
+                  <span className="size-6 shrink-0 overflow-hidden rounded-md border border-border">
                     {chosen ? <SampleSwatch sample={chosen} className="size-full" /> : <span className="block size-full bg-muted" />}
                   </span>
-                  <span className="min-w-0">
-                    <span className="block text-xs text-muted-foreground">{PART_LABEL[part.key]}</span>
-                    <span className="block truncate text-sm font-semibold">{chosen ? chosen.name : "None"}</span>
-                  </span>
+                  <span className="w-16 shrink-0 text-muted-foreground">{PART_LABEL[part.key]}</span>
+                  <span className={cn("min-w-0 truncate", chosen ? "font-medium" : "text-muted-foreground")}>{chosen ? chosen.name : "None"}</span>
                 </button>
               </li>
             );
@@ -254,21 +252,21 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
         <a
           href="#review"
           tabIndex={reviewInView ? -1 : undefined}
-          className="flex h-14 items-center gap-3 rounded-2xl bg-primary px-4 text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0_0_0/70%)]"
+          className="flex h-12 items-center gap-3 rounded-2xl bg-primary px-4 text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0_0_0/70%)]"
         >
           <span className="flex -space-x-2">
             {DESIGN_PARTS.filter((part) => parts[part.key])
               .slice(0, 4)
               .map((part) => (
-                <span key={part.key} className="size-7 overflow-hidden rounded-full border-2 border-primary">
+                <span key={part.key} className="size-6 overflow-hidden rounded-full border-2 border-primary">
                   <SampleSwatch sample={parts[part.key]!} className="size-full" />
                 </span>
               ))}
           </span>
           <span className="min-w-0 flex-1 text-xs font-semibold text-primary-foreground/85">{chosenCount} parts chosen</span>
-          <span className="flex items-center gap-1 text-base font-bold">
+          <span className="flex items-center gap-1 text-sm font-bold">
             Review &amp; quote
-            <ArrowRight className="size-5" strokeWidth={2.5} aria-hidden />
+            <ArrowRight className="size-4" strokeWidth={2.5} aria-hidden />
           </span>
         </a>
       </div>
@@ -284,17 +282,17 @@ function Swatch({ selected, onClick, label, children }: { selected: boolean; onC
       aria-checked={selected}
       aria-label={label}
       onClick={onClick}
-      className="group w-[4.75rem] shrink-0 snap-start text-left sm:w-auto"
+      className="group w-16 shrink-0 snap-start text-left sm:w-auto"
     >
       <span
         className={cn(
-          "relative block aspect-square overflow-hidden rounded-2xl border transition-[border-color,box-shadow]",
-          selected ? "border-white ring-2 ring-white" : "border-border group-hover:border-foreground/40",
+          "relative block aspect-square overflow-hidden rounded-xl border transition-[border-color,box-shadow]",
+          selected ? "border-white ring-2 ring-white ring-offset-2 ring-offset-background" : "border-border group-hover:border-foreground/40",
         )}
       >
         {children}
         {selected && (
-          <span className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-white text-black">
+          <span className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-white text-black">
             <Check className="size-3" strokeWidth={3} aria-hidden />
           </span>
         )}

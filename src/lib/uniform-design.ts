@@ -5,7 +5,7 @@
  * No server code here, so the designer, the admin and the server can all
  * use it.
  */
-export const SAMPLE_KINDS = ["SHIRT", "PANT", "SKIRT", "TIE", "BELT", "BLAZER", "SWEATER", "SOCKS", "TSHIRT", "OTHER"] as const;
+export const SAMPLE_KINDS = ["SHIRT", "PANT", "SKIRT", "TIE", "BELT", "BLAZER", "SWEATER", "SOCKS", "SHOES", "TSHIRT", "OTHER"] as const;
 export type SampleKind = (typeof SAMPLE_KINDS)[number];
 
 export const SAMPLE_PATTERNS = ["PLAIN", "CHECK", "STRIPE"] as const;
@@ -20,6 +20,7 @@ export const SAMPLE_KIND_LABEL: Record<SampleKind, string> = {
   BLAZER: "Blazer",
   SWEATER: "Sweater",
   SOCKS: "Socks",
+  SHOES: "Shoes",
   TSHIRT: "House / sports T-shirt",
   OTHER: "Other",
 };
@@ -32,7 +33,7 @@ export const SAMPLE_PATTERN_LABEL: Record<SamplePattern, string> = {
 
 /** The parts the designer lets a school choose, in picker order, and the
  * URL key each is saved under. Every part can be set to None (not part of
- * the uniform); the preview then shows a plain basic piece. `optional:
+ * the uniform); the preview then shows only a faint outline where it goes. `optional:
  * false` parts start on a sample on a fresh visit. */
 export const DESIGN_PARTS = [
   { kind: "SHIRT", key: "shirt", optional: false },
@@ -43,6 +44,7 @@ export const DESIGN_PARTS = [
   { kind: "SWEATER", key: "sweater", optional: true },
   { kind: "BLAZER", key: "blazer", optional: true },
   { kind: "SOCKS", key: "socks", optional: true },
+  { kind: "SHOES", key: "shoes", optional: false },
 ] as const satisfies readonly { kind: SampleKind; key: string; optional: boolean }[];
 
 export type DesignPartKey = (typeof DESIGN_PARTS)[number]["key"];
@@ -94,8 +96,8 @@ export function cleanDesignSelection(selection: DesignSelection, samples: Design
   return clean;
 }
 
-/** The colours the preview uses for a part set to None (a plain basic
- * piece, so the children are always dressed). */
+/** Colours for parts drawn without a sample (the boy's shoes before any
+ * shoe sample exists, the belt buckle's strap, and so on). */
 export const DEFAULT_PART_COLOUR: Record<DesignPartKey, string> = {
   shirt: "#f4f5f7",
   pant: "#5b6170",
@@ -105,6 +107,7 @@ export const DEFAULT_PART_COLOUR: Record<DesignPartKey, string> = {
   sweater: "#26304a",
   blazer: "#1f2a44",
   socks: "#f4f5f7",
+  shoes: "#16181d",
 };
 
 export const HEX_COLOUR = /^#[0-9a-f]{6}$/i;

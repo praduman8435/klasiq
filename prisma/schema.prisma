@@ -2350,7 +2350,7 @@ model PromoBanner {
 // ---------------------------------------------------------------------------
 
 /// What a sample is a sample of. The designer draws SHIRT, PANT, SKIRT,
-/// TIE, BELT, BLAZER, SWEATER and SOCKS; TSHIRT and OTHER only appear in
+/// TIE, BELT, BLAZER, SWEATER, SOCKS and SHOES; TSHIRT and OTHER only appear in
 /// the sample book.
 enum UniformSampleKind {
   SHIRT
@@ -2361,6 +2361,7 @@ enum UniformSampleKind {
   BLAZER
   SWEATER
   SOCKS
+  SHOES
   TSHIRT
   OTHER
 }
