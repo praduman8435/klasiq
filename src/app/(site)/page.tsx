@@ -86,31 +86,6 @@ export default async function HomePage() {
         </div>
       )}
 
-      {coupons.length > 0 && (
-        <section aria-labelledby="home-offers" className="bg-card py-5">
-          <div className="mx-auto max-w-6xl">
-            <h2 id="home-offers" className="px-4 text-lg font-bold tracking-tight sm:px-6 sm:text-xl">
-              Offers for you
-            </h2>
-            <ul className="mt-3 flex snap-x gap-3 overflow-x-auto scroll-px-4 px-4 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
-              {coupons.map((coupon) => (
-                <li
-                  key={coupon.id}
-                  className="relative flex w-64 shrink-0 snap-start flex-col rounded-2xl border border-dashed border-primary/60 bg-card p-4"
-                >
-                  <span className="text-lg font-extrabold text-foreground">{couponHeadline(coupon)}</span>
-                  <span className="mt-0.5 text-sm text-foreground/75">{describeCoupon(coupon)}</span>
-                  <span className="mt-3 w-fit rounded-lg bg-secondary px-2.5 py-1 font-mono text-sm font-bold tracking-wider text-foreground ring-1 ring-primary/50">
-                    {coupon.code}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
-
-
       <div id="shop" className="flex scroll-mt-32 flex-col divide-y divide-border">
         {fullRails.map(({ category, products }) => (
           <ProductRail key={category.slug} title={category.name} href={`/${category.slug}`} products={products} />
@@ -174,6 +149,30 @@ export default async function HomePage() {
           ))}
         </ul>
       </section>
+
+      {coupons.length > 0 && (
+        <section aria-labelledby="home-offers" className="bg-card py-5">
+          <div className="mx-auto max-w-6xl">
+            <h2 id="home-offers" className="px-4 text-lg font-bold tracking-tight sm:px-6 sm:text-xl">
+              Offers for you
+            </h2>
+            <ul className="mt-3 flex snap-x gap-3 overflow-x-auto scroll-px-4 px-4 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
+              {coupons.map((coupon) => (
+                <li
+                  key={coupon.id}
+                  className="relative flex w-64 shrink-0 snap-start flex-col rounded-2xl border border-dashed border-primary/60 bg-card p-4"
+                >
+                  <span className="text-lg font-extrabold text-foreground">{couponHeadline(coupon)}</span>
+                  <span className="mt-0.5 text-sm text-foreground/75">{describeCoupon(coupon)}</span>
+                  <span className="mt-3 w-fit rounded-lg bg-secondary px-2.5 py-1 font-mono text-sm font-bold tracking-wider text-foreground ring-1 ring-primary/50">
+                    {coupon.code}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
