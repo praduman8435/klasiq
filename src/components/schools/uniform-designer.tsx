@@ -174,7 +174,7 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
             <p className="flex items-baseline justify-between gap-3 text-sm">
               <span className="font-bold">{PART_LABEL[active]}</span>
               <span className="truncate text-muted-foreground">
-                {parts[active] ? `${parts[active]!.name}${parts[active]!.code ? ` · ${parts[active]!.code}` : ""}` : activePart.optional ? "Not included" : "Choose one"}
+                {parts[active] ? `${parts[active]!.name}${parts[active]!.code ? ` · ${parts[active]!.code}` : ""}` : "None · not part of the uniform"}
               </span>
             </p>
             {options.length === 0 ? (
@@ -185,11 +185,9 @@ export function UniformDesigner({ samples, initial }: { samples: DesignSample[];
                 aria-label={PART_LABEL[active]}
                 className="-mx-4 mt-2 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
               >
-                {activePart.optional && (
-                  <Swatch selected={!parts[active]} onClick={() => choose(undefined)} label="None">
-                    <span className="flex size-full items-center justify-center bg-muted text-xs font-bold text-muted-foreground">None</span>
-                  </Swatch>
-                )}
+                <Swatch selected={!parts[active]} onClick={() => choose(undefined)} label="None">
+                  <span className="flex size-full items-center justify-center bg-muted text-xs font-bold text-muted-foreground">None</span>
+                </Swatch>
                 {options.map((sample) => (
                   <Swatch key={sample.id} selected={parts[active]?.id === sample.id} onClick={() => choose(sample.id)} label={sample.name}>
                     <SampleSwatch sample={sample} className="size-full" />

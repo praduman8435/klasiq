@@ -111,8 +111,8 @@ function Cloth({ d, fill, p, light = true }: { d: string; fill: string; p: strin
 }
 // ---------------------------------------------------------------------------
 // Figures. Fashion-illustration proportions (about 8 heads), front view,
-// weight on the viewer-left leg, the viewer-right hand in a pocket. Torsos
-// are symmetric; arms and legs carry the pose.
+// weight on the viewer-left leg, both arms relaxed with both hands showing.
+// Torsos and arms are symmetric; the legs carry the pose.
 // ---------------------------------------------------------------------------
 
 function FaceFeatures({ girl }: { girl: boolean }) {
@@ -247,12 +247,9 @@ const B_SHIRT =
 const B_SHIRT_BODY = "M84 118 C96 112 108 110 120 112 C132 110 144 112 156 118 L170 124 L165 180 L162 280 L78 280 L75 180 L70 124 Z";
 const B_ARM_LEFT = "M54 202 C50 232 48 264 49 298 C50 322 52 340 55 354 L68 354 C67 338 67 320 68 298 C69 264 71 234 72 208 Z";
 const B_HAND_LEFT = "M54 350 C50 362 52 378 59 383 C66 386 72 378 71 368 C71 362 70 356 68 350 Z";
-const B_ARM_RIGHT = "M170 206 C174 226 177 244 178 258 C178 272 172 286 162 300 L150 296 C158 284 162 272 162 260 C161 244 166 226 168 208 Z";
-const B_SWEATER =
-  "M84 119 L106 117 L120 186 L134 117 L156 119 L174 126 C180 129 183 137 184 147 L184 162 L180 260 C178 276 170 290 160 302 L148 296 C156 284 160 272 160 260 L165 186 L163 286 L77 286 L75 186 L69 348 L49 344 L56 147 C57 137 60 129 66 126 Z";
+const B_SWEATER_BODY = "M84 119 L106 117 L120 186 L134 117 L156 119 L170 125 L165 186 L163 286 L77 286 L75 186 L70 125 Z";
 const B_BLAZER_PANEL = "M84 115 L104 113 L114 190 L120 199 L120 314 L72 316 C71 270 71 230 73 186 C67 164 64 144 66 128 Z";
 const B_SLEEVE_LEFT = "M66 126 C58 132 56 146 56 162 L49 346 L70 350 L75 188 C73 160 70 140 66 126 Z";
-const B_SLEEVE_RIGHT = "M174 126 C182 132 184 146 184 162 L180 262 C178 278 170 292 160 304 L147 297 C155 285 159 273 159 262 L165 188 C167 160 170 140 174 126 Z";
 
 function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
   const fill = (key: DesignPartKey) => partFill(key, parts[key], p);
@@ -282,12 +279,17 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
       <path d={SHOE_RIGHT} fill={`url(#${p}-shoe)`} />
       <path d="M70 597 C79 592 92 590 102 591 M150 594 C160 590 174 591 184 597" stroke="#fff" strokeOpacity="0.28" strokeWidth="1.5" fill="none" strokeLinecap="round" />
 
-      {/* relaxed left arm and hand (a long sleeve covers the arm) */}
-      {!hasSweater && !hasBlazer && <path d={B_ARM_LEFT} fill={`url(#${p}-skin)`} />}
+      {/* relaxed arms and both hands (a long sleeve covers the arms) */}
+      {!hasSweater && !hasBlazer && (
+        <>
+          <path d={B_ARM_LEFT} fill={`url(#${p}-skin)`} />
+          <path d={B_ARM_LEFT} fill={`url(#${p}-skin)`} transform={MIRROR} />
+        </>
+      )}
       <path d={B_HAND_LEFT} fill={`url(#${p}-skin)`} />
+      <path d={B_HAND_LEFT} fill={`url(#${p}-skin)`} transform={MIRROR} />
       <path d="M57 366 C60 370 64 371 67 369" stroke="rgba(0,0,0,0.16)" strokeWidth="1.1" fill="none" />
-      {/* right forearm going into the pocket */}
-      {!hasSweater && !hasBlazer && <path d={B_ARM_RIGHT} fill={`url(#${p}-skin)`} />}
+      <path d="M57 366 C60 370 64 371 67 369" stroke="rgba(0,0,0,0.16)" strokeWidth="1.1" fill="none" transform={MIRROR} />
 
       {/* shirt */}
       <Cloth d={hasSweater || hasBlazer ? B_SHIRT_BODY : B_SHIRT} fill={fill("shirt")} p={p} />
@@ -330,9 +332,14 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
 
       {hasSweater && (
         <>
-          <Cloth d={B_SWEATER} fill={fill("sweater")} p={p} />
+          <Cloth d={B_SWEATER_BODY} fill={fill("sweater")} p={p} />
+          <Cloth d={B_SLEEVE_LEFT} fill={fill("sweater")} p={p} />
+          <g transform={MIRROR}>
+            <Cloth d={B_SLEEVE_LEFT} fill={fill("sweater")} p={p} />
+          </g>
           <path d="M77 272 L163 272 L163 286 L77 286 Z" fill={`url(#${p}-rib)`} />
           <path d="M49 334 L69 338 L69 348 L49 344 Z" fill={`url(#${p}-rib)`} />
+          <path d="M49 334 L69 338 L69 348 L49 344 Z" fill={`url(#${p}-rib)`} transform={MIRROR} />
           <path d="M106 117 L120 186 L134 117" stroke="rgba(0,0,0,0.3)" strokeWidth="4" fill="none" strokeLinejoin="round" />
         </>
       )}
@@ -344,7 +351,9 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
             <Cloth d={B_BLAZER_PANEL} fill={fill("blazer")} p={p} />
           </g>
           <Cloth d={B_SLEEVE_LEFT} fill={fill("blazer")} p={p} />
-          <Cloth d={B_SLEEVE_RIGHT} fill={fill("blazer")} p={p} />
+          <g transform={MIRROR}>
+            <Cloth d={B_SLEEVE_LEFT} fill={fill("blazer")} p={p} />
+          </g>
           <path d="M104 113 L95 126 L103 148 L96 155 L114 190 Z" fill="rgba(0,0,0,0.22)" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
           <path d="M104 113 L95 126 L103 148 L96 155 L114 190 Z" fill="rgba(0,0,0,0.22)" stroke="rgba(255,255,255,0.14)" strokeWidth="1" transform={MIRROR} />
           <path d="M120 199 V314" stroke={LINE} strokeWidth="1.3" />
@@ -359,7 +368,10 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
       )}
 
       {hasSweater && !hasBlazer && (
-        <path d="M56 248 C60 254 64 256 68 254 M164 236 C168 240 172 242 176 240" stroke={SOFT_LINE} strokeWidth="1.2" fill="none" />
+        <>
+          <path d="M56 248 C60 254 64 256 68 254" stroke={SOFT_LINE} strokeWidth="1.2" fill="none" />
+          <path d="M56 248 C60 254 64 256 68 254" stroke={SOFT_LINE} strokeWidth="1.2" fill="none" transform={MIRROR} />
+        </>
       )}
 
       <BoyHead p={p} />
@@ -373,12 +385,9 @@ const G_SHIRT =
 const G_SHIRT_BODY = "M90 120 C100 114 110 112 120 114 C130 112 140 114 150 120 L162 126 L158 180 L155 268 L85 268 L82 180 L78 126 Z";
 const G_ARM_LEFT = "M62 200 C58 230 57 260 58 292 C59 314 61 332 63 344 L75 344 C74 330 74 314 75 292 C76 260 78 232 79 206 Z";
 const G_HAND_LEFT = "M62 340 C58 351 60 366 66 370 C72 373 78 366 77 357 C77 351 76 346 75 340 Z";
-const G_ARM_RIGHT = "M163 206 C167 226 170 244 170 256 C170 268 165 280 157 290 L146 286 C152 276 155 266 155 256 C154 242 158 226 161 208 Z";
-const G_SWEATER =
-  "M90 121 L108 119 L120 182 L132 119 L150 121 L166 128 C172 131 175 139 176 149 L176 164 L172 256 C171 270 165 282 157 292 L145 286 C151 276 154 266 154 256 L158 186 L156 274 L84 274 L82 186 L77 340 L58 336 L64 149 C65 139 68 131 74 128 Z";
+const G_SWEATER_BODY = "M90 121 L108 119 L120 182 L132 119 L150 121 L162 127 L158 186 L156 274 L84 274 L82 186 L78 127 Z";
 const G_BLAZER_PANEL = "M90 117 L106 115 L115 186 L120 194 L120 300 L80 302 C79 262 79 228 81 186 C75 166 72 146 74 130 Z";
 const G_SLEEVE_LEFT = "M74 128 C66 134 64 148 64 164 L58 338 L77 342 L82 190 C80 162 78 142 74 128 Z";
-const G_SLEEVE_RIGHT = "M166 128 C174 134 176 148 176 164 L172 258 C171 272 164 284 156 294 L144 287 C150 277 153 267 153 258 L158 190 C160 162 162 142 166 128 Z";
 
 function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
   const fill = (key: DesignPartKey) => partFill(key, parts[key], p);
@@ -400,18 +409,27 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
       {/* legs, socks, shoes */}
       <path d={LEG_LEFT} fill={`url(#${p}-skin)`} />
       <path d={LEG_RIGHT} fill={`url(#${p}-skin)`} />
-      <Cloth d={SOCK_LEFT} fill={fill("socks")} p={p} light={false} />
-      <Cloth d={SOCK_RIGHT} fill={fill("socks")} p={p} light={false} />
-      <path d="M91.6 470 L113.4 470 L113.3 478 L91.7 478 Z M130 470 L151 470 L151.4 478 L131 478 Z" fill={`url(#${p}-rib)`} />
+      {parts.socks && (
+        <>
+          <Cloth d={SOCK_LEFT} fill={fill("socks")} p={p} light={false} />
+          <Cloth d={SOCK_RIGHT} fill={fill("socks")} p={p} light={false} />
+          <path d="M91.6 470 L113.4 470 L113.3 478 L91.7 478 Z M130 470 L151 470 L151.4 478 L131 478 Z" fill={`url(#${p}-rib)`} />
+        </>
+      )}
       <path d={SHOE_LEFT} fill={`url(#${p}-shoe)`} />
       <path d={SHOE_RIGHT} fill={`url(#${p}-shoe)`} />
       <path d="M90 590 L111 588 M141 589 L162 588" stroke="rgba(255,255,255,0.18)" strokeWidth="1.4" />
       <path d="M82 597 C90 593 100 592 107 593 M148 595 C156 592 166 593 171 597" stroke="#fff" strokeOpacity="0.26" strokeWidth="1.4" fill="none" strokeLinecap="round" />
 
       {/* arms */}
-      {!hasSweater && !hasBlazer && <path d={G_ARM_LEFT} fill={`url(#${p}-skin)`} />}
+      {!hasSweater && !hasBlazer && (
+        <>
+          <path d={G_ARM_LEFT} fill={`url(#${p}-skin)`} />
+          <path d={G_ARM_LEFT} fill={`url(#${p}-skin)`} transform={MIRROR} />
+        </>
+      )}
       <path d={G_HAND_LEFT} fill={`url(#${p}-skin)`} />
-      {!hasSweater && !hasBlazer && <path d={G_ARM_RIGHT} fill={`url(#${p}-skin)`} />}
+      <path d={G_HAND_LEFT} fill={`url(#${p}-skin)`} transform={MIRROR} />
 
       {/* shirt */}
       <Cloth d={hasSweater || hasBlazer ? G_SHIRT_BODY : G_SHIRT} fill={fill("shirt")} p={p} />
@@ -434,9 +452,14 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
 
       {hasSweater && (
         <>
-          <Cloth d={G_SWEATER} fill={fill("sweater")} p={p} />
+          <Cloth d={G_SWEATER_BODY} fill={fill("sweater")} p={p} />
+          <Cloth d={G_SLEEVE_LEFT} fill={fill("sweater")} p={p} />
+          <g transform={MIRROR}>
+            <Cloth d={G_SLEEVE_LEFT} fill={fill("sweater")} p={p} />
+          </g>
           <path d="M84 262 L156 262 L156 274 L84 274 Z" fill={`url(#${p}-rib)`} />
           <path d="M58 326 L77 330 L77 340 L58 336 Z" fill={`url(#${p}-rib)`} />
+          <path d="M58 326 L77 330 L77 340 L58 336 Z" fill={`url(#${p}-rib)`} transform={MIRROR} />
           <path d="M108 119 L120 182 L132 119" stroke="rgba(0,0,0,0.3)" strokeWidth="3.6" fill="none" strokeLinejoin="round" />
         </>
       )}
@@ -453,7 +476,6 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
       ))}
       <path d="M86 258 L154 258 L154.6 270 L85.4 270 Z" fill={fill("skirt")} />
       <path d="M86 258 L154 258 L154.6 270 L85.4 270 Z" fill="rgba(0,0,0,0.18)" />
-      <path d="M146 272 C148 280 150 288 152 294" stroke="rgba(0,0,0,0.35)" strokeWidth="1.4" fill="none" />
       {parts.belt && (
         <>
           <path d="M86 260 L154 260 L154.4 268 L85.6 268 Z" fill={fill("belt")} />
@@ -469,7 +491,9 @@ function Girl({ parts, p }: { parts: ChosenParts; p: string }) {
             <Cloth d={G_BLAZER_PANEL} fill={fill("blazer")} p={p} />
           </g>
           <Cloth d={G_SLEEVE_LEFT} fill={fill("blazer")} p={p} />
-          <Cloth d={G_SLEEVE_RIGHT} fill={fill("blazer")} p={p} />
+          <g transform={MIRROR}>
+            <Cloth d={G_SLEEVE_LEFT} fill={fill("blazer")} p={p} />
+          </g>
           <path d="M106 115 L98 127 L105 147 L99 153 L115 186 Z" fill="rgba(0,0,0,0.22)" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
           <path d="M106 115 L98 127 L105 147 L99 153 L115 186 Z" fill="rgba(0,0,0,0.22)" stroke="rgba(255,255,255,0.14)" strokeWidth="1" transform={MIRROR} />
           <path d="M120 194 V300" stroke={LINE} strokeWidth="1.2" />
@@ -502,7 +526,7 @@ function Figure({ parts, idPrefix, girl }: { parts: ChosenParts; idPrefix: strin
 
 /**
  * A boy and a girl in the chosen uniform: fashion-illustration
- * proportions, a natural pose, and cloth shaded for volume. Pure SVG with
+ * proportions, a natural stance, and cloth shaded for volume. Pure SVG with
  * no hooks, so the designer and the admin enquiry page share it;
  * `idPrefix` keeps gradient and pattern ids unique per preview.
  */

@@ -31,7 +31,9 @@ export const SAMPLE_PATTERN_LABEL: Record<SamplePattern, string> = {
 };
 
 /** The parts the designer lets a school choose, in picker order, and the
- * URL key each is saved under. Optional parts can be left out. */
+ * URL key each is saved under. Every part can be set to None (not part of
+ * the uniform); the preview then shows a plain basic piece. `optional:
+ * false` parts start on a sample on a fresh visit. */
 export const DESIGN_PARTS = [
   { kind: "SHIRT", key: "shirt", optional: false },
   { kind: "PANT", key: "pant", optional: false },
@@ -92,7 +94,8 @@ export function cleanDesignSelection(selection: DesignSelection, samples: Design
   return clean;
 }
 
-/** The colours the preview uses for a part nobody has chosen yet. */
+/** The colours the preview uses for a part set to None (a plain basic
+ * piece, so the children are always dressed). */
 export const DEFAULT_PART_COLOUR: Record<DesignPartKey, string> = {
   shirt: "#f4f5f7",
   pant: "#5b6170",

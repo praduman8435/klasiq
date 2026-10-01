@@ -13,15 +13,19 @@ export const metadata: Metadata = {
 type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 /** The uniform designer. A shared link opens with its design; otherwise
- * the shirt, pant and skirt start on the first sample of each, so the
- * preview is never empty. */
+ * the shirt, pant and skirt start on the first sample of each. */
 export default async function UniformDesignPage({ searchParams }: PageProps) {
   const samples = await getActiveSamples();
-  const selection = cleanDesignSelection(parseDesignSelection(await searchParams), samples);
-  for (const part of DESIGN_PARTS) {
-    if (!part.optional && !selection[part.key]) {
-      const first = samples.find((s) => s.kind === part.kind);
-      if (first) selection[part.key] = first.id;
+  const fromLink = parseDesignSelection(await searchParams);
+  const selection = cleanDesignSelection(fromLink, samples);
+  // A fresh visit starts the shirt, pant and skirt on a sample; a shared
+  // link is shown exactly as sent (a part it leaves out stays None).
+  if (Object.keys(fromLink).length === 0) {
+    for (const part of DESIGN_PARTS) {
+      if (!part.optional) {
+        const first = samples.find((s) => s.kind === part.kind);
+        if (first) selection[part.key] = first.id;
+      }
     }
   }
 
