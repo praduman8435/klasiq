@@ -310,13 +310,13 @@ model ProductVariant {
   /// Public queries only ever return isActive: true variants.
   isActive          Boolean     @default(true)
 
-  product                Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
-  basketItems            BasketItem[]
-  orderItems             OrderItem[]
-  inventoryAdjustments   InventoryAdjustment[]
+  product                      Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  basketItems                  BasketItem[]
+  orderItems                   OrderItem[]
+  inventoryAdjustments         InventoryAdjustment[]
   /// Every ReturnRequestItem this variant has ever been chosen as the
   /// EXCHANGE replacement for — see ReturnRequestItem.replacementVariantId.
-  issuedAsReplacementFor ReturnRequestItem[]
+  issuedAsReplacementFor       ReturnRequestItem[]
   /// Phase 4 Part 4 — see SupplierPurchaseReceiptItem above.
   supplierPurchaseReceiptItems SupplierPurchaseReceiptItem[]
   /// Phase 4 Part 5 — see SupplierPurchaseReturnItem above.
@@ -522,13 +522,13 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders          Order[]
+  orders             Order[]
   /// Phase 3.5 Part 1 — see ReturnRequest below.
-  returnRequests  ReturnRequest[]
+  returnRequests     ReturnRequest[]
   /// Phase 3.6.5 Part 5 — see PaymentReceipt below.
-  paymentReceipts PaymentReceipt[]
-  khataEntries     KhataEntry[]
-  khataCollections KhataCollection[]
+  paymentReceipts    PaymentReceipt[]
+  khataEntries       KhataEntry[]
+  khataCollections   KhataCollection[]
   khataPaymentClaims KhataPaymentClaim[]
 
   @@index([whatsappPhoneNormalized])
@@ -717,7 +717,7 @@ model Order {
   /// When an ONLINE order was marked Paid (money collected at pickup or on
   /// delivery) — lets the dashboard count it in that day's takings. Null
   /// until paid; counter sales record payment at creation instead.
-  paidAt                 DateTime?
+  paidAt                DateTime?
 
   /// The moment this order's status actually transitioned INTO DELIVERED —
   /// set once, by src/server/commerce/update-order-status.ts (for
@@ -743,9 +743,9 @@ model Order {
   /// The offer code used at online checkout, and what it saved the
   /// customer (money off the items, or the delivery fee waived). The
   /// items part is also in discountInPaise, spread across the lines.
-  couponId             String?
-  couponCode           String?
-  couponSavingInPaise  Int     @default(0)
+  couponId            String?
+  couponCode          String?
+  couponSavingInPaise Int     @default(0)
 
   school               School?               @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   customer             Customer?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
@@ -850,30 +850,30 @@ model AdminUser {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sessions                 AdminSession[]
-  inventoryAdjustments     InventoryAdjustment[]
-  createdOrders            Order[]
-  approvedReturnRequests   ReturnRequest[]       @relation("ReturnRequestApprovedBy")
-  rejectedReturnRequests   ReturnRequest[]       @relation("ReturnRequestRejectedBy")
-  receivedReturnRequests   ReturnRequest[]       @relation("ReturnRequestReceivedBy")
-  completedReturnRequests  ReturnRequest[]       @relation("ReturnRequestCompletedBy")
-  cancelledReturnRequests  ReturnRequest[]       @relation("ReturnRequestCancelledBy")
-  overriddenReturnRequests ReturnRequest[]       @relation("ReturnRequestOverriddenBy")
+  sessions                         AdminSession[]
+  inventoryAdjustments             InventoryAdjustment[]
+  createdOrders                    Order[]
+  approvedReturnRequests           ReturnRequest[]           @relation("ReturnRequestApprovedBy")
+  rejectedReturnRequests           ReturnRequest[]           @relation("ReturnRequestRejectedBy")
+  receivedReturnRequests           ReturnRequest[]           @relation("ReturnRequestReceivedBy")
+  completedReturnRequests          ReturnRequest[]           @relation("ReturnRequestCompletedBy")
+  cancelledReturnRequests          ReturnRequest[]           @relation("ReturnRequestCancelledBy")
+  overriddenReturnRequests         ReturnRequest[]           @relation("ReturnRequestOverriddenBy")
   /// Phase 3.6.5 Part 5 — see PaymentReceipt below.
-  recordedPaymentReceipts  PaymentReceipt[]
+  recordedPaymentReceipts          PaymentReceipt[]
   /// Phase 4 Part 3 — see SupplierPayment below.
-  recordedSupplierPayments SupplierPayment[]
+  recordedSupplierPayments         SupplierPayment[]
   /// Phase 4 Part 4 — see SupplierPurchaseReceipt below.
   recordedSupplierPurchaseReceipts SupplierPurchaseReceipt[]
   /// Phase 4 Part 5 — see SupplierPurchaseReturn below.
-  createdSupplierPurchaseReturns   SupplierPurchaseReturn[] @relation("SupplierPurchaseReturnCreatedBy")
-  confirmedSupplierPurchaseReturns SupplierPurchaseReturn[] @relation("SupplierPurchaseReturnConfirmedBy")
+  createdSupplierPurchaseReturns   SupplierPurchaseReturn[]  @relation("SupplierPurchaseReturnCreatedBy")
+  confirmedSupplierPurchaseReturns SupplierPurchaseReturn[]  @relation("SupplierPurchaseReturnConfirmedBy")
   /// Phase 4 Part 6 — see SupplierCredit/SupplierRefund below.
-  createdSupplierCredits SupplierCredit[]
-  createdSupplierRefunds SupplierRefund[]
-  createdKhataEntries     KhataEntry[]
-  createdKhataCollections KhataCollection[]
-  decidedKhataPaymentClaims KhataPaymentClaim[]
+  createdSupplierCredits           SupplierCredit[]
+  createdSupplierRefunds           SupplierRefund[]
+  createdKhataEntries              KhataEntry[]
+  createdKhataCollections          KhataCollection[]
+  decidedKhataPaymentClaims        KhataPaymentClaim[]
 
   @@map("admin_users")
 }
@@ -952,25 +952,25 @@ enum InventoryAdjustmentReason {
 }
 
 model InventoryAdjustment {
-  id               String                    @id @default(cuid())
-  productVariantId String
-  previousQuantity Int
-  newQuantity      Int
-  delta            Int
-  reason           InventoryAdjustmentReason
-  note             String?
+  id                        String                    @id @default(cuid())
+  productVariantId          String
+  previousQuantity          Int
+  newQuantity               Int
+  delta                     Int
+  reason                    InventoryAdjustmentReason
+  note                      String?
   /// Null for system-restored stock where no admin session context applies
   /// (kept nullable defensively; in practice every current write path sets
   /// this because cancellation is itself an admin action).
-  adminUserId      String?
+  adminUserId               String?
   /// Set only for ORDER_CANCELLATION_RESTORE.
-  orderId          String?
+  orderId                   String?
   /// Set only for RETURN_RESTORE/EXCHANGE_ISSUE (Phase 3.5 Part 4) — lets
   /// the admin Return Detail page show exactly which stock movements a
   /// given ReturnRequest caused, reusing this same table rather than a
   /// second return-specific adjustment log (see docs/PHASE_3_5_REPORT.md
   /// Part 4 "Inventory audit").
-  returnRequestId  String?
+  returnRequestId           String?
   /// Set only for STOCK_RECEIVED rows created by Phase 4 Part 4's
   /// explicit "Receive Inventory" action — the smallest safe additive
   /// change needed so a stock increase from a supplier receipt can be
@@ -985,7 +985,7 @@ model InventoryAdjustment {
   /// explicit "Return to Supplier" action — same smallest-safe-additive
   /// reasoning as `supplierPurchaseReceiptId` above, one FK per new
   /// supplier-side inventory event this codebase learns to record.
-  supplierPurchaseReturnId String?
+  supplierPurchaseReturnId  String?
 
   createdAt DateTime @default(now())
 
@@ -1367,9 +1367,9 @@ model PaymentReceipt {
 
   createdAt DateTime @default(now())
 
-  order              Order      @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  customer           Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  createdByAdminUser AdminUser? @relation(fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
+  order              Order            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  customer           Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdByAdminUser AdminUser?       @relation(fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
   collection         KhataCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
 
   @@index([customerId])
@@ -1411,6 +1411,9 @@ model PaymentReceipt {
 /// relations exist to protect.
 model Supplier {
   id String @id @default(cuid())
+
+  /// Samples from this supplier's sample book (Admin → Sample book).
+  uniformSamples UniformSample[]
 
   /// The contact/person name — always required, even when a
   /// `businessName` also exists (e.g. "Rakesh" at "Mahesh Garments").
@@ -1488,7 +1491,7 @@ model Supplier {
 /// simply documents that invariant at the database level too, rather
 /// than silently allowing a future code path to orphan purchase history.
 model SupplierPurchase {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   supplierId   String
   purchaseDate DateTime
 
@@ -1501,14 +1504,14 @@ model SupplierPurchase {
 
   totalInPaise Int
 
-  supplier Supplier               @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  bills    SupplierPurchaseBill[]
+  supplier          Supplier                  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  bills             SupplierPurchaseBill[]
   /// Phase 4 Part 3 — see PaymentAllocation above.
-  allocations PaymentAllocation[]
+  allocations       PaymentAllocation[]
   /// Phase 4 Part 4 — see SupplierPurchaseReceipt above.
-  receipts    SupplierPurchaseReceipt[]
+  receipts          SupplierPurchaseReceipt[]
   /// Phase 4 Part 5 — see SupplierPurchaseReturn below.
-  returns     SupplierPurchaseReturn[]
+  returns           SupplierPurchaseReturn[]
   /// Phase 4 Part 6 — see CreditAllocation above.
   creditAllocations CreditAllocation[]
 
@@ -1755,7 +1758,7 @@ model SupplierPurchaseReceipt {
   createdByAdminUserId String?
 
   purchase             SupplierPurchase              @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
-  createdByAdminUser   AdminUser?                     @relation(fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
+  createdByAdminUser   AdminUser?                    @relation(fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
   items                SupplierPurchaseReceiptItem[]
   /// Every InventoryAdjustment this receiving event produced — one per
   /// distinct ProductVariant in `items` (see
@@ -1902,9 +1905,9 @@ model SupplierPurchaseReturn {
   /// Free-text elaboration — expected mainly when `reason` is OTHER, but
   /// not restricted to it (extra context is never harmful for any
   /// reason).
-  reasonNote String?
-  reference  String?
-  notes      String?
+  reasonNote   String?
+  reference    String?
+  notes        String?
 
   createdByAdminUserId   String?
   confirmedByAdminUserId String?
@@ -1912,9 +1915,9 @@ model SupplierPurchaseReturn {
 
   idempotencyKey String? @unique
 
-  purchase             SupplierPurchase      @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
-  createdByAdminUser   AdminUser?            @relation("SupplierPurchaseReturnCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
-  confirmedByAdminUser AdminUser?            @relation("SupplierPurchaseReturnConfirmedBy", fields: [confirmedByAdminUserId], references: [id], onDelete: SetNull)
+  purchase             SupplierPurchase             @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
+  createdByAdminUser   AdminUser?                   @relation("SupplierPurchaseReturnCreatedBy", fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
+  confirmedByAdminUser AdminUser?                   @relation("SupplierPurchaseReturnConfirmedBy", fields: [confirmedByAdminUserId], references: [id], onDelete: SetNull)
   items                SupplierPurchaseReturnItem[]
   inventoryAdjustments InventoryAdjustment[]
   /// Phase 4 Part 6 — CONTEXT only, never causal. See SupplierCredit's
@@ -2009,14 +2012,14 @@ enum SupplierCreditReason {
 /// (src/lib/supplier-credit-number.ts) distinct from every other
 /// generator in this schema.
 model SupplierCredit {
-  id           String               @id @default(cuid())
-  supplierId   String
-  creditNumber String               @unique
-  creditDate   DateTime
+  id            String               @id @default(cuid())
+  supplierId    String
+  creditNumber  String               @unique
+  creditDate    DateTime
   amountInPaise Int
-  reason       SupplierCreditReason
-  reference    String?
-  notes        String?
+  reason        SupplierCreditReason
+  reference     String?
+  notes         String?
 
   /// Optional CONTEXT only — see this model's own doc comment above for
   /// why this is never treated as "the return caused this credit."
@@ -2113,10 +2116,10 @@ model SupplierRefund {
 
   createdByAdminUserId String?
 
-  supplier           Supplier                     @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  sourceCredit       SupplierCredit?              @relation(fields: [sourceCreditId], references: [id], onDelete: SetNull)
-  sourceReturn       SupplierPurchaseReturn?      @relation(fields: [sourceReturnId], references: [id], onDelete: SetNull)
-  createdByAdminUser AdminUser?                    @relation(fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
+  supplier           Supplier                   @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  sourceCredit       SupplierCredit?            @relation(fields: [sourceCreditId], references: [id], onDelete: SetNull)
+  sourceReturn       SupplierPurchaseReturn?    @relation(fields: [sourceReturnId], references: [id], onDelete: SetNull)
+  createdByAdminUser AdminUser?                 @relation(fields: [createdByAdminUserId], references: [id], onDelete: SetNull)
   attachments        SupplierRefundAttachment[]
 
   createdAt DateTime @default(now())
@@ -2249,9 +2252,9 @@ model KhataPaymentClaim {
   decidedByAdminUserId String?
   collectionId         String?                 @unique
 
-  customer          Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  decidedByAdminUser AdminUser?      @relation(fields: [decidedByAdminUserId], references: [id], onDelete: SetNull)
-  collection        KhataCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  customer           Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  decidedByAdminUser AdminUser?       @relation(fields: [decidedByAdminUserId], references: [id], onDelete: SetNull)
+  collection         KhataCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
 
   @@index([customerId])
   @@index([status, createdAt])
@@ -2340,4 +2343,93 @@ model PromoBanner {
 
   @@index([isActive, sortOrder])
   @@map("promo_banners")
+}
+
+// ---------------------------------------------------------------------------
+// For schools: sample book, uniform designer, bulk quote requests
+// ---------------------------------------------------------------------------
+
+/// What a sample is a sample of. The designer draws SHIRT, PANT, SKIRT,
+/// TIE, BELT, BLAZER, SWEATER and SOCKS; TSHIRT and OTHER only appear in
+/// the sample book.
+enum UniformSampleKind {
+  SHIRT
+  PANT
+  SKIRT
+  TIE
+  BELT
+  BLAZER
+  SWEATER
+  SOCKS
+  TSHIRT
+  OTHER
+}
+
+enum UniformSamplePattern {
+  PLAIN
+  CHECK
+  STRIPE
+}
+
+/// One swatch from a supplier's sample book, shown to schools at
+/// /for-schools and used by the uniform designer. No prices: schools
+/// ask for a quote.
+model UniformSample {
+  id          String               @id @default(cuid())
+  /// The supplier's own code for it ("SH-204"), if any.
+  code        String?
+  name        String
+  kind        UniformSampleKind
+  pattern     UniformSamplePattern @default(PLAIN)
+  /// Main colour, "#RRGGBB".
+  colourHex   String
+  /// Second colour for CHECK / STRIPE, "#RRGGBB".
+  accentHex   String?
+  description String?
+  /// A photo uploaded in admin (/api/product-photos/{id}).
+  photoUrl    String?
+  supplierId  String?
+  supplier    Supplier?            @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  isActive    Boolean              @default(true)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([isActive, kind, sortOrder])
+  @@map("uniform_samples")
+}
+
+enum SchoolEnquiryStatus {
+  NEW
+  QUOTED
+  CONFIRMED
+  CLOSED
+}
+
+/// A school's request for a quote (bulk uniform order), sent from
+/// /for-schools/design. `design` keeps a snapshot of the chosen samples
+/// (kind → { id, code, name }) so it still reads correctly if a sample
+/// is later edited or removed.
+model SchoolEnquiry {
+  id              String              @id @default(cuid())
+  enquiryNumber   String              @unique
+  schoolName      String
+  contactName     String
+  role            String?
+  phone           String
+  phoneNormalized String
+  city            String?
+  studentCount    Int?
+  classes         String?
+  neededBy        String?
+  message         String?
+  design          Json
+  status          SchoolEnquiryStatus @default(NEW)
+  adminNote       String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([status, createdAt])
+  @@index([phoneNormalized, createdAt])
+  @@map("school_enquiries")
 }

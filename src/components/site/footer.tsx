@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, PackageSearch, Phone, School as SchoolIcon } from "lucide-react";
+import { MapPin, PackageSearch, Palette, Phone, School as SchoolIcon } from "lucide-react";
 import { BrandWordmark } from "@/components/site/brand-wordmark";
 import { BRAND, STORE_CONTACT, getBackedByLine } from "@/lib/constants";
 
@@ -11,7 +11,8 @@ const ICON_TILE = "flex size-8 shrink-0 items-center justify-center rounded-lg b
 /**
  * A quiet close (after the kirana shop's footer): the store's name and
  * line, then the few things people need — call, directions, track an
- * order, find a school. Contact details come only from `STORE_CONTACT`.
+ * order, find a school, and the For-schools page (shared with principals;
+ * not in any menu). Contact details come only from `STORE_CONTACT`.
  * Search lives in the sticky header, so it isn't repeated here.
  */
 export function SiteFooter({ storeName }: { storeName: string }) {
@@ -61,6 +62,14 @@ export function SiteFooter({ storeName }: { storeName: string }) {
                 <SchoolIcon className="size-4" aria-hidden />
               </span>
               Find your school
+            </Link>
+          </li>
+          <li>
+            <Link href="/for-schools" className={ROW}>
+              <span className={ICON_TILE}>
+                <Palette className="size-4" aria-hidden />
+              </span>
+              For schools: uniform design &amp; bulk orders
             </Link>
           </li>
         </ul>
