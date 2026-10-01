@@ -12,7 +12,7 @@
  * FIRST VIEWPORT: pinned search (products, categories, schools), a row
  *   of round category tiles (Schools last), then the red hero with its
  *   drawing and one button: Shop now. Not school-only: the family shop
- *   leads; schools stay one tap away.
+ *   leads; schools stay one tap away. The trust strip closes the page.
  * FORM: the category standard, by the owner's choice (seed cf0e2a27).
  * FINISH: unreviewed and undocumented is unfinished; this build ends with
  *   the finish review, the verdict, and DESIGN.md
@@ -103,22 +103,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section aria-label="Why shop with us" className="bg-card">
-        <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-border sm:grid-cols-4">
-          {promises.map(({ icon: Icon, title, detail }) => (
-            <li key={title} className="flex items-center gap-3 bg-card px-4 py-3.5 sm:justify-center sm:py-4">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-deal">
-                <Icon className="size-5" aria-hidden />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-bold leading-5">{title}</span>
-                <span className="block text-xs text-muted-foreground">{detail}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {banners.length > 0 && (
         <div className="bg-card px-4 py-4 sm:px-6">
           <div className="mx-auto max-w-6xl">
@@ -199,6 +183,22 @@ export default async function HomePage() {
         </div>
       </section>
 
+
+      <section aria-label="Why shop with us" className="bg-card">
+        <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-border sm:grid-cols-4">
+          {promises.map(({ icon: Icon, title, detail }) => (
+            <li key={title} className="flex items-center gap-3 bg-card px-4 py-3.5 sm:justify-center sm:py-4">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-deal">
+                <Icon className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-bold leading-5">{title}</span>
+                <span className="block text-xs text-muted-foreground">{detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
