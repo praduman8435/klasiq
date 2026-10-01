@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, CheckCircle2, MessageCircle, Phone, Share2 } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, MapPin, MessageCircle, Phone, Share2, Store } from "lucide-react";
 import { SampleSwatch, UniformPreview, type ChosenParts, type PreviewView } from "@/components/schools/uniform-preview";
 import { STORE_CONTACT } from "@/lib/constants";
 import {
@@ -13,9 +13,7 @@ import {
   type DesignSelection,
 } from "@/lib/uniform-design";
 import { cn } from "@/lib/utils";
-import { submitSchoolEnquiryAction } from "@/server/actions/school-enquiry";
-
-const ROLES = ["Principal", "Manager", "Owner / trustee", "Teacher", "Other"];
+import { schoolDistanceAction, searchSchoolLocationAction, submitSchoolEnquiryAction } from "@/server/actions/school-enquiry";
 
 const PART_LABEL: Record<DesignPartKey, string> = {
   shirt: "Shirt",
@@ -302,27 +300,114 @@ function Swatch({ selected, onClick, label, children }: { selected: boolean; onC
   );
 }
 
-const NEEDED_BY = ["This month", "In 1–3 months", "Next session", "Not sure yet"];
+function formatDistance(meters: number): string {
+  return meters < 1000 ? `${meters} m` : `${(meters / 1000).toLocaleString("en-IN", { maximumFractionDigits: 1 })} km`;
+}
+
+type Place = { label: string; latitude: number; longitude: number };
+
+/** "School kahan hai?" — suggestions appear as you type (Geoapify, via the
+ * server), and once a place is picked its road distance from the shop
+ * shows underneath. Typing without picking still works. */
+function LocationInput({
+  id,
+  value,
+  onChange,
+  onPick,
+}: {
+  id: string;
+  value: string;
+  onChange: (text: string) => void;
+  onPick: (place: Place | null) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<{ id: string; formattedAddress: string; lat: number; lon: number }[]>([]);
+  const [open, setOpen] = useState(false);
+  const [distance, setDistance] = useState<number | null | "loading">(null);
+  const listId = useId();
+  const query = value.trim();
+
+  useEffect(() => {
+    if (!open || query.length < 3) return;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      const result = await searchSchoolLocationAction({ query });
+      if (!cancelled) setSuggestions(result.success ? result.suggestions : []);
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query, open]);
+
+  async function pick(suggestion: { formattedAddress: string; lat: number; lon: number }) {
+    onChange(suggestion.formattedAddress);
+    onPick({ label: suggestion.formattedAddress, latitude: suggestion.lat, longitude: suggestion.lon });
+    setOpen(false);
+    setSuggestions([]);
+    setDistance("loading");
+    const result = await schoolDistanceAction({ latitude: suggestion.lat, longitude: suggestion.lon });
+    setDistance(result.success ? result.distanceMeters : null);
+  }
+
+  return (
+    <div className="relative">
+      <MapPin className="pointer-events-none absolute left-3.5 top-3 size-5 text-muted-foreground" aria-hidden />
+      <input
+        id={id}
+        role="combobox"
+        aria-expanded={open && suggestions.length > 0}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        autoComplete="off"
+        placeholder="Mohalla, town ya village"
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          onPick(null);
+          setDistance(null);
+          setOpen(true);
+          if (e.target.value.trim().length < 3) setSuggestions([]);
+        }}
+        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+        className="h-11 w-full rounded-xl border border-transparent bg-muted pl-11 pr-3.5 text-base outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30 focus-visible:bg-background"
+      />
+      {open && suggestions.length > 0 && (
+        <ul id={listId} role="listbox" className="absolute inset-x-0 top-12 z-20 overflow-hidden rounded-xl border border-border bg-popover py-1 shadow-[0_12px_32px_-12px_oklch(0_0_0/0.7)]">
+          {suggestions.map((s) => (
+            <li key={s.id} role="option" aria-selected={false}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(s)}
+                className="flex w-full items-start gap-2.5 px-3.5 py-2.5 text-left text-sm hover:bg-muted"
+              >
+                <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="line-clamp-2">{s.formattedAddress}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {distance !== null && (
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-medium">
+          <Store className="size-3.5" aria-hidden />
+          {distance === "loading" ? "Distance dekh rahe hain…" : `Humari dukaan se ${formatDistance(distance)}`}
+        </p>
+      )}
+    </div>
+  );
+}
 
 /**
- * The quote request, kept short: the school and how to reach you are all
- * that's required; role and timing are one-tap chips; the note is tucked
- * away until wanted. Saved with the current design.
+ * "Apna design humein bhejiye" — the school sends the uniform it designed.
+ * Asked as a few short questions rather than a form: school name, new or
+ * running school, where it is, who to call. A note is optional.
  */
 function QuoteForm({ selection }: { selection: DesignSelection }) {
-  const ids = { school: useId(), city: useId(), count: useId(), classes: useId(), name: useId(), phone: useId(), message: useId() };
-  const [values, setValues] = useState({
-    schoolName: "",
-    contactName: "",
-    role: "",
-    phone: "",
-    city: "",
-    studentCount: "",
-    classes: "",
-    neededBy: "",
-    message: "",
-    website: "",
-  });
+  const ids = { school: useId(), place: useId(), name: useId(), phone: useId(), message: useId() };
+  const [values, setValues] = useState({ schoolName: "", city: "", contactName: "", phone: "", message: "", website: "" });
+  const [schoolType, setSchoolType] = useState<"NEW" | "EXISTING" | null>(null);
+  const [place, setPlace] = useState<Place | null>(null);
   const [showNote, setShowNote] = useState(false);
   const [error, setError] = useState<{ message: string; field?: string } | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -335,18 +420,17 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
         <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-secondary">
           <CheckCircle2 className="size-6 text-deal" aria-hidden />
         </span>
-        <h2 className="mt-3 text-lg font-bold">Request sent. Dhanyavaad!</h2>
+        <h2 className="mt-3 text-lg font-bold">Design mil gaya. Dhanyavaad!</h2>
         <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-          Request <span className="font-semibold text-foreground">{done}</span>. We&apos;ll call you on {values.phone} with the
-          price for your school.
+          Request <span className="font-semibold text-foreground">{done}</span>. Hum {values.phone} par call karke daam aur samay batayenge.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <a href={STORE_CONTACT.phoneHref} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground">
             <Phone className="size-4" aria-hidden />
-            Call us now
+            Abhi call kijiye
           </a>
           <Link href="/for-schools" className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium text-muted-foreground hover:text-foreground">
-            Back to the sample book
+            Sample book par wapas
           </Link>
         </div>
       </div>
@@ -354,13 +438,8 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
   }
 
   const field =
-    "h-11 w-full rounded-xl border border-transparent bg-muted px-3.5 text-base outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-white/30 focus-visible:bg-background aria-invalid:border-destructive";
+    "h-11 w-full rounded-xl border border-transparent bg-muted px-3.5 text-base outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30 focus-visible:bg-background aria-invalid:border-destructive";
   const invalid = (name: string) => error?.field === name;
-  const chip = (active: boolean) =>
-    cn(
-      "h-9 rounded-full border px-3.5 text-sm transition-colors",
-      active ? "border-white/80 bg-white/10 font-semibold text-white" : "border-border text-foreground/70 hover:text-foreground",
-    );
 
   return (
     <form
@@ -370,101 +449,102 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
         if (isPending) return;
         setError(null);
         startTransition(async () => {
-          const result = await submitSchoolEnquiryAction({ ...values, design: selection });
+          const result = await submitSchoolEnquiryAction({
+            ...values,
+            schoolType: schoolType ?? undefined,
+            latitude: place?.latitude,
+            longitude: place?.longitude,
+            design: selection,
+          });
           if (result.success) setDone(result.enquiryNumber);
           else setError(result.error);
         });
       }}
       className="rounded-3xl border border-border bg-card p-4 sm:p-6"
     >
-      <h2 className="text-lg font-bold">Get a quote</h2>
-      <p className="mt-0.5 text-sm text-muted-foreground">No payment now. We&apos;ll call you with the price for your school.</p>
+      <h2 className="text-lg font-bold">Apna design humein bhejiye</h2>
+      <p className="mt-0.5 text-sm text-muted-foreground">
+        Aapki banayi uniform hum tak pahunch jaayegi. Hum call karke daam aur samay batayenge. Abhi koi payment nahi.
+      </p>
 
-      <fieldset className="mt-5">
-        <legend className="text-xs font-semibold text-muted-foreground">School</legend>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
-          <Field id={ids.school} label="School name" required>
-            <input id={ids.school} value={values.schoolName} onChange={(e) => set("schoolName", e.target.value)} aria-invalid={invalid("schoolName")} className={field} />
-          </Field>
-          <Field id={ids.city} label="Town">
-            <input id={ids.city} value={values.city} onChange={(e) => set("city", e.target.value)} className={field} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:grid-cols-2">
-            <Field id={ids.count} label="Students">
-              <input
-                id={ids.count}
-                type="number"
-                inputMode="numeric"
-                min={1}
-                placeholder="About"
-                value={values.studentCount}
-                onChange={(e) => set("studentCount", e.target.value)}
-                aria-invalid={invalid("studentCount")}
-                className={field}
-              />
-            </Field>
-            <Field id={ids.classes} label="Classes">
-              <input id={ids.classes} placeholder="Nursery–8" value={values.classes} onChange={(e) => set("classes", e.target.value)} className={field} />
-            </Field>
+      <ol className="mt-5 flex flex-col gap-5">
+        <Question n={1} label="School ka naam" htmlFor={ids.school}>
+          <input id={ids.school} placeholder="Jaise: Sunrise Public School" value={values.schoolName} onChange={(e) => set("schoolName", e.target.value)} aria-invalid={invalid("schoolName")} className={field} />
+        </Question>
+
+        <Question n={2} label="School naya hai ya pehle se chal raha hai?">
+          <div role="radiogroup" aria-label="School type" className="grid grid-cols-2 gap-2">
+            {(
+              [
+                { value: "NEW", title: "Naya school", hint: "Abhi khul raha hai" },
+                { value: "EXISTING", title: "Chal raha school", hint: "Uniform badalni hai" },
+              ] as const
+            ).map((option) => {
+              const active = schoolType === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setSchoolType(active ? null : option.value)}
+                  className={cn(
+                    "rounded-xl border px-3 py-2.5 text-left transition-colors",
+                    active ? "border-white/80 bg-white/10" : "border-border hover:bg-muted",
+                  )}
+                >
+                  <span className="flex items-center justify-between text-sm font-semibold">
+                    {option.title}
+                    {active && <Check className="size-4" aria-hidden />}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
-        <p className="mt-3 text-sm font-medium">Needed by</p>
-        <div role="radiogroup" aria-label="Needed by" className="mt-2 flex flex-wrap gap-2">
-          {NEEDED_BY.map((option) => (
-            <button key={option} type="button" role="radio" aria-checked={values.neededBy === option} onClick={() => set("neededBy", values.neededBy === option ? "" : option)} className={chip(values.neededBy === option)}>
-              {option}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+        </Question>
 
-      <fieldset className="mt-6">
-        <legend className="text-xs font-semibold text-muted-foreground">You</legend>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
-          <Field id={ids.name} label="Your name" required>
-            <input id={ids.name} value={values.contactName} onChange={(e) => set("contactName", e.target.value)} aria-invalid={invalid("contactName")} className={field} autoComplete="name" />
-          </Field>
-          <Field id={ids.phone} label="Mobile number" required>
+        <Question n={3} label="School kahan hai?" htmlFor={ids.place}>
+          <LocationInput id={ids.place} value={values.city} onChange={(text) => set("city", text)} onPick={setPlace} />
+        </Question>
+
+        <Question n={4} label="Kisse baat karein?">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input id={ids.name} aria-label="Your name" placeholder="Aapka naam" value={values.contactName} onChange={(e) => set("contactName", e.target.value)} aria-invalid={invalid("contactName")} className={field} autoComplete="name" />
             <input
               id={ids.phone}
+              aria-label="Mobile number"
               type="tel"
               inputMode="tel"
               autoComplete="tel"
-              placeholder="98765 43210"
+              placeholder="Mobile number"
               value={values.phone}
               onChange={(e) => set("phone", e.target.value)}
               aria-invalid={invalid("phone")}
               className={field}
             />
-          </Field>
-        </div>
-        <p className="mt-3 text-sm font-medium">I am the</p>
-        <div role="radiogroup" aria-label="I am the" className="mt-2 flex flex-wrap gap-2">
-          {ROLES.map((role) => (
-            <button key={role} type="button" role="radio" aria-checked={values.role === role} onClick={() => set("role", values.role === role ? "" : role)} className={chip(values.role === role)}>
-              {role}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+          </div>
+        </Question>
+      </ol>
 
       {showNote ? (
-        <div className="mt-6">
-          <Field id={ids.message} label="Note">
-            <textarea
-              id={ids.message}
-              rows={3}
-              autoFocus
-              placeholder="Sizes, logo, house T-shirts…"
-              value={values.message}
-              onChange={(e) => set("message", e.target.value)}
-              className="w-full rounded-xl border border-transparent bg-muted px-3.5 py-2.5 text-base outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30 focus-visible:bg-background"
-            />
-          </Field>
+        <div className="mt-5">
+          <label htmlFor={ids.message} className="text-sm font-medium">
+            Note
+          </label>
+          <textarea
+            id={ids.message}
+            rows={3}
+            autoFocus
+            placeholder="Students ki ginti, logo, house T-shirts, kab tak chahiye…"
+            value={values.message}
+            onChange={(e) => set("message", e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-transparent bg-muted px-3.5 py-2.5 text-base outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30 focus-visible:bg-background"
+          />
         </div>
       ) : (
         <button type="button" onClick={() => setShowNote(true)} className="mt-5 text-sm font-medium text-deal hover:underline">
-          + Add a note (sizes, logo, house T-shirts)
+          + Note joden (students, logo, kab tak chahiye)
         </button>
       )}
 
@@ -491,7 +571,7 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
           disabled={isPending}
           className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
-          {isPending ? "Sending…" : "Send request"}
+          {isPending ? "Bhej rahe hain…" : "Design bhejiye"}
           {!isPending && <ArrowRight className="size-4" aria-hidden />}
         </button>
         <a
@@ -501,21 +581,29 @@ function QuoteForm({ selection }: { selection: DesignSelection }) {
           className="inline-flex h-10 items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <MessageCircle className="size-4" aria-hidden />
-          Or chat on WhatsApp
+          Ya WhatsApp par baat kijiye
         </a>
       </div>
     </form>
   );
 }
 
-function Field({ id, label, required = false, children }: { id: string; label: string; required?: boolean; children: React.ReactNode }) {
+function Question({ n, label, htmlFor, children }: { n: number; label: string; htmlFor?: string; children: React.ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-        {required && <span className="text-muted-foreground"> *</span>}
-      </label>
-      {children}
-    </div>
+    <li className="flex gap-3">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border text-xs font-semibold text-muted-foreground">
+        {n}
+      </span>
+      <div className="min-w-0 flex-1">
+        {htmlFor ? (
+          <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold">
+            {label}
+          </label>
+        ) : (
+          <p className="mb-2 text-sm font-semibold">{label}</p>
+        )}
+        {children}
+      </div>
+    </li>
   );
 }

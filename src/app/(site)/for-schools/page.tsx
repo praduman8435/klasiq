@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MessageCircle, Phone } from "lucide-react";
 import { SampleSwatch, UniformPreview, type ChosenParts } from "@/components/schools/uniform-preview";
-import { BRAND, STORE_CONTACT } from "@/lib/constants";
+import { STORE_CONTACT } from "@/lib/constants";
 import { DESIGN_PARTS, SAMPLE_KINDS, SAMPLE_KIND_LABEL, type SampleKind } from "@/lib/uniform-design";
 import { cn } from "@/lib/utils";
 import { getActiveSamples } from "@/server/queries/uniform-samples";
@@ -19,16 +19,16 @@ type PageProps = { searchParams: Promise<{ kind?: string }> };
 /** The story a principal goes through, told in three short chapters. */
 const CHAPTERS = [
   {
-    title: "Sab kuch ek jagah dekhiye",
-    text: "Shirting, pant aur skirt ke kapde, ties, belts, sweaters, blazers aur shoes. Supplier ki poori sample book yahin hai, bina dukaan aaye.",
+    title: "Sample book dekhiye",
+    text: "Shirt, pant aur skirt ke kapde, ties, belts, sweaters, blazers aur shoes. Supplier ki poori sample book yahin hai.",
   },
   {
-    title: "Apni uniform khud banaiye",
-    text: "Har cheez chuniye aur turant dekhiye ki ladke aur ladki par poori uniform kaisi lagegi. Pasand aaye to link committee ke saath share kijiye.",
+    title: "Apne school ki dress khud design kijiye",
+    text: "Har part chuniye aur turant dekhiye ki ladke aur ladki par aapki uniform kaisi lagegi. Chahe to link committee ke saath share kijiye.",
   },
   {
-    title: "Quote paaiye, baaki hum sambhaalenge",
-    text: "Design ke saath students ki ginti bhejiye. Hum call karke aapke school ke liye daam batayenge, phir silai aur delivery tak saath rahenge.",
+    title: "Design bhejiye, baaki hum karenge",
+    text: "Design humein bhejiye. Hum call karke daam aur samay batayenge, aur aapke school ki poori uniform taiyaar karke denge.",
   },
 ];
 
@@ -127,9 +127,6 @@ export default async function ForSchoolsPage({ searchParams }: PageProps) {
               </li>
             ))}
           </ol>
-          <blockquote className="mt-10 border-l-2 border-primary pl-4 text-pretty text-base leading-7 text-foreground/85">
-            {BRAND.heritageLine} Wahi bharosa ab aapke school ki uniform ke liye.
-          </blockquote>
         </div>
       </section>
 

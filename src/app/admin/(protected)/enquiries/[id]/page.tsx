@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MessageCircle, Phone } from "lucide-react";
+import { ArrowLeft, MapPin, MessageCircle, Phone } from "lucide-react";
 import { SchoolEnquiryStatusForm } from "@/components/admin/school-enquiry-status-form";
 import { UniformPreview, type ChosenParts } from "@/components/schools/uniform-preview";
 import { normalizePhoneNumber } from "@/lib/phone";
@@ -38,7 +38,16 @@ export default async function AdminEnquiryPage({ params }: { params: Promise<{ i
   const facts: [string, string | null][] = [
     ["Contact", `${enquiry.contactName}${enquiry.role ? ` (${enquiry.role})` : ""}`],
     ["Mobile", enquiry.phone],
-    ["City / town", enquiry.city],
+    ["School", enquiry.schoolType === "NEW" ? "New school (just opening)" : enquiry.schoolType === "EXISTING" ? "Running school (changing uniform)" : null],
+    ["Location", enquiry.city],
+    [
+      "Distance from shop",
+      enquiry.distanceMeters !== null
+        ? enquiry.distanceMeters < 1000
+          ? `${enquiry.distanceMeters} m by road`
+          : `${(enquiry.distanceMeters / 1000).toLocaleString("en-IN", { maximumFractionDigits: 1 })} km by road`
+        : null,
+    ],
     ["Students", enquiry.studentCount ? String(enquiry.studentCount) : null],
     ["Classes", enquiry.classes],
     ["Needed by", enquiry.neededBy],
@@ -65,6 +74,17 @@ export default async function AdminEnquiryPage({ params }: { params: Promise<{ i
               <Phone className="size-4" aria-hidden />
               Call {enquiry.contactName}
             </a>
+            {enquiry.latitude !== null && enquiry.longitude !== null && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${enquiry.latitude},${enquiry.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-sm font-medium hover:bg-muted"
+              >
+                <MapPin className="size-4" aria-hidden />
+                Open in Maps
+              </a>
+            )}
             {waNumber && (
               <a
                 href={`https://wa.me/${waNumber}`}

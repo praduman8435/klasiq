@@ -5,7 +5,12 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { normalizePhoneNumber } from "@/lib/phone";
 import { DESIGN_PARTS, SAMPLE_KIND_LABEL } from "@/lib/uniform-design";
-import { schoolEnquirySchema } from "@/lib/validation/school-enquiry";
+import {
+  schoolEnquirySchema,
+  schoolLocationDistanceSchema,
+  schoolLocationSearchSchema,
+} from "@/lib/validation/school-enquiry";
+import { calculateRouteDistanceMeters, searchDeliveryAddresses, type AddressSuggestion } from "@/server/geoapify";
 import { notifyOwnerOfSchoolEnquiry } from "@/server/whatsapp/owner-school-enquiry-alert";
 
 /** A phone can send this many enquiries per hour — plenty for a real
@@ -61,6 +66,9 @@ export async function submitSchoolEnquiryAction(input: unknown): Promise<SchoolE
     if (sample && sample.kind === part.kind) design[part.key] = sample;
   }
 
+  const hasPoint = typeof data.latitude === "number" && typeof data.longitude === "number";
+  const distance = hasPoint ? await calculateRouteDistanceMeters({ lat: data.latitude!, lon: data.longitude! }) : null;
+
   const enquiry = await db.schoolEnquiry.create({
     data: {
       enquiryNumber: enquiryNumber(new Date()),
@@ -70,6 +78,10 @@ export async function submitSchoolEnquiryAction(input: unknown): Promise<SchoolE
       phone: data.phone,
       phoneNormalized: phone.normalized,
       city: data.city,
+      latitude: hasPoint ? data.latitude : null,
+      longitude: hasPoint ? data.longitude : null,
+      distanceMeters: distance?.success ? distance.distanceMeters : null,
+      schoolType: data.schoolType ?? null,
       studentCount: data.studentCount,
       classes: data.classes,
       neededBy: data.neededBy,
@@ -91,4 +103,28 @@ export async function submitSchoolEnquiryAction(input: unknown): Promise<SchoolE
   });
 
   return { success: true, enquiryNumber: enquiry.enquiryNumber };
+}
+
+export type SchoolLocationSearchResult =
+  | { success: true; suggestions: AddressSuggestion[] }
+  | { success: false; message: string };
+
+/** Location suggestions while a school types where it is (the same
+ * server-side Geoapify search checkout uses; the key never reaches the
+ * browser). */
+export async function searchSchoolLocationAction(input: unknown): Promise<SchoolLocationSearchResult> {
+  const parsed = schoolLocationSearchSchema.safeParse(input);
+  if (!parsed.success) return { success: true, suggestions: [] };
+  const result = await searchDeliveryAddresses(parsed.data.query);
+  return result.success ? { success: true, suggestions: result.suggestions } : { success: false, message: result.error.message };
+}
+
+export type SchoolDistanceResult = { success: true; distanceMeters: number } | { success: false };
+
+/** Road distance from the shop to a picked location, shown as a hint. */
+export async function schoolDistanceAction(input: unknown): Promise<SchoolDistanceResult> {
+  const parsed = schoolLocationDistanceSchema.safeParse(input);
+  if (!parsed.success) return { success: false };
+  const result = await calculateRouteDistanceMeters({ lat: parsed.data.latitude, lon: parsed.data.longitude });
+  return result.success ? { success: true, distanceMeters: result.distanceMeters } : { success: false };
 }

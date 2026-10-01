@@ -9,6 +9,7 @@ import {
   MapPin,
   Menu,
   PackageSearch,
+  Palette,
   Phone,
   School as SchoolIcon,
   ShoppingBag,
@@ -130,6 +131,17 @@ export function MobileNav({
             >
               <RowIcon icon={SchoolIcon} active={onSchools} />
               <span className="flex-1">Find your school</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/for-schools"
+              onClick={close}
+              aria-current={pathname.startsWith("/for-schools") ? "page" : undefined}
+              className={cn(ROW, pathname.startsWith("/for-schools") && "bg-secondary")}
+            >
+              <RowIcon icon={Palette} active={pathname.startsWith("/for-schools")} />
+              <span className="flex-1">For schools: design your uniform</span>
             </Link>
           </li>
           <li>

@@ -27,9 +27,20 @@ export const schoolEnquirySchema = z.object({
   classes: optional(120),
   neededBy: optional(60),
   message: optional(1000),
+  /** Picked from the location suggestions; the server works out the
+   * distance from the shop itself. */
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  schoolType: z.enum(["NEW", "EXISTING"]).optional(),
   design: z.object(designShape),
   /** Left empty by people; bots fill every field. */
   website: z.string().max(0).optional(),
 });
 
 export type SchoolEnquiryInput = z.input<typeof schoolEnquirySchema>;
+
+export const schoolLocationSearchSchema = z.object({ query: z.string().trim().min(2).max(120) });
+export const schoolLocationDistanceSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});

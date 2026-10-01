@@ -50,6 +50,8 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
                     {e.contactName}
                     {e.role ? ` (${e.role})` : ""} · {e.phone}
                     {e.studentCount ? ` · ${e.studentCount} students` : ""}
+                    {e.schoolType ? ` · ${e.schoolType === "NEW" ? "new school" : "running school"}` : ""}
+                    {e.distanceMeters !== null ? ` · ${(e.distanceMeters / 1000).toLocaleString("en-IN", { maximumFractionDigits: 1 })} km` : ""}
                   </span>
                 </span>
                 <span className="text-xs text-muted-foreground">{DATE.format(e.createdAt)}</span>

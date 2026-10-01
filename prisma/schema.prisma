@@ -2400,6 +2400,13 @@ model UniformSample {
   @@map("uniform_samples")
 }
 
+/// Whether the enquiry is for a school that's just opening or one that
+/// already exists (changing its uniform).
+enum SchoolEnquirySchoolType {
+  NEW
+  EXISTING
+}
+
 enum SchoolEnquiryStatus {
   NEW
   QUOTED
@@ -2412,23 +2419,30 @@ enum SchoolEnquiryStatus {
 /// (kind → { id, code, name }) so it still reads correctly if a sample
 /// is later edited or removed.
 model SchoolEnquiry {
-  id              String              @id @default(cuid())
-  enquiryNumber   String              @unique
+  id              String                   @id @default(cuid())
+  enquiryNumber   String                   @unique
   schoolName      String
   contactName     String
   role            String?
   phone           String
   phoneNormalized String
+  /// The school's location as picked from the suggestions (or typed).
   city            String?
+  latitude        Float?
+  longitude       Float?
+  /// Road distance from the shop, in metres (null when it couldn't be
+  /// calculated).
+  distanceMeters  Int?
+  schoolType      SchoolEnquirySchoolType?
   studentCount    Int?
   classes         String?
   neededBy        String?
   message         String?
   design          Json
-  status          SchoolEnquiryStatus @default(NEW)
+  status          SchoolEnquiryStatus      @default(NEW)
   adminNote       String?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
 
   @@index([status, createdAt])
   @@index([phoneNormalized, createdAt])
