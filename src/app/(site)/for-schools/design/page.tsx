@@ -26,16 +26,22 @@ export default async function UniformDesignPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
-      <Link href="/for-schools" className="flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" aria-hidden />
-        Sample book
-      </Link>
-      <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Design your school uniform</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground sm:text-base">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-6 pt-3 sm:px-6 sm:py-8">
+      <div className="flex items-center gap-2 sm:block">
+        <Link
+          href="/for-schools"
+          aria-label="Back to the sample book"
+          className="-ml-2 flex size-10 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground sm:ml-0 sm:size-auto sm:justify-start sm:gap-1.5 sm:text-sm"
+        >
+          <ArrowLeft className="size-5 sm:size-4" aria-hidden />
+          <span className="hidden sm:inline">Sample book</span>
+        </Link>
+        <h1 className="text-xl font-bold tracking-tight sm:mt-3 sm:text-3xl">Design your school uniform</h1>
+      </div>
+      <p className="mt-1 hidden max-w-2xl text-base text-muted-foreground sm:block">
         Choose each part from our sample book. Dekhiye poori uniform kaisi lagegi, phir link share kijiye ya quote maangiye.
       </p>
-      <div className="mt-6">
+      <div className="mt-3 sm:mt-6">
         <UniformDesigner samples={samples} initial={selection} />
       </div>
     </div>
