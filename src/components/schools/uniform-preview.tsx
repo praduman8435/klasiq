@@ -187,156 +187,198 @@ function Cloth({
 // Torsos and arms are symmetric; the legs carry the pose.
 // ---------------------------------------------------------------------------
 
-/** Shared face gradients: soft side shading, cheek warmth, iris, lips. */
-function FaceDefs({ p }: { p: string }) {
-  return (
-    <defs>
-      <radialGradient id={`${p}-face-shade`} cx="0.5" cy="0.42" r="0.62">
-        <stop offset="0.6" stopColor="#000" stopOpacity="0" />
-        <stop offset="1" stopColor="#5a2e1a" stopOpacity="0.22" />
-      </radialGradient>
-      <radialGradient id={`${p}-blush`} cx="0.5" cy="0.5" r="0.5">
-        <stop offset="0" stopColor="#e07a6a" stopOpacity="0.32" />
-        <stop offset="1" stopColor="#e07a6a" stopOpacity="0" />
-      </radialGradient>
-      <radialGradient id={`${p}-iris`} cx="0.45" cy="0.4" r="0.6">
-        <stop offset="0" stopColor="#7a4a2c" />
-        <stop offset="0.7" stopColor="#3d2416" />
-        <stop offset="1" stopColor="#24150d" />
-      </radialGradient>
-      <linearGradient id={`${p}-neck`} x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#8a5236" stopOpacity="0.5" />
-        <stop offset="0.35" stopColor="#8a5236" stopOpacity="0.12" />
-        <stop offset="1" stopColor="#8a5236" stopOpacity="0" />
-      </linearGradient>
-      <linearGradient id={`${p}-hair-sheen`} x1="0" x2="1" y1="0" y2="0">
-        <stop offset="0" stopColor="#fff" stopOpacity="0" />
-        <stop offset="0.5" stopColor="#fff" stopOpacity="0.16" />
-        <stop offset="1" stopColor="#fff" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-  );
-}
-
-function Eye({ cx, p, girl, flip = false }: { cx: number; p: string; girl: boolean; flip?: boolean }) {
-  // drawn for the viewer-left eye (outer corner on the left), mirrored around
-  // its own centre for the right eye
-  const t = flip ? `matrix(-1 0 0 1 ${cx * 2} 0)` : undefined;
-  return (
-    <g transform={t}>
-      {/* white of the eye, almond shaped */}
-      <path d={`M${cx - 7} 62.6 C${cx - 4.6} 58.6 ${cx + 4.4} 58.4 ${cx + 7} 62 C${cx + 4.6} 65.6 ${cx - 4.4} 66 ${cx - 7} 62.6 Z`} fill="#f7f2ee" />
-      {/* iris and pupil, looking slightly forward */}
-      <circle cx={cx + 0.4} cy="62.2" r="3.5" fill={`url(#${p}-iris)`} />
-      <circle cx={cx + 0.4} cy="62.2" r="1.6" fill="#120b07" />
-      <circle cx={cx + 1.5} cy="60.9" r="1" fill="#fff" />
-      <circle cx={cx - 0.9} cy="63.6" r="0.45" fill="#fff" opacity="0.7" />
-      {/* the upper lid hides the top of the iris */}
-      <path d={`M${cx - 7.4} 62.6 C${cx - 4.8} 57.8 ${cx + 4.6} 57.4 ${cx + 7.4} 61.8 C${cx + 4.6} 59.6 ${cx - 4.4} 59.6 ${cx - 7.4} 62.6 Z`} fill={HAIR} />
-      {girl && <path d={`M${cx - 6.8} 61.8 C${cx - 7.8} 61.2 ${cx - 8.4} 60.6 ${cx - 8.8} 59.8`} stroke={HAIR} strokeWidth="1.1" strokeLinecap="round" fill="none" />}
-      {/* lower lid and lid crease */}
-      <path d={`M${cx - 5.6} 64.8 C${cx - 2} 66.4 ${cx + 2.6} 66.2 ${cx + 5.8} 63.8`} stroke="#9c6446" strokeOpacity="0.45" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-      <path d={`M${cx - 6} 58.4 C${cx - 3} 55.6 ${cx + 3.4} 55.4 ${cx + 6.4} 57.8`} stroke="#9c6446" strokeOpacity="0.4" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-    </g>
-  );
-}
-
-function FaceFeatures({ p, girl }: { p: string; girl: boolean }) {
+function FaceFeatures({ girl }: { girl: boolean }) {
   return (
     <>
-      {/* brows: tapered, softly arched */}
+      {/* brows */}
       <path
-        d={girl ? "M99.6 54 C103.4 50.4 109 49.6 114.2 51.4 C109.4 51 104 51.8 100.4 54.8 Z" : "M99 54.4 C103 50.6 109.6 49.6 115 51.4 L114.6 53.2 C109.4 52.2 104 52.8 99.8 55.6 Z"}
-        fill={HAIR}
+        d={
+          girl
+            ? "M101 54.5 C105 51.5 110 51 114 52.5"
+            : "M100 55 C104.5 52 110 51.5 114.5 53"
+        }
+        stroke={HAIR}
+        strokeWidth={girl ? 1.7 : 2.6}
+        strokeLinecap="round"
+        fill="none"
       />
       <path
-        d={girl ? "M99.6 54 C103.4 50.4 109 49.6 114.2 51.4 C109.4 51 104 51.8 100.4 54.8 Z" : "M99 54.4 C103 50.6 109.6 49.6 115 51.4 L114.6 53.2 C109.4 52.2 104 52.8 99.8 55.6 Z"}
-        fill={HAIR}
-        transform={MIRROR}
+        d={
+          girl
+            ? "M126 52.5 C130 51 135 51.5 139 54.5"
+            : "M125.5 53 C130 51.5 135.5 52 140 55"
+        }
+        stroke={HAIR}
+        strokeWidth={girl ? 1.7 : 2.6}
+        strokeLinecap="round"
+        fill="none"
       />
-      <Eye cx={107.4} p={p} girl={girl} />
-      <Eye cx={132.6} p={p} girl={girl} flip />
-      {/* nose: a soft side shadow and the tip */}
-      <path d="M118.6 63 C117.6 69 116.4 73.6 115.6 76.4 C117 77.4 118.2 77.2 119 76.4" stroke="#b07454" strokeOpacity="0.55" strokeWidth="1.1" fill="none" strokeLinecap="round" />
-      <path d="M115.8 78.6 C117.6 80.2 122.4 80.2 124.2 78.6" stroke="#9a5f42" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-      <ellipse cx="120" cy="77.6" rx="3" ry="1.6" fill="#fff" opacity="0.08" />
-      {/* a friendly closed-mouth smile */}
+      {/* eyes: white, iris, lid line, catch-light */}
+      {[
+        {
+          cx: 107.5,
+          d: "M101 63 C104 59.6 111 59.6 114 63 C111 65.8 104 65.8 101 63 Z",
+        },
+        {
+          cx: 132.5,
+          d: "M126 63 C129 59.6 136 59.6 139 63 C136 65.8 129 65.8 126 63 Z",
+        },
+      ].map((eye) => (
+        <g key={eye.cx}>
+          <path d={eye.d} fill="#f6f1ec" />
+          <circle cx={eye.cx} cy="62.6" r="2.7" fill="#3a2418" />
+          <circle cx={eye.cx} cy="62.6" r="1.3" fill="#120c09" />
+          <circle cx={eye.cx + 0.9} cy="61.6" r="0.75" fill="#fff" />
+          <path
+            d={eye.d.split(" C")[0] + " C" + eye.d.split(" C")[1]}
+            stroke={HAIR}
+            strokeWidth={girl ? 1.9 : 1.3}
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+      ))}
+      {girl && (
+        <>
+          <path
+            d="M101.2 62.6 L98.2 60.2 M138.8 62.6 L141.8 60.2"
+            stroke={HAIR}
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </>
+      )}
+      {/* nose */}
+      <path
+        d="M120 64 C119.3 70.5 118 75 116.6 78.4"
+        stroke="#b77d5c"
+        strokeWidth="1.2"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M116.4 79.2 C118.4 80.8 121.6 80.8 123.6 79.2"
+        stroke="#a46a4b"
+        strokeWidth="1.3"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* mouth */}
       {girl ? (
         <>
-          <path d="M112.4 86.4 C115.6 85.4 118 85.8 120 86.6 C122 85.8 124.4 85.4 127.6 86.4 C125.6 87.6 122.8 88 120 88 C117.2 88 114.4 87.6 112.4 86.4 Z" fill="#c26a5e" />
-          <path d="M112.6 86.6 C115.4 88 117.6 88.6 120 88.6 C122.4 88.6 124.6 88 127.4 86.6 C125.8 90.4 123 91.8 120 91.8 C117 91.8 114.2 90.4 112.6 86.6 Z" fill="#cf7a6c" />
-          <path d="M112.4 86.4 C116 88.6 124 88.6 127.6 86.4" stroke="#8c3e35" strokeWidth="0.9" fill="none" strokeLinecap="round" />
-          <path d="M117.2 89.8 C118.8 90.4 121.2 90.4 122.8 89.8" stroke="#fff" strokeOpacity="0.4" strokeWidth="0.9" fill="none" strokeLinecap="round" />
-          <path d="M111.4 85.6 L112.6 86.6 M128.6 85.6 L127.4 86.6" stroke="#8c3e35" strokeOpacity="0.5" strokeWidth="0.8" strokeLinecap="round" />
+          <path
+            d="M112.6 86.6 C115.5 85 118 85.4 120 86.2 C122 85.4 124.5 85 127.4 86.6 C124.5 89.8 115.5 89.8 112.6 86.6 Z"
+            fill="#c0665c"
+          />
+          <path
+            d="M113.4 87 C116 88.6 124 88.6 126.6 87"
+            stroke="#8f3f37"
+            strokeWidth="0.9"
+            fill="none"
+          />
+          <path
+            d="M117 88.6 C118.6 89.2 121.4 89.2 123 88.6"
+            stroke="#fff"
+            strokeOpacity="0.35"
+            strokeWidth="0.8"
+            fill="none"
+          />
         </>
       ) : (
         <>
-          <path d="M111.8 85.6 C115.4 89.6 124.6 89.6 128.2 85.6" stroke="#8a4636" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-          <path d="M115.6 90.6 C118.2 91.8 121.8 91.8 124.4 90.6" stroke="#9a5a44" strokeOpacity="0.4" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-          <path d="M110.8 84.6 C111.4 85.2 111.8 85.8 111.8 86.4 M129.2 84.6 C128.6 85.2 128.2 85.8 128.2 86.4" stroke="#8a4636" strokeOpacity="0.5" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+          <path
+            d="M112.5 86.6 C116 89.4 124 89.4 127.5 86.6"
+            stroke="#93503f"
+            strokeWidth="1.7"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M115.5 90.2 C118.5 91.6 121.5 91.6 124.5 90.2"
+            stroke="rgba(0,0,0,0.12)"
+            strokeWidth="1.2"
+            fill="none"
+            strokeLinecap="round"
+          />
         </>
       )}
-      {/* gentle cheek warmth */}
-      <ellipse cx="102.5" cy="76" rx="8" ry="5" fill={`url(#${p}-blush)`} opacity={girl ? 1 : 0.55} />
-      <ellipse cx="137.5" cy="76" rx="8" ry="5" fill={`url(#${p}-blush)`} opacity={girl ? 1 : 0.55} />
+      {/* cheeks */}
+      <ellipse
+        cx="103"
+        cy="77"
+        rx="6.5"
+        ry="4"
+        fill="#d9786a"
+        opacity={girl ? 0.28 : 0.14}
+      />
+      <ellipse
+        cx="137"
+        cy="77"
+        rx="6.5"
+        ry="4"
+        fill="#d9786a"
+        opacity={girl ? 0.28 : 0.14}
+      />
     </>
   );
 }
 
 const EAR = "M91 58 C85 55 82 65 85 72 C87 76 90 77 92 74 Z";
-const EAR_INNER = "M89.6 61.6 C87 61 86 66 87.6 70";
-
-function Neck({ p, x1, x2 }: { p: string; x1: number; x2: number }) {
-  return (
-    <>
-      <path d={`M${x1} 88 L${x1} 116 C${x1 + 5} 121 ${x2 - 5} 121 ${x2} 116 L${x2} 88 Z`} fill={`url(#${p}-skin)`} />
-      {/* soft shadow under the jaw, fading down the neck */}
-      <path d={`M${x1} 92 C${x1 + 4} 102 ${x2 - 4} 102 ${x2} 92 L${x2} 116 C${x2 - 5} 121 ${x1 + 5} 121 ${x1} 116 Z`} fill={`url(#${p}-neck)`} />
-    </>
-  );
-}
 
 function BoyHead({ p }: { p: string }) {
   return (
     <>
-      <FaceDefs p={p} />
-      <Neck p={p} x1={110} x2={130} />
-      <path d={EAR} fill="#c58d6b" />
-      <path d={EAR} fill="#c58d6b" transform={MIRROR} />
-      <path d={EAR_INNER} stroke="#9c6446" strokeOpacity="0.5" strokeWidth="1" fill="none" />
-      <path d={EAR_INNER} stroke="#9c6446" strokeOpacity="0.5" strokeWidth="1" fill="none" transform={MIRROR} />
-      {/* face: a defined, gently squared jaw */}
       <path
-        d="M120 22 C139 22 150 37 150 57 C150 72 147 83 139 91 C133 97 126 100.5 120 100.5 C114 100.5 107 97 101 91 C93 83 90 72 90 57 C90 37 101 22 120 22 Z"
+        d="M110 90 L110 116 C115 121 125 121 130 116 L130 90 Z"
         fill={`url(#${p}-skin)`}
       />
       <path
-        d="M120 22 C139 22 150 37 150 57 C150 72 147 83 139 91 C133 97 126 100.5 120 100.5 C114 100.5 107 97 101 91 C93 83 90 72 90 57 C90 37 101 22 120 22 Z"
-        fill={`url(#${p}-face-shade)`}
+        d="M110 100 C115 107 125 107 130 100 L130 109 C125 114 115 114 110 109 Z"
+        fill="rgba(0,0,0,0.18)"
       />
-      <FaceFeatures p={p} girl={false} />
-      {/* hair: short tapered sides, textured top swept to one side */}
+      <path d={EAR} fill="#c58d6b" />
+      <path d={EAR} fill="#c58d6b" transform={MIRROR} />
       <path
-        d="M89 60 C85 36 100 16 124 15 C146 14 160 31 154 58 C153 50 151 44 148 40 C147 34 140 30 131 30 C122 32 112 33 104 31 C98 37 93 46 92 56 Z"
+        d="M120 22 C139 22 150 37 150 58 C150 74 146 86 136 94 C130 99 125 101 120 101 C115 101 110 99 104 94 C94 86 90 74 90 58 C90 37 101 22 120 22 Z"
+        fill={`url(#${p}-skin)`}
+      />
+      <path
+        d="M96 86 C104 97 136 97 144 86 C138 98 129 102 120 102 C111 102 102 98 96 86 Z"
+        fill="rgba(0,0,0,0.09)"
+      />
+      <FaceFeatures girl={false} />
+      {/* textured, swept fringe */}
+      <path
+        d="M88 62 C82 32 100 12 124 13 C148 14 160 32 154 60 C152 49 148 42 143 38 C141 45 132 47 124 43 C119 51 107 53 97 46 C93 50 90 55 88 62 Z"
         fill={`url(#${p}-hair)`}
       />
       <path
-        d="M92 46 C96 30 112 20 132 21 C146 22 155 31 156 42 C150 34 142 31 133 31 C124 37 111 41 98 41 C96 42 94 44 92 46 Z"
-        fill="#2b1e18"
+        d="M96 47 C100 33 116 26 140 30 C130 33 121 38 115 47 C108 45 101 45 96 47 Z"
+        fill="#2c1f19"
       />
-      <path d="M100 39 C110 36 122 32 131 30 C125 34 117 38 108 41 Z" fill="#3a2a22" />
-      <path d="M101 26 C112 19 130 18 145 25" stroke={`url(#${p}-hair-sheen)`} strokeWidth="5" fill="none" strokeLinecap="round" />
-      <path d="M106 33 C116 28 128 27 140 30 M112 37 C120 34 128 33 136 34" stroke="#fff" strokeOpacity="0.07" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-      <path d="M91 50 C89.6 56 89.6 61 90.4 65 M149 50 C150.4 56 150.4 61 149.6 65" stroke={HAIR} strokeWidth="2.4" strokeLinecap="round" opacity="0.8" />
+      <path
+        d="M104 24 C116 18 132 18 146 26 M100 32 C112 25 128 24 142 30"
+        stroke="#fff"
+        strokeOpacity="0.09"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M150 50 C152 56 152 62 151 66 M90 50 C88 56 88 62 89 66"
+        stroke={HAIR}
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </>
   );
 }
 
 function GirlHeadBack({ p }: { p: string }) {
-  // long hair falling behind the shoulders, with a little volume
+  // long hair falling behind the shoulders
   return (
     <path
-      d="M84 66 C77 28 96 9 120 9 C144 9 163 28 156 66 L161 150 C163 186 163 214 159 238 C151 247 138 247 132 237 L136 122 L104 122 L108 237 C102 247 89 247 81 238 C77 214 77 186 79 150 Z"
+      d="M86 66 C79 30 97 11 120 11 C143 11 161 30 154 66 L160 150 C162 186 162 214 158 238 C150 246 138 246 132 236 L136 122 L104 122 L108 236 C102 246 90 246 82 238 C78 214 78 186 80 150 Z"
       fill={`url(#${p}-hair)`}
     />
   );
@@ -345,30 +387,47 @@ function GirlHeadBack({ p }: { p: string }) {
 function GirlHead({ p }: { p: string }) {
   return (
     <>
-      <FaceDefs p={p} />
-      <Neck p={p} x1={111} x2={129} />
-      {/* face: soft oval */}
       <path
-        d="M120 24 C138 24 149 38 149 57 C149 73 145 84 136 92 C131 97 125 99.6 120 99.6 C115 99.6 109 97 104 92 C95 84 91 73 91 57 C91 38 102 24 120 24 Z"
+        d="M111 90 L111 116 C115 120 125 120 129 116 L129 90 Z"
         fill={`url(#${p}-skin)`}
       />
       <path
-        d="M120 24 C138 24 149 38 149 57 C149 73 145 84 136 92 C131 97 125 99.6 120 99.6 C115 99.6 109 97 104 92 C95 84 91 73 91 57 C91 38 102 24 120 24 Z"
-        fill={`url(#${p}-face-shade)`}
+        d="M111 100 C115 106 125 106 129 100 L129 108 C125 113 115 113 111 108 Z"
+        fill="rgba(0,0,0,0.16)"
       />
-      <FaceFeatures p={p} girl />
-      {/* soft side part: the hair sweeps from the part over the forehead */}
       <path
-        d="M88 70 C84 38 98 16 122 16 C144 16 158 34 153 68 C151 52 145 42 136 36 C128 31 120 30 112 32 C104 36 96 46 92 58 Z"
+        d="M120 24 C138 24 149 38 149 58 C149 75 144 86 134 94 C129 98 124 100 120 100 C116 100 111 98 106 94 C96 86 91 75 91 58 C91 38 102 24 120 24 Z"
+        fill={`url(#${p}-skin)`}
+      />
+      <path
+        d="M98 86 C106 96 134 96 142 86 C136 97 128 101 120 101 C112 101 104 97 98 86 Z"
+        fill="rgba(0,0,0,0.07)"
+      />
+      <FaceFeatures girl />
+      {/* centre parting and face-framing strands */}
+      <path
+        d="M89 66 C86 36 101 19 120 19 C139 19 154 36 151 66 C148 50 140 39 123 35 L120 24 L117 35 C100 39 92 50 89 66 Z"
         fill={`url(#${p}-hair)`}
       />
-      <path d="M112 31 C104 34 96 43 92 56 C96 49 103 42 112 38 C120 34 129 33 136 35 C129 31 120 30 112 31 Z" fill="#2c1f19" />
-      {/* face-framing strands down both sides */}
-      <path d="M91 56 C86 82 88 110 95 130 C93 106 93 84 97 62 Z" fill={HAIR} />
-      <path d="M150 54 C156 90 157 130 153 172 C151 192 147 206 142 214 C145 190 147 150 144 112 C142 90 144 70 150 54 Z" fill="#2a1d17" />
-      {/* shine */}
-      <path d="M104 24 C115 18 131 18 143 25" stroke={`url(#${p}-hair-sheen)`} strokeWidth="5" fill="none" strokeLinecap="round" />
-      <path d="M150 84 C152 112 152 140 149 168" stroke="#fff" strokeOpacity="0.07" strokeWidth="1.4" fill="none" />
+      <path d="M92 58 C88 84 90 108 96 126 C92 104 92 84 96 62 Z" fill={HAIR} />
+      <path
+        d="M148 58 C154 92 156 132 152 176 C150 194 146 206 141 214 C144 190 146 150 142 112 C140 90 142 72 148 58 Z"
+        fill="#2a1d17"
+      />
+      <path
+        d="M118 22 C108 26 100 36 96 50 M124 22 C134 26 142 36 146 52"
+        stroke="#fff"
+        strokeOpacity="0.1"
+        strokeWidth="1.6"
+        fill="none"
+      />
+      <path
+        d="M150 80 C152 110 152 140 149 170"
+        stroke="#fff"
+        strokeOpacity="0.08"
+        strokeWidth="1.4"
+        fill="none"
+      />
     </>
   );
 }
@@ -405,9 +464,6 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
   return (
     <>
       <ellipse cx="124" cy="610" rx="80" ry="9" fill="rgba(0,0,0,0.45)" />
-      {/* A healthy build, matching the girl: the body is drawn a little
-          fuller than the slim base shapes; the head keeps its size. */}
-      <g transform="matrix(1.06 0 0 1 -7.2 0)">
       {/* legs */}
       {parts.socks && (
         <>
@@ -783,7 +839,6 @@ function Boy({ parts, p }: { parts: ChosenParts; p: string }) {
         </>
       )}
 
-      </g>
       <BoyHead p={p} />
     </>
   );
