@@ -6,7 +6,7 @@ import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { requestOtpAction, signInWithoutCodeAction, verifyOtpAction } from "@/server/actions/customer-portal/auth";
+import { requestOtpAction, signInWithOrderNumberAction, verifyOtpAction } from "@/server/actions/customer-portal/auth";
 
 type Step = "phone" | "code";
 
@@ -23,16 +23,19 @@ function maskPhone(phone: string): string {
 const DEFAULT_RESEND_COOLDOWN_SECONDS = 45;
 
 /** `otpPaused` (from the server's `isOtpPaused()`): sign in with the mobile
- * number alone, no code step — temporary until WhatsApp OTP is set up. */
+ * number plus an order number from one of the customer's own bills —
+ * temporary until WhatsApp OTP is set up. The server re-checks both. */
 export function TrackOrdersForm({ otpPaused = false }: { otpPaused?: boolean }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const phoneId = useId();
   const codeId = useId();
+  const orderId = useId();
 
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
+  const [orderNumber, setOrderNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
@@ -76,9 +79,13 @@ export function TrackOrdersForm({ otpPaused = false }: { otpPaused?: boolean }) 
     event.preventDefault();
     if (isPending || !phone.trim()) return;
     if (otpPaused) {
+      if (!orderNumber.trim()) {
+        setError("Please enter an order number from your bill.");
+        return;
+      }
       setError(null);
       startTransition(async () => {
-        const result = await signInWithoutCodeAction({ phone });
+        const result = await signInWithOrderNumberAction({ phone, orderNumber });
         if (result.success) {
           router.push("/track/orders");
           router.refresh();
@@ -157,6 +164,29 @@ export function TrackOrdersForm({ otpPaused = false }: { otpPaused?: boolean }) 
             className="h-12 text-base"
           />
         </div>
+
+        {otpPaused && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={orderId}>Order number</Label>
+            <Input
+              id={orderId}
+              type="text"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              placeholder="ORD-20260801-K7M3P"
+              value={orderNumber}
+              onChange={(e) => setOrderNumber(e.target.value)}
+              required
+              aria-invalid={Boolean(error)}
+              aria-describedby={`${orderId}-hint`}
+              className="h-12 font-mono text-base uppercase"
+            />
+            <p id={`${orderId}-hint`} className="text-xs text-muted-foreground">
+              Any order number from your bill or order message.
+            </p>
+          </div>
+        )}
 
         <Button type="submit" size="lg" className="mt-2 h-12 w-full text-base" disabled={isPending}>
           {isPending ? (otpPaused ? "Opening..." : "Sending code...") : "Continue"}

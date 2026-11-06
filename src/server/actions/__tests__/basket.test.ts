@@ -14,6 +14,7 @@ import { db } from "@/lib/db";
 const { store } = vi.hoisted(() => ({ store: new Map<string, string>() }));
 
 vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "x-real-ip": `test-${Math.random().toString(36).slice(2)}` }),
   cookies: async () => ({
     get: (name: string) => (store.has(name) ? { name, value: store.get(name)! } : undefined),
     set: (name: string, value: string) => {

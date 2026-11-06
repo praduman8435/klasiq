@@ -14,7 +14,7 @@ import { FULFILLMENT_CONFIG } from "@/lib/fulfillment-config";
  * width under it — both rows stay pinned, so search is always a thumb
  * away. Desktop: a single row with the category links.
  */
-export async function SiteHeader({ storeName, bagCount }: { storeName: string; bagCount: number }) {
+export async function SiteHeader({ storeName }: { storeName: string }) {
   const categories = await getHeaderCategories();
 
   return (
@@ -22,7 +22,6 @@ export async function SiteHeader({ storeName, bagCount }: { storeName: string; b
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-2 sm:gap-3 sm:px-6 md:h-16">
         <MobileNav
           categories={categories}
-          bagCount={bagCount}
           serviceableAreaNote={FULFILLMENT_CONFIG.serviceableAreaNote}
         />
 
@@ -54,7 +53,7 @@ export async function SiteHeader({ storeName, bagCount }: { storeName: string; b
           >
             Orders
           </TrackOrdersLink>
-          <BagLink count={bagCount} />
+          <BagLink />
         </div>
       </div>
 

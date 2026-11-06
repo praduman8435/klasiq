@@ -5,6 +5,17 @@ import { ProductDetail } from "@/components/product/product-detail";
 import { getMoreForSchool, getSimilarProducts, getYouMayAlsoLike } from "@/server/queries/categories";
 import { getProductBySlug } from "@/server/queries/products";
 
+// Served from the CDN and rebuilt in the background at most once a minute,
+// so shoppers get an instant page while admin edits still show up within
+// 60 seconds. Nothing per-visitor is rendered here (the bag badge loads in
+// the browser), which is what makes caching safe.
+export const revalidate = 60;
+
+// Every product page is built the first time it's visited, then cached.
+export function generateStaticParams(): { slug: string }[] {
+  return [];
+}
+
 type PageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

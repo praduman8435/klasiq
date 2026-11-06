@@ -7,6 +7,7 @@ import { formatPaise } from "@/lib/money";
 import { pickDefaultOrderableVariant } from "@/lib/basket-math";
 import { addRecommendedSet } from "@/server/actions/basket";
 import type { RecommendedSetWithItems } from "@/types/catalog";
+import { refreshBagCount } from "@/lib/bag-count-store";
 
 const GENDER_LABEL: Partial<Record<RecommendedSetWithItems["gender"], string>> = {
   BOYS: "Boys",
@@ -30,6 +31,7 @@ export function RecommendedSetCard({ set }: { set: RecommendedSetWithItems }) {
   function handleAdd() {
     startTransition(async () => {
       const result = await addRecommendedSet({ setId: set.id });
+      void refreshBagCount();
       if (result.success) {
         toast.success(result.message ?? "Complete set added to your bag.");
         router.refresh();

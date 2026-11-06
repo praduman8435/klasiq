@@ -34,7 +34,7 @@ export default async function TrackOrdersPage() {
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           {otpPaused
-            ? "Enter the mobile number you shop with."
+            ? "Enter the mobile number you shop with and an order number from your bill."
             : "Enter the mobile number you shop with. We’ll send a code to check it’s you."}
         </p>
       </div>

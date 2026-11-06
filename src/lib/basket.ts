@@ -172,3 +172,17 @@ export async function getConvertedBasketOrderLink(): Promise<{
 
   return { orderNumber: order.orderNumber, accessToken: order.accessToken };
 }
+
+/** Just the number for the header badge — one small aggregate query, no
+ * product data. Served by /api/bag/count so storefront pages themselves
+ * never read cookies and can be cached on the CDN. */
+export async function getBasketItemCount(): Promise<number> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(BASKET_COOKIE_NAME)?.value;
+  if (!token) return 0;
+  const result = await db.basketItem.aggregate({
+    where: { basket: { accessToken: token, status: "ACTIVE" } },
+    _sum: { quantity: true },
+  });
+  return result._sum.quantity ?? 0;
+}

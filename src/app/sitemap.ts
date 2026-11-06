@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { SITE_URL } from "@/lib/site-config";
 
-const SITE_URL = "https://example.com";
+// Rebuilt hourly so new schools and categories reach search engines.
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Phase 3.6.7 Part 1 — every category is a real, working browse page

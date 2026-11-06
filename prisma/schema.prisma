@@ -847,6 +847,16 @@ model AdminUser {
   passwordHash String
   isActive     Boolean @default(true)
 
+  /// Two-step sign-in (TOTP, RFC 6238) — see src/lib/admin/totp.ts.
+  /// The secret is AES-256-GCM encrypted when ADMIN_MFA_ENCRYPTION_KEY is
+  /// set (`enc:v1:` prefix). `totpPendingSecret` holds a secret during
+  /// set-up, before the admin has proved their app works.
+  totpSecret        String?
+  totpPendingSecret String?
+  totpEnabledAt     DateTime?
+  /// Last accepted 30-second step — a code can never be used twice.
+  totpLastStep      Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2447,4 +2457,15 @@ model SchoolEnquiry {
   @@index([status, createdAt])
   @@index([phoneNormalized, createdAt])
   @@map("school_enquiries")
+}
+
+/// Fixed-window rate-limit counters shared by every server instance — see
+/// src/server/rate-limit.ts. One row per key (e.g. "signin:ip:1.2.3.4").
+model RateLimitBucket {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+
+  @@index([windowStart])
+  @@map("rate_limit_buckets")
 }

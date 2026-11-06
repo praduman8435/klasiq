@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { placeOrder } from "@/server/actions/checkout";
 import { applyCouponAction } from "@/server/actions/coupons";
 import { previewDeliveryFeeAction } from "@/server/actions/checkout-address";
+import { refreshBagCount } from "@/lib/bag-count-store";
 
 type CheckoutItem = {
   id: string;
@@ -210,6 +211,7 @@ export function CheckoutForm({
         idempotencyKey,
       });
 
+      void refreshBagCount();
       if (result.success) {
         router.push(`/order/${result.orderNumber}/${result.accessToken}`);
         return;

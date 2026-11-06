@@ -12,8 +12,9 @@ const PURPOSE = "CUSTOMER_PORTAL_LOGIN" as const;
 
 /**
  * TEMPORARY: while the live store has no WhatsApp OTP setup, a code can
- * never reach the customer, so Track Orders signs them in with just their
- * mobile number instead (see `signInWithoutCodeAction`). This turns itself
+ * never reach the customer, so Track Orders signs them in with their
+ * mobile number plus one of their own order numbers instead (see
+ * `signInWithOrderNumberAction`). This turns itself
  * off — OTP comes back — the moment WHATSAPP_API_TOKEN,
  * WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_OTP_TEMPLATE_NAME are all set.
  * Production only: local development keeps the console-OTP flow.

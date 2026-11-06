@@ -5,6 +5,11 @@ import { db } from "@/lib/db";
 const notify = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/server/whatsapp/owner-school-enquiry-alert", () => ({ notifyOwnerOfSchoolEnquiry: (...a: unknown[]) => notify(...a) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// The rate limiter reads the client IP; a fresh one per call keeps tests
+// independent of each other's limits.
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "x-real-ip": `test-${Math.random().toString(36).slice(2)}` }),
+}));
 
 import { submitSchoolEnquiryAction } from "@/server/actions/school-enquiry";
 

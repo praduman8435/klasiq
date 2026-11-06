@@ -1,5 +1,8 @@
 "use server";
 
+import { getClientIp } from "@/lib/request-ip";
+import { consumeRateLimit } from "@/server/rate-limit";
+
 import { z } from "zod";
 import { basketTotalInPaise, getBasket } from "@/lib/basket";
 import { describeCoupon } from "@/lib/coupons";
@@ -23,6 +26,9 @@ export type ApplyCouponResult =
  * real, when it's placed.
  */
 export async function applyCouponAction(input: unknown): Promise<ApplyCouponResult> {
+  // Stops anyone guessing coupon codes by brute force.
+  const limit = await consumeRateLimit({ key: `coupon:ip:${await getClientIp()}`, limit: 20, windowSeconds: 10 * 60 });
+  if (!limit.allowed) return { success: false, message: "Too many tries. Please wait a few minutes." };
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Enter a code." };
   const basket = await getBasket();

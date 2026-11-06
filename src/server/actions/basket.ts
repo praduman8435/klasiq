@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { getClientIp } from "@/lib/request-ip";
+import { consumeMemoryRateLimit } from "@/server/rate-limit";
 import { getBasketId, getOrCreateBasketId } from "@/lib/basket";
 import { isOrderable, isVariantOrderable } from "@/lib/stock";
 import {
@@ -22,6 +24,12 @@ export type BasketActionResult = {
   message?: string;
 };
 
+/** Real shoppers tap a few times a minute; this only stops scripts from
+ * creating baskets in a loop. */
+async function basketRateLimited(): Promise<boolean> {
+  return !consumeMemoryRateLimit({ key: `basket:${await getClientIp()}`, limit: 90, windowSeconds: 60 }).allowed;
+}
+
 function revalidateBasketViews() {
   // The bag icon/count lives in the root layout, and the bag page shows the
   // full basket — both need to reflect the change immediately.
@@ -32,6 +40,7 @@ function revalidateBasketViews() {
 export async function addToBasket(
   input: unknown,
 ): Promise<BasketActionResult> {
+  if (await basketRateLimited()) return { success: false, message: "You\u2019re going a bit fast. Please try again in a moment." };
   const parsed = addToBasketSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, message: "Invalid request." };
@@ -196,6 +205,7 @@ export async function removeBasketItem(
 export async function addRecommendedSet(
   input: unknown,
 ): Promise<BasketActionResult> {
+  if (await basketRateLimited()) return { success: false, message: "You\u2019re going a bit fast. Please try again in a moment." };
   const parsed = addRecommendedSetSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, message: "Invalid request." };

@@ -8,6 +8,7 @@ import { CustomerSheet } from "@/components/customer-portal/customer-sheet";
 import { cn } from "@/lib/utils";
 import { reorderAction } from "@/server/actions/customer-portal/orders";
 import type { ReorderLine, SkippedLine } from "@/server/customer-portal/reorder";
+import { refreshBagCount } from "@/lib/bag-count-store";
 
 type Done = { added: ReorderLine[]; skipped: SkippedLine[]; priceChanged: boolean };
 
@@ -31,6 +32,7 @@ export function ReorderButton({
   function reorder() {
     startTransition(async () => {
       const response = await reorderAction({ orderNumber });
+      void refreshBagCount();
       if (!response.success) {
         toast.error(response.message);
         return;

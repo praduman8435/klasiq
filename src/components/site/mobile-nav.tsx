@@ -19,6 +19,7 @@ import {
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BrandWordmark } from "@/components/site/brand-wordmark";
 import { getCategoryIcon } from "@/lib/category-icons";
+import { useBagCount } from "@/lib/bag-count-store";
 import { STORE_CONTACT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -46,13 +47,12 @@ function RowIcon({ icon: Icon, active = false }: { icon: LucideIcon; active?: bo
  */
 export function MobileNav({
   categories,
-  bagCount,
   serviceableAreaNote,
 }: {
   categories: { slug: string; name: string; icon: string | null }[];
-  bagCount: number;
   serviceableAreaNote: string;
 }) {
+  const bagCount = useBagCount();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const close = () => setOpen(false);

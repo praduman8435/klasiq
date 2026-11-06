@@ -20,10 +20,15 @@ const displayFont = Fraunces({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // The browser tab always reads just the brand name. Page-level titles
+  // still flow into `template` (which drops them on purpose) and into
+  // openGraph/share cards where they're set explicitly.
   title: {
-    default: `${BRAND.name} | ${BRAND.tagline}`,
-    template: `%s | ${BRAND.name}`,
+    default: BRAND.name,
+    template: BRAND.name,
   },
+  applicationName: BRAND.name,
+  appleWebApp: { title: BRAND.name },
   description: BRAND.description,
 };
 

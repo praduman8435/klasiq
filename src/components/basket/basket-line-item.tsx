@@ -12,6 +12,7 @@ import {
   removeBasketItem,
   setBasketItemQuantity,
 } from "@/server/actions/basket";
+import { refreshBagCount } from "@/lib/bag-count-store";
 
 export type BasketLineItemData = {
   id: string;
@@ -62,6 +63,7 @@ export function BasketLineItem({ item }: { item: BasketLineItemData }) {
         basketItemId: item.id,
         quantity: nextQuantity,
       });
+      void refreshBagCount();
       if (!result.success) {
         toast.error(result.message ?? "Could not update quantity.");
       } else if (result.message) {
@@ -74,6 +76,7 @@ export function BasketLineItem({ item }: { item: BasketLineItemData }) {
   function remove() {
     startTransition(async () => {
       const result = await removeBasketItem({ basketItemId: item.id });
+      void refreshBagCount();
       if (!result.success) {
         toast.error(result.message ?? "Could not remove item.");
         router.refresh();
@@ -95,6 +98,7 @@ export function BasketLineItem({ item }: { item: BasketLineItemData }) {
                 productVariantId: productVariant.id,
                 quantity,
               });
+              void refreshBagCount();
               if (!undoResult.success) {
                 toast.error(undoResult.message ?? "Could not restore item.");
               }

@@ -53,6 +53,9 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  "frame-src 'none'",
+  "manifest-src 'self'",
+  "worker-src 'self' blob:",
   "upgrade-insecure-requests",
 ].join("; ");
 
@@ -67,6 +70,12 @@ const nextConfig: NextConfig = {
   // packages (sharp, better-sqlite3, etc.) in Next's own default list.
   serverExternalPackages: ["pdfkit"],
 
+  // Don't advertise the framework (the `X-Powered-By: Next.js` header).
+  poweredByHeader: false,
+  // Never ship browser source maps — the original source stays private.
+  // (This is the default; stated so nobody flips it on by accident.)
+  productionBrowserSourceMaps: false,
+
   async headers() {
     return [
       {
@@ -76,8 +85,16 @@ const nextConfig: NextConfig = {
           // Superseded by CSP's frame-ancestors below in modern browsers
           // (Next's own docs note this) — kept too for older browsers.
           { key: "X-Frame-Options", value: "DENY" },
-          { key: "Referrer-Policy", value: "origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+          },
+          // No other site can hold a reference to our window (tab-nabbing,
+          // cross-window leaks), or embed our responses in theirs.
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Resource-Policy", value: "same-site" },
+          { key: "X-DNS-Prefetch-Control", value: "on" },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
           // Only in production: HSTS over a plain-HTTP local dev origin
           // is meaningless and, in the worst case, a footgun (browsers
@@ -85,7 +102,7 @@ const nextConfig: NextConfig = {
           // it before this app is genuinely served over HTTPS).
           ...(isDev
             ? []
-            : [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]),
+            : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]),
         ],
       },
     ];

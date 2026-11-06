@@ -28,6 +28,7 @@ vi.mock("next/headers", () => ({
 
 import * as passwordModule from "@/lib/admin/password";
 import { hashPassword } from "@/lib/admin/password";
+import { currentTotpStep, generateTotpSecret, sealTotpSecret, totpCode } from "@/lib/admin/totp";
 import { adminLogin } from "@/server/actions/admin/auth";
 
 const createdAdminIds: string[] = [];
@@ -40,6 +41,7 @@ beforeEach(() => {
 afterAll(async () => {
   if (createdAdminIds.length) await db.adminUser.deleteMany({ where: { id: { in: createdAdminIds } } });
   await db.adminLoginAttempt.deleteMany({ where: { ipAddress: { startsWith: "198.51.100." } } });
+  await db.rateLimitBucket.deleteMany({ where: { key: { startsWith: "admin-login:email:test-auth-" } } });
   await db.$disconnect();
 });
 
@@ -171,3 +173,69 @@ describe("adminLogin", () => {
     });
   });
 });
+
+describe("adminLogin — two-step sign-in", () => {
+  const PASSWORD = "correct-horse-battery-staple";
+
+  async function adminWithTwoStep() {
+    const admin = await createTestAdmin(PASSWORD);
+    const secret = generateTotpSecret();
+    await db.adminUser.update({
+      where: { id: admin.id },
+      data: { totpSecret: sealTotpSecret(secret), totpEnabledAt: new Date() },
+    });
+    return { admin, secret };
+  }
+
+  it("never opens a session with the password alone", async () => {
+    setClientIp(freshTestIp());
+    const { admin } = await adminWithTwoStep();
+    const result = await adminLogin({ email: admin.email, password: PASSWORD });
+    expect(result).toMatchObject({ success: false, mfaRequired: true });
+    expect(store.size).toBe(0);
+  });
+
+  it("signs in with the password and a current code", async () => {
+    setClientIp(freshTestIp());
+    const { admin, secret } = await adminWithTwoStep();
+    const code = totpCode(secret, currentTotpStep());
+    expect(await adminLogin({ email: admin.email, password: PASSWORD, code })).toEqual({ success: true });
+  });
+
+  it("rejects a wrong code, and never accepts the same code twice", async () => {
+    setClientIp(freshTestIp());
+    const { admin, secret } = await adminWithTwoStep();
+    const wrong = await adminLogin({ email: admin.email, password: PASSWORD, code: "000000" === totpCode(secret, currentTotpStep()) ? "111111" : "000000" });
+    expect(wrong).toMatchObject({ success: false, mfaRequired: true });
+
+    const code = totpCode(secret, currentTotpStep());
+    setClientIp(freshTestIp());
+    expect(await adminLogin({ email: admin.email, password: PASSWORD, code })).toEqual({ success: true });
+    store.clear();
+    setClientIp(freshTestIp());
+    expect(await adminLogin({ email: admin.email, password: PASSWORD, code })).toMatchObject({ success: false, mfaRequired: true });
+    expect(store.size).toBe(0);
+  });
+
+  it("does not ask for a code when the password is wrong", async () => {
+    setClientIp(freshTestIp());
+    const { admin } = await adminWithTwoStep();
+    const result = await adminLogin({ email: admin.email, password: "wrong-password" });
+    expect(result).toEqual({ success: false, message: "Invalid email or password." });
+  });
+});
+
+describe("adminLogin — per-account limit", () => {
+  it("locks one account after 10 tries in 15 minutes, even from different IPs", async () => {
+    const admin = await createTestAdmin("correct-horse-battery-staple");
+    for (let i = 0; i < 10; i++) {
+      setClientIp(freshTestIp());
+      await adminLogin({ email: admin.email, password: "wrong-password" });
+    }
+    setClientIp(freshTestIp());
+    const result = await adminLogin({ email: admin.email, password: "correct-horse-battery-staple" });
+    expect(result.success).toBe(false);
+    expect(!result.success && result.message).toMatch(/Too many login attempts for this account/);
+  });
+});
+

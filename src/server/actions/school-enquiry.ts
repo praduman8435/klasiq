@@ -3,6 +3,8 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { getClientIp } from "@/lib/request-ip";
+import { consumeMemoryRateLimit, consumeRateLimit } from "@/server/rate-limit";
 import { normalizePhoneNumber } from "@/lib/phone";
 import { DESIGN_PARTS, SAMPLE_KIND_LABEL } from "@/lib/uniform-design";
 import {
@@ -39,6 +41,11 @@ export async function submitSchoolEnquiryAction(input: unknown): Promise<SchoolE
   }
   const data = parsed.data;
   if (data.website) return { success: false, error: { message: "Please try again." } };
+
+  const ipLimit = await consumeRateLimit({ key: `enquiry:ip:${await getClientIp()}`, limit: 5, windowSeconds: 60 * 60 });
+  if (!ipLimit.allowed) {
+    return { success: false, error: { message: "We've had several requests from this connection. Please call us directly." } };
+  }
 
   const phone = normalizePhoneNumber(data.phone);
   if (!phone.valid) return { success: false, error: { message: "Please enter a valid 10-digit mobile number.", field: "phone" } };
@@ -115,6 +122,8 @@ export type SchoolLocationSearchResult =
 export async function searchSchoolLocationAction(input: unknown): Promise<SchoolLocationSearchResult> {
   const parsed = schoolLocationSearchSchema.safeParse(input);
   if (!parsed.success) return { success: true, suggestions: [] };
+  const geoLimit = consumeMemoryRateLimit({ key: `geo:${await getClientIp()}`, limit: 60, windowSeconds: 60 });
+  if (!geoLimit.allowed) return { success: false, message: "Location search is busy. Please try again in a moment." };
   const result = await searchDeliveryAddresses(parsed.data.query);
   return result.success ? { success: true, suggestions: result.suggestions } : { success: false, message: result.error.message };
 }
@@ -125,6 +134,8 @@ export type SchoolDistanceResult = { success: true; distanceMeters: number } | {
 export async function schoolDistanceAction(input: unknown): Promise<SchoolDistanceResult> {
   const parsed = schoolLocationDistanceSchema.safeParse(input);
   if (!parsed.success) return { success: false };
+  const geoLimit = consumeMemoryRateLimit({ key: `geo:${await getClientIp()}`, limit: 60, windowSeconds: 60 });
+  if (!geoLimit.allowed) return { success: false };
   const result = await calculateRouteDistanceMeters({ lat: parsed.data.latitude, lon: parsed.data.longitude });
   return result.success ? { success: true, distanceMeters: result.distanceMeters } : { success: false };
 }

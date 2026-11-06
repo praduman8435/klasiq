@@ -12,9 +12,12 @@ export function AdminLoginForm() {
   const router = useRouter();
   const emailId = useId();
   const passwordId = useId();
+  const codeId = useId();
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [needsCode, setNeedsCode] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(event: React.FormEvent) {
@@ -23,13 +26,20 @@ export function AdminLoginForm() {
     setError(null);
 
     startTransition(async () => {
-      const result = await adminLogin({ email, password });
+      const result = await adminLogin({ email, password, code: needsCode ? code : undefined });
       if (result.success) {
         router.push("/admin");
         router.refresh();
-      } else {
-        setError(result.message);
+        return;
       }
+      if (result.mfaRequired) {
+        // First time through this is the prompt, not an error.
+        if (needsCode) setError(result.message);
+        setNeedsCode(true);
+        setCode("");
+        return;
+      }
+      setError(result.message);
     });
   }
 
@@ -45,6 +55,26 @@ export function AdminLoginForm() {
         </div>
       )}
 
+      {needsCode ? (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={codeId}>6-digit code</Label>
+          <p className="text-sm text-muted-foreground">Open your authenticator app and enter the code for Klasiq.</p>
+          <Input
+            id={codeId}
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            maxLength={6}
+            placeholder="123456"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            required
+            className="h-12 text-center text-2xl tracking-[0.5em]"
+          />
+        </div>
+      ) : (
+        <>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={emailId}>Email</Label>
         <Input
@@ -68,9 +98,11 @@ export function AdminLoginForm() {
           required
         />
       </div>
+        </>
+      )}
 
-      <Button type="submit" size="lg" className="mt-2 h-12 w-full text-base" disabled={isPending}>
-        {isPending ? "Signing in..." : "Sign in"}
+      <Button type="submit" size="lg" className="mt-2 h-12 w-full text-base" disabled={isPending || (needsCode && code.length !== 6)}>
+        {isPending ? "Signing in..." : needsCode ? "Verify" : "Sign in"}
       </Button>
     </form>
   );

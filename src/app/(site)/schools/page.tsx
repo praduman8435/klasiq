@@ -3,6 +3,12 @@ import { SchoolDirectory } from "@/components/school/school-directory";
 import { STORE_CONTACT } from "@/lib/constants";
 import { getActiveSchools } from "@/server/queries/schools";
 
+// Served from the CDN and rebuilt in the background at most once a minute,
+// so shoppers get an instant page while admin edits still show up within
+// 60 seconds. Nothing per-visitor is rendered here (the bag badge loads in
+// the browser), which is what makes caching safe.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "All schools",
   description: "Find your child's school and see its exact uniform, by class and size.",

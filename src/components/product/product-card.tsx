@@ -19,6 +19,7 @@ import { STOCK_STATUS_LABEL, isOrderable } from "@/lib/stock";
 import { cn } from "@/lib/utils";
 import { addToBasket } from "@/server/actions/basket";
 import type { ProductWithVariants } from "@/types/catalog";
+import { refreshBagCount } from "@/lib/bag-count-store";
 
 const STOCK_BADGE_CLASS: Record<string, string> = {
   IN_STOCK: "text-muted-foreground",
@@ -60,6 +61,7 @@ export function ProductCard({
         productVariantId: selectedVariant.id,
         quantity: 1,
       });
+      void refreshBagCount();
       if (result.success) {
         toast.success(`Added ${product.name} (Size ${selectedVariant.size}) to your bag.`);
         setJustAdded(true);

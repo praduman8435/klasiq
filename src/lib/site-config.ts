@@ -10,6 +10,11 @@
 function resolveSiteUrl(): string {
   const configured = process.env.SITE_URL?.trim();
   if (configured) return configured.replace(/\/+$/, "");
+  // On Vercel, fall back to the project's production domain (set by the
+  // platform at build and run time) so sitemap/robots/links are never
+  // pointed at localhost on a live deployment that forgot SITE_URL.
+  const vercelProduction = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelProduction) return `https://${vercelProduction.replace(/\/+$/, "")}`;
   return "http://localhost:3000";
 }
 

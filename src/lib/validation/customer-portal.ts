@@ -9,6 +9,11 @@ export const requestOtpSchema = z.object({
   phone: z.string().trim().min(1, "Please enter your mobile number.").max(20),
 });
 
+export const signInWithOrderNumberSchema = z.object({
+  phone: z.string().trim().min(1, "Please enter your mobile number.").max(20),
+  orderNumber: z.string().trim().min(1, "Please enter an order number from your bill.").max(40),
+});
+
 export const verifyOtpSchema = z.object({
   phone: z.string().trim().min(1).max(20),
   code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code."),

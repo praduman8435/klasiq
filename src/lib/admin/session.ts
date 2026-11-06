@@ -30,7 +30,9 @@ export async function createAdminSession(adminUserId: string): Promise<void> {
   cookieStore.set(ADMIN_SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // "strict": the admin is never legitimately entered from another
+    // site's link, so the cookie is never sent on any cross-site request.
+    sameSite: "strict",
     path: "/admin",
     expires: expiresAt,
   });
@@ -81,4 +83,17 @@ export async function destroyAdminSession(): Promise<void> {
   }
 
   cookieStore.delete({ name: ADMIN_SESSION_COOKIE_NAME, path: "/admin" });
+}
+
+/**
+ * Signs the admin out everywhere except this browser — used right after
+ * two-step sign-in is switched on, so a session opened earlier with only
+ * a (possibly leaked) password doesn't live on.
+ */
+export async function destroyOtherAdminSessions(adminUserId: string): Promise<void> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value;
+  await db.adminSession.deleteMany({
+    where: { adminUserId, ...(token ? { NOT: { tokenHash: hashToken(token) } } : {}) },
+  });
 }

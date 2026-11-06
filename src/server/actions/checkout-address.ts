@@ -1,5 +1,8 @@
 "use server";
 
+import { getClientIp } from "@/lib/request-ip";
+import { consumeMemoryRateLimit } from "@/server/rate-limit";
+
 import { basketTotalInPaise, getBasket } from "@/lib/basket";
 import { calculateDeliveryFee, FULFILLMENT_CONFIG } from "@/lib/fulfillment-config";
 import {
@@ -27,6 +30,10 @@ export type SearchDeliveryAddressResult =
 export async function searchDeliveryAddressAction(
   input: unknown,
 ): Promise<SearchDeliveryAddressResult> {
+  const geoLimit = consumeMemoryRateLimit({ key: `geo:${await getClientIp()}`, limit: 60, windowSeconds: 60 });
+  if (!geoLimit.allowed) {
+    return { success: false, error: { type: "RATE_LIMITED", message: "Address lookup is busy. Please try again in a moment." } };
+  }
   const parsed = deliveryAddressSearchSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: { type: "VALIDATION", message: "Invalid search." } };
@@ -64,6 +71,10 @@ export type PreviewDeliveryFeeResult =
 export async function previewDeliveryFeeAction(
   input: unknown,
 ): Promise<PreviewDeliveryFeeResult> {
+  const geoLimit = consumeMemoryRateLimit({ key: `geo:${await getClientIp()}`, limit: 60, windowSeconds: 60 });
+  if (!geoLimit.allowed) {
+    return { success: false, error: { type: "RATE_LIMITED", message: "Address lookup is busy. Please try again in a moment." } };
+  }
   const parsed = deliveryFeePreviewSchema.safeParse(input);
   if (!parsed.success) {
     return {

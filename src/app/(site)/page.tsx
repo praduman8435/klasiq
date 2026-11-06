@@ -34,6 +34,12 @@ import { getGenericCategoryProducts, getHeaderCategories } from "@/server/querie
 import { countActiveSchools, getActiveSchools } from "@/server/queries/schools";
 import { getWebsiteCoupons } from "@/server/coupons/coupons";
 
+// Served from the CDN and rebuilt in the background at most once a minute,
+// so shoppers get an instant page while admin edits still show up within
+// 60 seconds. Nothing per-visitor is rendered here (the bag badge loads in
+// the browser), which is what makes caching safe.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   description: BRAND.description,
 };

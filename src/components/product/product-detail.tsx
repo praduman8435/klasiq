@@ -14,6 +14,7 @@ import { isOrderable } from "@/lib/stock";
 import { cn } from "@/lib/utils";
 import { addToBasket } from "@/server/actions/basket";
 import type { ProductDetail as ProductDetailData } from "@/server/queries/products";
+import { refreshBagCount } from "@/lib/bag-count-store";
 
 const STOCK_NOTE: Record<string, { text: string; className: string } | null> = {
   IN_STOCK: null,
@@ -119,6 +120,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
           productVariantId: selectedVariant.id,
           quantity,
         });
+        void refreshBagCount();
         if (result.success) {
           toast.success(`Added ${product.name} (Size ${selectedVariant.size}) to your bag.`);
           router.refresh();

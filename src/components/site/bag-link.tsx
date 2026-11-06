@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
+import { useBagCount } from "@/lib/bag-count-store";
 import { cn } from "@/lib/utils";
 
-export function BagLink({ count, className }: { count: number; className?: string }) {
-
+export function BagLink({ className }: { className?: string }) {
+  const count = useBagCount();
   return (
     <Link
       href="/bag"

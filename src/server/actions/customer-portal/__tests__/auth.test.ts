@@ -12,6 +12,12 @@ vi.mock("@/server/otp/provider", () => ({
   getOtpProvider: () => ({ sendOtp: vi.fn().mockResolvedValue(undefined) }),
 }));
 
+// The rate limiter reads the client IP; a fresh one per call keeps tests
+// independent of each other's limits.
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "x-real-ip": `test-${Math.random().toString(36).slice(2)}` }),
+}));
+
 import { requestOtpAction } from "@/server/actions/customer-portal/auth";
 
 const createdCustomerIds: string[] = [];

@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LogOut,
   Megaphone,
+  ShieldCheck,
   Palette,
   Menu,
   School as SchoolIcon,
@@ -42,6 +43,7 @@ const ADMIN_NAV = [
   { href: "/admin/categories", label: "Categories", icon: Tags, exact: false },
   { href: "/admin/offers", label: "Offers", icon: TicketPercent, exact: false },
   { href: "/admin/banners", label: "Banners", icon: Megaphone, exact: false },
+  { href: "/admin/security", label: "Security", icon: ShieldCheck, exact: false },
 ] as const;
 
 function isNavActive(pathname: string, href: string, exact?: boolean) {

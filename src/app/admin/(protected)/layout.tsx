@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { getAdminSession } from "@/lib/admin/session";
-import { ADMIN_BRAND_NAME } from "@/lib/constants";
+import { BRAND } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: { default: ADMIN_BRAND_NAME, template: `%s | ${ADMIN_BRAND_NAME}` },
+  title: { default: BRAND.name, template: BRAND.name },
   robots: { index: false, follow: false },
 };
 

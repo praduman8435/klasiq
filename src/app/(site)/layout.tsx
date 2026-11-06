@@ -1,15 +1,12 @@
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { basketItemCount, getBasket } from "@/lib/basket";
 import { BRAND } from "@/lib/constants";
 
-export default async function SiteLayout({
+export default function SiteLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const bagCount = basketItemCount(await getBasket());
-
   return (
     <div className="flex min-h-full flex-1 flex-col bg-background text-foreground">
       <a
@@ -18,7 +15,7 @@ export default async function SiteLayout({
       >
         Skip to content
       </a>
-      <SiteHeader storeName={BRAND.name} bagCount={bagCount} />
+      <SiteHeader storeName={BRAND.name} />
       <main id="main-content" className="flex-1">
         {children}
       </main>

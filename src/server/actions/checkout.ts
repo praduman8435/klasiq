@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getBasketId } from "@/lib/basket";
+import { getClientIp } from "@/lib/request-ip";
+import { consumeRateLimit } from "@/server/rate-limit";
 import { checkoutInputSchema } from "@/lib/validation/checkout";
 import { placeOrderForBasket, type PlaceOrderError } from "@/server/commerce/place-order";
 
@@ -15,6 +17,13 @@ export type CheckoutActionResult =
     };
 
 export async function placeOrder(input: unknown): Promise<CheckoutActionResult> {
+  const limit = await consumeRateLimit({ key: `checkout:ip:${await getClientIp()}`, limit: 10, windowSeconds: 10 * 60 });
+  if (!limit.allowed) {
+    return {
+      success: false,
+      error: { type: "VALIDATION", message: "Too many orders from this connection. Please wait a few minutes.", fieldErrors: {} },
+    };
+  }
   const parsed = checkoutInputSchema.safeParse(input);
   if (!parsed.success) {
     return {
