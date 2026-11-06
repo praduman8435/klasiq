@@ -58,7 +58,7 @@ export default async function ForSchoolsPage({ searchParams }: PageProps) {
   const chip = (active: boolean) =>
     cn(
       "inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-sm transition-colors",
-      active ? "border-white/80 bg-white/10 font-semibold text-white" : "border-transparent text-foreground/65 hover:text-foreground",
+      active ? "border-foreground/80 bg-foreground/10 font-semibold text-foreground" : "border-transparent text-foreground/65 hover:text-foreground",
     );
 
   return (
@@ -67,7 +67,7 @@ export default async function ForSchoolsPage({ searchParams }: PageProps) {
       <section className="relative overflow-hidden border-b border-border">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_35%,oklch(0.3_0.03_260),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_35%,var(--hero-glow),transparent_60%)]"
         />
         <div className="relative mx-auto grid max-w-6xl items-center gap-6 px-4 pt-8 sm:px-6 md:grid-cols-[1.1fr_1fr] md:gap-10 md:py-14">
           <div>

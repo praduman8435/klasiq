@@ -35,7 +35,7 @@ const TONES: Record<PromoBannerTone, { card: string; body: string; cta: string; 
     card: "bg-card text-card-foreground ring-1 ring-border",
     body: "text-muted-foreground",
     cta: "bg-primary text-primary-foreground",
-    art: "bg-white/8 text-white",
+    art: "bg-white/8 text-white light:bg-secondary light:text-deal",
   },
   SOFT: {
     card: "bg-accent text-accent-foreground",

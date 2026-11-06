@@ -232,6 +232,19 @@ The surface ramp is deliberate. Night Black (0.13) is lower than Recess Grey (0.
 
 **The Solid Signature Rule.** On these dark surfaces, a translucent red tint with red text (`bg-primary/10 text-primary`) measured under 4:1. A selected or signature state is a solid red fill or a red ring, never a red wash behind red text.
 
+### Light Mode
+
+Dark is the storefront's home theme. Light mode is the visitor's choice, set from the sun/moon button at the right end of the header and remembered in their browser (`html[data-theme="light"]`, next-themes, `:root[data-theme="light"]` in `globals.css`). It is the same black-red-grey world in daylight, not an inversion:
+
+- **Page** is a soft cool grey (`oklch(0.94 0.006 260)`) so white bands and cards still read as bands; the **header** (`--chrome`) is white.
+- **Ink** is Night Black's lightness (`oklch(0.17 0.02 260)`); secondary text is a 0.46 pewter.
+- **Klasiq Red fills are unchanged.** **Deal Red drops to 0.5 lightness**, because 0.66 fails as small text on white — the Two Reds Rule holds in both themes.
+- Raised steps (category circles, icon tiles) are a 0.94 grey; borders are 11% ink instead of 12% white.
+- Heavy shadows use theme tokens (`--shadow-lift`, `--shadow-overlay`), softer and slightly warm in light.
+- The switch is a circular reveal from the button (View Transitions), instant under reduced motion. Which icon shows is decided by CSS (`light:` variant), never React state, so CDN-cached pages can't mismatch.
+
+Never style for light with `dark:` or the `.dark` class: that legacy token block would restyle the dark theme. Use the `light:` variant or a token.
+
 ## Typography
 
 **Body and Heading Font:** Plus Jakarta Sans (with ui-sans-serif, system-ui fallback)

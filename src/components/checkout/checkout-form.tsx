@@ -639,7 +639,7 @@ export function CheckoutForm({
         <button
           type="submit"
           disabled={isPending || !canSubmit || isRefreshingQuote}
-          className="flex h-14 w-full items-center gap-3 rounded-2xl bg-primary px-4 text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0_0_0/70%)] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring disabled:opacity-60"
+          className="flex h-14 w-full items-center gap-3 rounded-2xl bg-primary px-4 text-primary-foreground shadow-[0_8px_24px_-8px_var(--shadow-lift)] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring disabled:opacity-60"
         >
           <span className="min-w-0 flex-1 text-left leading-tight">
             <span className="block text-xs font-semibold text-primary-foreground/85">Total</span>

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { BRAND } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site-config";
@@ -53,9 +54,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      // next-themes sets data-theme before React hydrates.
+      suppressHydrationWarning
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        <ThemeProvider>
         {children}
         {/* PDP redesign critique fix — the Product Detail page's mobile
             sticky purchase bar (`product-detail.tsx`) sits in the same
@@ -67,6 +71,7 @@ export default function RootLayout({
             higher off the edge), and it means this doesn't need to be
             threaded per-route. */}
         <Toaster position="bottom-center" mobileOffset={{ bottom: "88px" }} />
+        </ThemeProvider>
       </body>
     </html>
   );

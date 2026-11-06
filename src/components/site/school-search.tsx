@@ -245,7 +245,7 @@ export function SchoolSearch({
             role="listbox"
             aria-label="Search suggestions"
             style={{ top: menuRect.top, left: menuRect.left, width: menuRect.width }}
-            className="fixed z-50 max-h-[min(28rem,65vh)] overflow-y-auto overflow-x-hidden rounded-2xl border border-border bg-popover py-1.5 shadow-[0_16px_40px_-12px_oklch(0_0_0/0.7)]"
+            className="fixed z-50 max-h-[min(28rem,65vh)] overflow-y-auto overflow-x-hidden rounded-2xl border border-border bg-popover py-1.5 shadow-[0_16px_40px_-12px_var(--shadow-overlay)]"
           >
             {searched && isLoading && options.length <= 1 && (
               <li className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">

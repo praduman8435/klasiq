@@ -3,6 +3,10 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+/* The storefront's light mode (html[data-theme="light"], set by the theme
+   toggle). Deliberately not `.dark`/`dark:` — those belong to the legacy
+   scaffold and would restyle the dark theme. */
+@custom-variant light (&:is([data-theme="light"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -12,6 +16,7 @@
   --font-heading: var(--font-heading);
   --font-display: var(--font-display);
   --color-deal: var(--deal);
+  --color-chrome: var(--chrome);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -78,6 +83,11 @@
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
   --ring: oklch(0.56 0.2 25 / 50%);
+  /* The header bar, and two shadows that read right on each theme. */
+  --chrome: oklch(0.13 0.02 260);
+  --shadow-lift: oklch(0 0 0 / 70%);
+  --shadow-overlay: oklch(0 0 0 / 70%);
+  --hero-glow: oklch(0.3 0.03 260);
   --chart-1: oklch(0.56 0.2 25);
   --chart-2: oklch(0.72 0.015 260);
   --chart-3: oklch(0.5 0.015 260);
@@ -94,6 +104,55 @@
   --sidebar-accent-foreground: oklch(0.94 0.006 85);
   --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.56 0.2 25 / 50%);
+}
+
+/* Storefront light mode — the same black, red and grey world, daylight
+   edition. Not an inversion: the page is a soft cool grey so the white
+   bands still read as bands (the Band Rule), ink is the dark theme's
+   Night Black, Klasiq Red fills are unchanged, and Deal Red drops to 0.5
+   lightness so small red text keeps AA contrast on white. Same hue 260
+   greys, same warm-ink accent ramp. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: oklch(0.94 0.006 260);
+  --foreground: oklch(0.17 0.02 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.17 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.17 0.02 260);
+  --primary: oklch(0.56 0.2 25);
+  --primary-foreground: oklch(0.98 0.012 25);
+  --secondary: oklch(0.94 0.006 260);
+  --secondary-foreground: oklch(0.2 0.02 260);
+  --muted: oklch(0.935 0.006 260);
+  --muted-foreground: oklch(0.46 0.015 260);
+  --accent: oklch(0.96 0.004 260);
+  --accent-foreground: oklch(0.16 0.02 260);
+  --deal: oklch(0.5 0.19 25);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.2 0.02 260 / 11%);
+  --input: oklch(0.2 0.02 260 / 18%);
+  --ring: oklch(0.56 0.2 25 / 45%);
+  --chrome: oklch(1 0 0);
+  --shadow-lift: oklch(0.45 0.12 25 / 35%);
+  --shadow-overlay: oklch(0.2 0.03 260 / 18%);
+  --hero-glow: oklch(0.9 0.03 25);
+  --chart-2: oklch(0.46 0.015 260);
+  --chart-4: oklch(0.3 0.01 260);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.17 0.02 260);
+  --sidebar-accent: oklch(0.94 0.006 260);
+  --sidebar-accent-foreground: oklch(0.2 0.02 260);
+  --sidebar-border: oklch(0.2 0.02 260 / 11%);
+}
+
+/* The theme switch: the new theme opens as a circle from the toggle
+   (clip-path, driven from theme-toggle.tsx) instead of the default
+   cross-fade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 /**

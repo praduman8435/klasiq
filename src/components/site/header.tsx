@@ -6,6 +6,7 @@ import { MobileNav } from "@/components/site/mobile-nav";
 import { BagLink } from "@/components/site/bag-link";
 import { TrackOrdersLink } from "@/components/site/track-orders-link";
 import { BrandWordmark } from "@/components/site/brand-wordmark";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { FULFILLMENT_CONFIG } from "@/lib/fulfillment-config";
 
 /**
@@ -18,7 +19,7 @@ export async function SiteHeader({ storeName }: { storeName: string }) {
   const categories = await getHeaderCategories();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85">
+    <header className="sticky top-0 z-30 border-b border-border bg-chrome/95 backdrop-blur supports-backdrop-filter:bg-chrome/85">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-2 sm:gap-3 sm:px-6 md:h-16">
         <MobileNav
           categories={categories}
@@ -54,6 +55,7 @@ export async function SiteHeader({ storeName }: { storeName: string }) {
             Orders
           </TrackOrdersLink>
           <BagLink />
+          <ThemeToggle />
         </div>
       </div>
 

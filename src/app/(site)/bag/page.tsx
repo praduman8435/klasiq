@@ -161,7 +161,7 @@ export default async function BagPage() {
       <div data-sticky-bar className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
         <Link
           href="/checkout"
-          className="flex h-14 items-center gap-3 rounded-2xl bg-primary pl-4 pr-4 text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0_0_0/70%)] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"
+          className="flex h-14 items-center gap-3 rounded-2xl bg-primary pl-4 pr-4 text-primary-foreground shadow-[0_8px_24px_-8px_var(--shadow-lift)] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"
         >
           <span className="min-w-0 flex-1 leading-tight">
             <span className="block text-xs font-semibold text-primary-foreground/85">{itemCountLabel}</span>
