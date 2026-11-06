@@ -62,7 +62,7 @@ export function CounterSaleCashChange({
         ))}
       </div>
       {givenInPaise > 0 && (
-        <p className={cn("mt-2 text-sm font-semibold tabular-nums", changeInPaise >= 0 ? "text-emerald-400" : "text-destructive")}>
+        <p className={cn("mt-2 text-sm font-semibold tabular-nums", changeInPaise >= 0 ? "text-emerald-400 light:text-emerald-700" : "text-destructive")}>
           {changeInPaise >= 0 ? `Return ${formatPaise(changeInPaise)}` : `${formatPaise(-changeInPaise)} short`}
         </p>
       )}

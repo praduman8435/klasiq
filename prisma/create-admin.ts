@@ -14,6 +14,7 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/admin/password";
+import { adminPasswordProblem } from "../src/lib/admin/password-policy";
 
 const db = new PrismaClient();
 
@@ -32,8 +33,9 @@ async function main() {
     return;
   }
 
-  if (password.length < 8) {
-    console.error("ADMIN_BOOTSTRAP_PASSWORD must be at least 8 characters.");
+  const problem = adminPasswordProblem(password, email);
+  if (problem) {
+    console.error(`ADMIN_BOOTSTRAP_PASSWORD rejected: ${problem}`);
     process.exitCode = 1;
     return;
   }

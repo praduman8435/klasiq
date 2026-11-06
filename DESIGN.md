@@ -245,6 +245,8 @@ Dark is the storefront's home theme. Light mode is the visitor's choice, set fro
 
 Never style for light with `dark:` or the `.dark` class: that legacy token block would restyle the dark theme. Use the `light:` variant or a token.
 
+**Admin follows the same choice.** The admin shell, its sheets, invoice views and the login page are `.dark` areas; under light mode `:root[data-theme="light"] .dark` swaps in the Klasiq light palette (keeping admin's Fraunces headings and gold accent) and the `dark:` variant switches off. The toggle sits at the top of the admin sidebar (desktop) and top right of the admin bar (phones). Status colours carry both shades: `text-amber-500 light:text-amber-700`, `text-emerald-700 dark:text-emerald-400`, so every "due", "low stock" and "paid" stays AA on white and on charcoal.
+
 ## Typography
 
 **Body and Heading Font:** Plus Jakarta Sans (with ui-sans-serif, system-ui fallback)

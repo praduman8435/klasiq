@@ -22,6 +22,7 @@ import {
   Wallet,
   TicketPercent,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ADMIN_BRAND_NAME } from "@/lib/constants";
@@ -152,11 +153,14 @@ export function AdminShell({
           rounding, across every width. `print:hidden` (Phase 4 Part 7)
           keeps admin navigation out of any printed page. */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border lg:flex print:hidden">
-        <div className="shrink-0 border-b border-border px-5 py-4">
-          <p className="font-heading text-base font-semibold tracking-tight text-foreground">
-            {ADMIN_BRAND_NAME}
-          </p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{adminName}</p>
+        <div className="flex shrink-0 items-center gap-2 border-b border-border py-3 pl-5 pr-2">
+          <div className="min-w-0 flex-1">
+            <p className="font-heading text-base font-semibold tracking-tight text-foreground">
+              {ADMIN_BRAND_NAME}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{adminName}</p>
+          </div>
+          <ThemeToggle compact />
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-3">
           <NavLinks />
@@ -202,7 +206,7 @@ export function AdminShell({
           </SheetContent>
         </Sheet>
         <p className="font-heading text-base font-semibold text-foreground">{ADMIN_BRAND_NAME}</p>
-        <span className="size-11" aria-hidden />
+        <ThemeToggle compact />
       </header>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden bg-background print:overflow-visible">

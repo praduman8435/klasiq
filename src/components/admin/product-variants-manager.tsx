@@ -34,7 +34,7 @@ const whole = (v: string) => v.replace(/\D/g, "");
 
 function stockText(v: Variant) {
   if (v.stockStatus === "OUT_OF_STOCK") return { text: "Out of stock", className: "text-destructive" };
-  if (v.stockStatus === "LOW_STOCK") return { text: `${v.stockQuantity} left · running low`, className: "text-amber-400" };
+  if (v.stockStatus === "LOW_STOCK") return { text: `${v.stockQuantity} left · running low`, className: "text-amber-400 light:text-amber-700" };
   return { text: `${v.stockQuantity} in stock`, className: "text-muted-foreground" };
 }
 
@@ -261,7 +261,7 @@ function SizeRow({ variant, editing, onEdit, onDone }: { variant: Variant; editi
             {variant.mrpInPaise !== null && (
               <p className="text-xs text-muted-foreground tabular-nums">
                 MRP <span className={off ? "line-through" : ""}>{formatPaise(variant.mrpInPaise)}</span>
-                {off > 0 && <span className="ml-1 text-emerald-400">{formatPaise(off)} off</span>}
+                {off > 0 && <span className="ml-1 text-emerald-400 light:text-emerald-700">{formatPaise(off)} off</span>}
               </p>
             )}
           </div>

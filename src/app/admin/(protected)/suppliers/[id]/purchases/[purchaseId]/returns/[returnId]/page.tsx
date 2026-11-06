@@ -61,7 +61,7 @@ export default async function SupplierPurchaseReturnDetailPage({ params }: PageP
               {DATE_FORMATTER.format(supplierReturn.returnDate)} · {supplierReturn.purchase.supplier.name}
             </p>
           </div>
-          <Badge variant="outline" className="border-emerald-600/40 text-emerald-600 dark:text-emerald-400">
+          <Badge variant="outline" className="border-emerald-600/40 text-emerald-700 dark:text-emerald-400">
             {supplierReturn.status === "COMPLETED" ? "Completed" : "Cancelled"}
           </Badge>
         </div>
@@ -112,7 +112,7 @@ export default async function SupplierPurchaseReturnDetailPage({ params }: PageP
                     </p>
                     <p className="text-xs text-muted-foreground">SKU {item.productVariant.sku}</p>
                     <p className="text-xs text-muted-foreground">
-                      Quantity: <span className="font-medium text-amber-600 dark:text-amber-400">-{item.quantity}</span>
+                      Quantity: <span className="font-medium text-amber-700 dark:text-amber-400">-{item.quantity}</span>
                       {item.unitCostInPaise !== null && (
                         <> · {formatPaise(item.unitCostInPaise)} each · Value {formatPaise(item.quantity * item.unitCostInPaise)}</>
                       )}
@@ -127,7 +127,7 @@ export default async function SupplierPurchaseReturnDetailPage({ params }: PageP
                       </p>
                     </div>
                     <span className="w-24 shrink-0 truncate text-xs text-muted-foreground">{item.productVariant.sku}</span>
-                    <span className="w-20 shrink-0 text-right text-sm font-medium text-amber-600 dark:text-amber-400">-{item.quantity}</span>
+                    <span className="w-20 shrink-0 text-right text-sm font-medium text-amber-700 dark:text-amber-400">-{item.quantity}</span>
                     <span className="w-24 shrink-0 text-right text-sm text-muted-foreground">
                       {item.unitCostInPaise !== null ? formatPaise(item.unitCostInPaise) : "—"}
                     </span>
@@ -150,13 +150,13 @@ export default async function SupplierPurchaseReturnDetailPage({ params }: PageP
                   <span>
                     {item.productVariant.product.name} ({item.productVariant.size})
                   </span>
-                  <span className="font-medium text-amber-600 dark:text-amber-400">-{item.quantity}</span>
+                  <span className="font-medium text-amber-700 dark:text-amber-400">-{item.quantity}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-sm font-semibold">
               <span>Total</span>
-              <span className="text-amber-600 dark:text-amber-400">-{totalUnits} units</span>
+              <span className="text-amber-700 dark:text-amber-400">-{totalUnits} units</span>
             </div>
             {showValue && (
               <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">

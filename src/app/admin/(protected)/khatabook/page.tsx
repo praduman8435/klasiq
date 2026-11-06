@@ -63,7 +63,7 @@ export default async function KhataBookPage({ searchParams }: PageProps) {
             <p
               className={
                 overview.totalDueInPaise > 0
-                  ? "mt-1 text-3xl font-semibold tabular-nums text-amber-500"
+                  ? "mt-1 text-3xl font-semibold tabular-nums text-amber-500 light:text-amber-700"
                   : "mt-1 text-3xl font-semibold tabular-nums"
               }
             >
@@ -178,7 +178,7 @@ export default async function KhataBookPage({ searchParams }: PageProps) {
                           : "—"}
                     </span>
                     <div className="flex shrink-0 flex-col items-end text-right lg:w-28">
-                      <span className={due ? "text-sm font-semibold tabular-nums text-amber-500" : "text-sm text-muted-foreground"}>
+                      <span className={due ? "text-sm font-semibold tabular-nums text-amber-500 light:text-amber-700" : "text-sm text-muted-foreground"}>
                         {due ? formatPaise(row.dueInPaise) : "All paid"}
                       </span>
                       <span className="text-xs text-muted-foreground">{due ? "Lena hai" : "Hisaab barabar"}</span>

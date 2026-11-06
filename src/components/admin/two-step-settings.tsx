@@ -92,7 +92,7 @@ export function TwoStepSettings({ enabledAt }: { enabledAt: string | null }) {
     return (
       <section className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
         <div className="flex items-start gap-3">
-          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-400" aria-hidden />
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-400 light:text-emerald-700" aria-hidden />
           <div>
             <h2 className="font-semibold">Two-step sign-in is on</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -118,7 +118,7 @@ export function TwoStepSettings({ enabledAt }: { enabledAt: string | null }) {
   return (
     <section className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
       <div className="flex items-start gap-3">
-        <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-400" aria-hidden />
+        <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-400 light:text-amber-700" aria-hidden />
         <div>
           <h2 className="font-semibold">Two-step sign-in is off</h2>
           <p className="mt-1 text-sm text-muted-foreground">

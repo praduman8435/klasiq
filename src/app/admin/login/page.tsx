@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminLoginForm } from "@/components/admin/login-form";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { getAdminSession } from "@/lib/admin/session";
 import { ADMIN_BRAND_NAME } from "@/lib/constants";
 
@@ -16,6 +17,9 @@ export default async function AdminLoginPage() {
   }
 
   return (
+    // Same theme as the signed-in admin (dark by default, light by choice).
+    <div className="dark relative flex min-h-screen flex-1 flex-col bg-background text-foreground">
+      <ThemeToggle compact className="absolute right-3 top-3" />
     <div className="mx-auto flex min-h-screen w-full max-w-sm flex-1 flex-col justify-center px-4 py-12 sm:px-6">
       <div className="mb-8 text-center">
         <p className="font-heading text-2xl font-semibold tracking-tight">
@@ -28,6 +32,7 @@ export default async function AdminLoginPage() {
       <div className="rounded-2xl border bg-card p-6 shadow-sm">
         <AdminLoginForm />
       </div>
+    </div>
     </div>
   );
 }

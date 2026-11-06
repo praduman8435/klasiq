@@ -54,7 +54,7 @@ export function ProductFilters({
   const views = [
     { key: "", label: "All", count: counts.all },
     { key: "out", label: "Out of stock", count: counts.out, tone: "text-destructive" },
-    { key: "low", label: "Running low", count: counts.low, tone: "text-amber-400" },
+    { key: "low", label: "Running low", count: counts.low, tone: "text-amber-400 light:text-amber-700" },
     { key: "hidden", label: "Hidden", count: counts.hidden },
   ];
 

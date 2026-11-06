@@ -2,7 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* `dark:` utilities apply inside a `.dark` area (the admin shell, its
+   sheets, invoice views) — except when the visitor chose light mode,
+   where those same areas switch to the light tokens below. */
+@custom-variant dark (&:is(:root:not([data-theme="light"]) .dark *));
 /* The storefront's light mode (html[data-theme="light"], set by the theme
    toggle). Deliberately not `.dark`/`dark:` — those belong to the legacy
    scaffold and would restyle the dark theme. */
@@ -266,6 +269,46 @@
   --sidebar-accent: oklch(0.23 0.015 260);
   --sidebar-accent-foreground: oklch(0.92 0.006 85);
   --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.56 0.2 25 / 45%);
+}
+
+/* Admin (and the other `.dark` areas) in light mode — the Klasiq light
+   palette, keeping the admin's own Fraunces headings and gold accent so
+   it stays recognisably the same tool. Wins over `.dark` by specificity. */
+:root[data-theme="light"] .dark {
+  color-scheme: light;
+  --font-heading: var(--font-display);
+  --background: oklch(0.965 0.004 260);
+  --foreground: oklch(0.17 0.02 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.17 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.17 0.02 260);
+  --primary: oklch(0.56 0.2 25);
+  --primary-foreground: oklch(0.98 0.012 25);
+  --secondary: oklch(0.935 0.006 260);
+  --secondary-foreground: oklch(0.2 0.02 260);
+  --muted: oklch(0.935 0.006 260);
+  --muted-foreground: oklch(0.45 0.015 260);
+  --accent: oklch(0.8 0.15 85);
+  --accent-foreground: oklch(0.22 0.05 70);
+  --deal: oklch(0.5 0.19 25);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.2 0.02 260 / 12%);
+  --input: oklch(0.2 0.02 260 / 20%);
+  --ring: oklch(0.56 0.2 25 / 45%);
+  --chart-1: oklch(0.56 0.2 25);
+  --chart-2: oklch(0.7 0.14 75);
+  --chart-3: oklch(0.5 0.1 150);
+  --chart-4: oklch(0.55 0.12 240);
+  --chart-5: oklch(0.55 0.02 260);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.17 0.02 260);
+  --sidebar-primary: oklch(0.56 0.2 25);
+  --sidebar-primary-foreground: oklch(0.98 0.012 25);
+  --sidebar-accent: oklch(0.935 0.006 260);
+  --sidebar-accent-foreground: oklch(0.2 0.02 260);
+  --sidebar-border: oklch(0.2 0.02 260 / 12%);
   --sidebar-ring: oklch(0.56 0.2 25 / 45%);
 }
 

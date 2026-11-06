@@ -65,7 +65,7 @@ export default async function SupplierCreditDetailPage({ params }: PageProps) {
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Unallocated</dt>
-              <dd className="mt-0.5 font-semibold text-sky-600 dark:text-sky-400">{formatPaise(credit.unallocatedInPaise)}</dd>
+              <dd className="mt-0.5 font-semibold text-sky-700 dark:text-sky-400">{formatPaise(credit.unallocatedInPaise)}</dd>
             </div>
           </dl>
           <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-3 text-sm sm:grid-cols-3">
@@ -118,7 +118,7 @@ export default async function SupplierCreditDetailPage({ params }: PageProps) {
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Purchase outstanding after allocation:{" "}
-                    <span className={allocation.purchaseOutstandingAfterInPaise > 0 ? "font-medium text-amber-600 dark:text-amber-400" : "font-medium text-emerald-600 dark:text-emerald-400"}>
+                    <span className={allocation.purchaseOutstandingAfterInPaise > 0 ? "font-medium text-amber-700 dark:text-amber-400" : "font-medium text-emerald-700 dark:text-emerald-400"}>
                       {formatPaise(Math.max(0, allocation.purchaseOutstandingAfterInPaise))}
                     </span>
                   </p>

@@ -29,9 +29,9 @@ const EVENT_TYPE_LABEL: Record<string, string> = {
 
 const EVENT_TYPE_BADGE_CLASS: Record<string, string> = {
   PURCHASE: "text-foreground",
-  PAYMENT: "text-emerald-600 dark:text-emerald-400",
-  CREDIT: "text-sky-600 dark:text-sky-400",
-  REFUND: "text-sky-600 dark:text-sky-400",
+  PAYMENT: "text-emerald-700 dark:text-emerald-400",
+  CREDIT: "text-sky-700 dark:text-sky-400",
+  REFUND: "text-sky-700 dark:text-sky-400",
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -136,7 +136,7 @@ export default async function SupplierLedgerPage({ params, searchParams }: PageP
                 <p
                   className={cn(
                     "mt-0.5 text-lg font-semibold print:text-neutral-900",
-                    summary.purchaseOutstandingInPaise > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400",
+                    summary.purchaseOutstandingInPaise > 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400",
                   )}
                 >
                   {formatPaise(Math.max(0, summary.purchaseOutstandingInPaise))}

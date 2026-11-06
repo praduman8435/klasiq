@@ -16,7 +16,7 @@ const THEME_COLOR = { dark: "#0b0e14", light: "#ffffff" } as const;
  * new theme opens as a circle from the button; otherwise (or with reduced
  * motion) it switches instantly.
  */
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { resolvedTheme, setTheme } = useTheme();
 
   // A visitor who saved "light" also gets a light browser top bar.
@@ -67,6 +67,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       onClick={toggle}
       className={cn(
+        compact && "size-11 px-0 sm:px-0",
         "group flex h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl px-2 text-xs font-semibold text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring sm:flex-row sm:gap-1.5 sm:px-3 sm:text-sm",
         className,
       )}
@@ -75,8 +76,8 @@ export function ThemeToggle({ className }: { className?: string }) {
         <Sun className="absolute inset-0 size-5 transition-transform duration-500 ease-out group-hover:rotate-45 light:hidden" />
         <Moon className="absolute inset-0 hidden size-5 transition-transform duration-500 ease-out group-hover:-rotate-12 light:block" />
       </span>
-      <span className="light:hidden">Light</span>
-      <span className="hidden light:inline">Dark</span>
+      <span className={cn("light:hidden", compact && "sr-only")}>Light</span>
+      <span className={cn("hidden light:inline", compact && "sr-only")}>Dark</span>
       <span className="sr-only"> theme</span>
     </button>
   );

@@ -411,7 +411,7 @@ export function SupplierPurchaseDetail({
             {creditsAppliedInPaise > 0 && (
               <div>
                 <dt className="text-xs text-muted-foreground">Credits Applied</dt>
-                <dd className="mt-0.5 font-medium text-sky-600 dark:text-sky-400">{formatPaise(creditsAppliedInPaise)}</dd>
+                <dd className="mt-0.5 font-medium text-sky-700 dark:text-sky-400">{formatPaise(creditsAppliedInPaise)}</dd>
               </div>
             )}
             <div>
@@ -420,7 +420,7 @@ export function SupplierPurchaseDetail({
                   getPurchasePaymentInfo's own doc comment). The
                   purchase's own totalInPaise is never modified here. */}
               <dt className="text-xs text-muted-foreground">Outstanding</dt>
-              <dd className={cn("mt-0.5 font-medium", outstandingInPaise > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
+              <dd className={cn("mt-0.5 font-medium", outstandingInPaise > 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400")}>
                 {formatPaise(Math.max(0, outstandingInPaise))}
               </dd>
             </div>
@@ -532,7 +532,7 @@ export function SupplierPurchaseDetail({
                       <p className="text-xs text-muted-foreground">{CREDIT_REASON_LABEL[row.credit.reason] ?? row.credit.reason}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="text-sm font-semibold text-sky-600 dark:text-sky-400">{formatPaise(row.amountInPaise)}</span>
+                      <span className="text-sm font-semibold text-sky-700 dark:text-sky-400">{formatPaise(row.amountInPaise)}</span>
                       <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
                     </div>
                   </Link>
@@ -559,7 +559,7 @@ export function SupplierPurchaseDetail({
               nativeButton={false}
               size="sm"
               variant="outline"
-              className="h-8 border-amber-600/40 text-amber-600 hover:bg-amber-600/10 dark:text-amber-400"
+              className="h-8 border-amber-600/40 text-amber-700 hover:bg-amber-600/10 dark:text-amber-400"
             >
               <Undo2 className="size-3.5" aria-hidden />
               Return to Supplier
@@ -587,7 +587,7 @@ export function SupplierPurchaseDetail({
           </div>
           <div className="bg-card px-4 py-3">
             <p className="text-xs text-muted-foreground">Supplier Returned</p>
-            <p className="mt-0.5 text-lg font-semibold text-amber-600 dark:text-amber-400">{returnSummary.totalReturnedUnits} units</p>
+            <p className="mt-0.5 text-lg font-semibold text-amber-700 dark:text-amber-400">{returnSummary.totalReturnedUnits} units</p>
           </div>
           {receivingSummary.totalReceivedUnits > 0 && (
             <div className="bg-card px-4 py-3">
@@ -628,7 +628,7 @@ export function SupplierPurchaseDetail({
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{receipt.totalUnits} units</span>
+                      <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{receipt.totalUnits} units</span>
                       <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
                     </div>
                   </Link>
@@ -665,7 +665,7 @@ export function SupplierPurchaseDetail({
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">-{supplierReturn.totalUnits} units</span>
+                      <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">-{supplierReturn.totalUnits} units</span>
                       <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
                     </div>
                   </Link>

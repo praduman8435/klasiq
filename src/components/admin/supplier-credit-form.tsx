@@ -58,7 +58,7 @@ function AllocationRow({
         <p className="text-sm font-medium">{DATE_FORMATTER.format(purchase.purchaseDate)}{purchase.reference ? ` · ${purchase.reference}` : ""}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           Total {formatPaise(purchase.totalInPaise)} · Paid {formatPaise(purchase.paidInPaise)} · Credited {formatPaise(purchase.creditsAppliedInPaise)} · Outstanding{" "}
-          <span className={cn("font-medium", isPaidOff ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
+          <span className={cn("font-medium", isPaidOff ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400")}>
             {formatPaise(purchase.outstandingInPaise)}
           </span>
         </p>
@@ -68,7 +68,7 @@ function AllocationRow({
           Allocate to {DATE_FORMATTER.format(purchase.purchaseDate)}
         </Label>
         {isPaidOff ? (
-          <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Settled</span>
+          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Settled</span>
         ) : (
           <Input
             id={inputId}

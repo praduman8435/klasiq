@@ -44,7 +44,7 @@ export function SupplierSidePanel({
                 <span className="min-w-0 truncate text-muted-foreground">
                   <span className="tabular-nums">{DAY.format(row.date)}</span> · {row.label}
                 </span>
-                <span className={cn("shrink-0 tabular-nums", row.sign === -1 ? "text-emerald-400" : "text-foreground")}>
+                <span className={cn("shrink-0 tabular-nums", row.sign === -1 ? "text-emerald-400 light:text-emerald-700" : "text-foreground")}>
                   {row.sign === -1 ? "−" : row.sign === 1 ? "+" : ""}
                   {formatPaise(row.amountInPaise)}
                 </span>

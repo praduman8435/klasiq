@@ -275,7 +275,7 @@ export default async function AdminSupplierPage({ params }: PageProps) {
                           <span
                             className={cn(
                               "text-sm font-medium tabular-nums lg:w-28 lg:text-right",
-                              amount > 0 ? "text-foreground" : "text-emerald-400",
+                              amount > 0 ? "text-foreground" : "text-emerald-400 light:text-emerald-700",
                             )}
                           >
                             {amount > 0 ? "+" : "−"}

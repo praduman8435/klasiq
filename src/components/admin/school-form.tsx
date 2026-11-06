@@ -112,7 +112,7 @@ export function SchoolForm({ initial }: { initial?: SchoolFormValues }) {
             />
           </div>
           {isEditing && (
-            <p className="text-xs font-medium text-amber-500">
+            <p className="text-xs font-medium text-amber-500 light:text-amber-700">
               Changing the slug breaks any printed QR codes or shared links using the old address.
             </p>
           )}

@@ -79,6 +79,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // The admin panel must never appear in search results, even if a
+        // link to it leaks somewhere public.
+        source: "/admin/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },

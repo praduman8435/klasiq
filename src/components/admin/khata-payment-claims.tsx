@@ -57,7 +57,7 @@ export function KhataPaymentClaims({ claims, showCustomer = true }: { claims: Pe
   return (
     <section aria-labelledby="claims-heading" className="overflow-hidden rounded-xl border border-amber-500/40 bg-amber-500/5">
       <div className="flex items-start gap-3 border-b border-amber-500/20 px-4 py-3 sm:px-5">
-        <Smartphone className="mt-0.5 size-4 shrink-0 text-amber-400" aria-hidden />
+        <Smartphone className="mt-0.5 size-4 shrink-0 text-amber-400 light:text-amber-700" aria-hidden />
         <div>
           <h2 id="claims-heading" className="text-sm font-semibold">
             {claims.length === 1 ? "1 online payment to check" : `${claims.length} online payments to check`}

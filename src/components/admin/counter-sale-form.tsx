@@ -492,7 +492,7 @@ export function CounterSaleForm({
         aria-labelledby={startNewSaleHeadingId}
         className="flex flex-col items-center gap-5 py-6 text-center"
       >
-        <span className="flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
+        <span className="flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 light:text-emerald-700">
           <CheckCircle2 className="size-6" aria-hidden />
         </span>
         <div>
@@ -556,7 +556,7 @@ export function CounterSaleForm({
                   <span className="text-muted-foreground">Received</span>
                   <span>{formatPaise(completedSale.amountReceivedInPaise)}</span>
                 </div>
-                <div className="mt-1 flex justify-between text-sm font-semibold text-amber-500">
+                <div className="mt-1 flex justify-between text-sm font-semibold text-amber-500 light:text-amber-700">
                   <span>Added to khata</span>
                   <span>{formatPaise(completedSale.outstandingInPaise)}</span>
                 </div>
@@ -691,7 +691,7 @@ export function CounterSaleForm({
                         <p className="text-xs text-muted-foreground">
                           {formatPaise(line.priceInPaise)} each
                           {line.quantity >= line.stockQuantity && (
-                            <span className="ml-1 font-medium text-amber-500">&middot; no more in stock</span>
+                            <span className="ml-1 font-medium text-amber-500 light:text-amber-700">&middot; no more in stock</span>
                           )}
                         </p>
                       </div>

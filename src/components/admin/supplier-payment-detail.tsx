@@ -309,7 +309,7 @@ export function SupplierPaymentDetail({ payment }: { payment: Payment }) {
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Remaining after this payment:{" "}
-                  <span className={cn("font-medium", allocation.purchaseOutstandingAfterInPaise > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
+                  <span className={cn("font-medium", allocation.purchaseOutstandingAfterInPaise > 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400")}>
                     {formatPaise(Math.max(0, allocation.purchaseOutstandingAfterInPaise))}
                   </span>
                 </p>

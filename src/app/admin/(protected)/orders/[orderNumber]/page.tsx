@@ -188,7 +188,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                   <div
                     className={
                       order.outstandingInPaise > 0
-                        ? "mt-1 flex justify-between font-semibold text-amber-500"
+                        ? "mt-1 flex justify-between font-semibold text-amber-500 light:text-amber-700"
                         : "mt-1 flex justify-between text-muted-foreground"
                     }
                   >
@@ -269,7 +269,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             <p
               className={cn(
                 "mt-1 text-sm font-medium",
-                payment.tone === "due" ? "text-amber-500" : payment.tone === "paid" ? "text-emerald-400" : "text-muted-foreground",
+                payment.tone === "due" ? "text-amber-500 light:text-amber-700" : payment.tone === "paid" ? "text-emerald-400 light:text-emerald-700" : "text-muted-foreground",
               )}
             >
               {payment.label}

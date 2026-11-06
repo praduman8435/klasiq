@@ -86,7 +86,7 @@ export default async function KhataBookCustomerPage({ params }: PageProps) {
                   <span className="flex flex-col items-end">
                     <span className="font-medium tabular-nums">{formatPaise(order.totalInPaise)}</span>
                     {order.outstandingInPaise > 0 && (
-                      <span className="text-xs text-amber-500 tabular-nums">{formatPaise(order.outstandingInPaise)} baaki</span>
+                      <span className="text-xs text-amber-500 light:text-amber-700 tabular-nums">{formatPaise(order.outstandingInPaise)} baaki</span>
                     )}
                   </span>
                 </Link>
@@ -160,7 +160,7 @@ export default async function KhataBookCustomerPage({ params }: PageProps) {
             <p id="balance-heading" className="text-sm text-muted-foreground">
               {due ? "To get · Lena hai" : "Hisaab barabar"}
             </p>
-            <p className={cn("mt-1 text-4xl font-semibold tabular-nums", due ? "text-amber-500" : "text-muted-foreground")}>
+            <p className={cn("mt-1 text-4xl font-semibold tabular-nums", due ? "text-amber-500 light:text-amber-700" : "text-muted-foreground")}>
               {due ? formatPaise(khata.dueInPaise) : "All paid"}
             </p>
             {due && khata.dueSince && (
@@ -261,7 +261,7 @@ export default async function KhataBookCustomerPage({ params }: PageProps) {
                       </span>
                       <span className="min-w-0 flex-1 truncate text-sm">{khataEventLabel(event)}</span>
                       <span className="flex flex-col items-end lg:flex-row lg:items-center">
-                        <span className={cn("text-sm font-medium tabular-nums lg:w-28 lg:text-right", plus ? "text-foreground" : "text-emerald-400")}>
+                        <span className={cn("text-sm font-medium tabular-nums lg:w-28 lg:text-right", plus ? "text-foreground" : "text-emerald-400 light:text-emerald-700")}>
                           {plus ? "+" : "−"}
                           {formatPaise(event.amountInPaise)}
                         </span>

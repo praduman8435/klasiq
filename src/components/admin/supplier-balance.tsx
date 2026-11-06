@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 /** Amber = the shop owes (same as KhataBook's outstanding), emerald =
  * advance with the supplier, muted = settled. */
 export const BALANCE_TONE_CLASS: Record<SupplierBalanceTone, string> = {
-  owe: "text-amber-500",
-  advance: "text-emerald-400",
+  owe: "text-amber-500 light:text-amber-700",
+  advance: "text-emerald-400 light:text-emerald-700",
   settled: "text-muted-foreground",
 };
 

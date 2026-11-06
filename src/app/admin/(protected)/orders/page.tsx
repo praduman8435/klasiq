@@ -156,7 +156,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 <span
                   className={cn(
                     "text-xs",
-                    payment.tone === "due" ? "font-medium text-amber-500" : payment.tone === "paid" ? "text-emerald-400" : "text-muted-foreground",
+                    payment.tone === "due" ? "font-medium text-amber-500 light:text-amber-700" : payment.tone === "paid" ? "text-emerald-400 light:text-emerald-700" : "text-muted-foreground",
                   )}
                 >
                   {payment.label}

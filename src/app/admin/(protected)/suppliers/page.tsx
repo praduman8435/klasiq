@@ -49,7 +49,7 @@ export default async function AdminSuppliersPage({ searchParams }: PageProps) {
             <p
               className={
                 overview.totalOwedInPaise > 0
-                  ? "mt-1 text-3xl font-semibold tabular-nums text-amber-500"
+                  ? "mt-1 text-3xl font-semibold tabular-nums text-amber-500 light:text-amber-700"
                   : "mt-1 text-3xl font-semibold tabular-nums"
               }
             >

@@ -23,8 +23,8 @@ export type AdminBanner = PromoBannerData & {
 };
 
 const STATUS_BADGE: Record<AdminBanner["status"], { label: string; className: string }> = {
-  live: { label: "Live", className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-300" },
-  scheduled: { label: "Scheduled", className: "border-sky-500/40 bg-sky-500/15 text-sky-300" },
+  live: { label: "Live", className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 light:text-emerald-700" },
+  scheduled: { label: "Scheduled", className: "border-sky-500/40 bg-sky-500/15 text-sky-300 light:text-sky-700" },
   ended: { label: "Ended", className: "border-border text-muted-foreground" },
   hidden: { label: "Hidden", className: "border-border text-muted-foreground" },
 };

@@ -13,8 +13,8 @@ export const metadata: Metadata = { title: "Offers" };
 const DAY = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" });
 
 const STATUS: Record<CouponStatus, { label: string; className: string }> = {
-  live: { label: "Live", className: "bg-emerald-500/15 text-emerald-400" },
-  scheduled: { label: "Starts later", className: "bg-sky-500/15 text-sky-300" },
+  live: { label: "Live", className: "bg-emerald-500/15 text-emerald-400 light:text-emerald-700" },
+  scheduled: { label: "Starts later", className: "bg-sky-500/15 text-sky-300 light:text-sky-700" },
   expired: { label: "Ended", className: "bg-secondary text-muted-foreground" },
   "used-up": { label: "All used", className: "bg-secondary text-muted-foreground" },
   off: { label: "Paused", className: "bg-secondary text-muted-foreground" },

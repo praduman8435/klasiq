@@ -111,7 +111,7 @@ export function SupplierQuickPayForm({
               return (
                 <li key={a.purchaseId} className="flex items-center justify-between gap-3 text-muted-foreground">
                   <span className="flex min-w-0 items-center gap-1.5">
-                    {full && <Check className="size-3.5 shrink-0 text-emerald-400" aria-hidden />}
+                    {full && <Check className="size-3.5 shrink-0 text-emerald-400 light:text-emerald-700" aria-hidden />}
                     <span className="truncate">{bill.label}</span>
                   </span>
                   <span className="shrink-0 tabular-nums">
@@ -123,7 +123,7 @@ export function SupplierQuickPayForm({
             {preview.advanceInPaise > 0 && (
               <li className="flex items-center justify-between gap-3 text-muted-foreground">
                 <span>Extra, counted for the next bill</span>
-                <span className="tabular-nums text-emerald-400">{formatPaise(preview.advanceInPaise)}</span>
+                <span className="tabular-nums text-emerald-400 light:text-emerald-700">{formatPaise(preview.advanceInPaise)}</span>
               </li>
             )}
           </ul>

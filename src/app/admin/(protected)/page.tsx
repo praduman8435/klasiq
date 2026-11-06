@@ -203,7 +203,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
         </div>
         <div className="p-4 sm:p-5">
           <p className="text-sm text-muted-foreground">Udhaar given today</p>
-          <p className={cn("mt-1 text-2xl font-semibold tabular-nums", today.udhaarGivenInPaise > 0 && "text-amber-500")}>
+          <p className={cn("mt-1 text-2xl font-semibold tabular-nums", today.udhaarGivenInPaise > 0 && "text-amber-500 light:text-amber-700")}>
             {formatPaise(today.udhaarGivenInPaise)}
           </p>
           <Link href="/admin/khatabook" className="mt-1 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -297,7 +297,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
                       aria-hidden
                       className={cn(
                         "flex size-9 shrink-0 items-center justify-center rounded-full",
-                        item.tone === "danger" ? "bg-destructive/15 text-destructive" : item.tone === "warn" ? "bg-amber-500/15 text-amber-500" : "bg-secondary text-muted-foreground",
+                        item.tone === "danger" ? "bg-destructive/15 text-destructive" : item.tone === "warn" ? "bg-amber-500/15 text-amber-500 light:text-amber-700" : "bg-secondary text-muted-foreground",
                       )}
                     >
                       <item.icon className="size-4" />

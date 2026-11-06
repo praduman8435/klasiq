@@ -3,6 +3,8 @@
 import QRCode from "qrcode";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { hashPassword, verifyPassword } from "@/lib/admin/password";
+import { adminPasswordProblem, ADMIN_PASSWORD_MAX_LENGTH } from "@/lib/admin/password-policy";
 import { destroyOtherAdminSessions, getAdminSession } from "@/lib/admin/session";
 import { generateTotpSecret, openTotpSecret, sealTotpSecret, totpUri, verifyTotp } from "@/lib/admin/totp";
 import { BRAND } from "@/lib/constants";
@@ -80,4 +82,51 @@ export async function disableTwoStepAction(input: unknown): Promise<{ success: t
   });
   revalidatePath("/admin/security");
   return { success: true };
+}
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Enter your current password.").max(ADMIN_PASSWORD_MAX_LENGTH),
+  newPassword: z.string().max(ADMIN_PASSWORD_MAX_LENGTH),
+  code: z.string().trim().max(10).optional(),
+});
+
+/** Changing the password proves it's really you (current password, and a
+ * current app code when two-step is on), then signs every other device
+ * out — anyone holding the old password's session loses it. */
+export async function changeAdminPasswordAction(input: unknown): Promise<{ success: true } | Failure> {
+  const admin = await getAdminSession();
+  if (!admin) return { success: false, message: "Please sign in again." };
+  const parsed = changePasswordSchema.safeParse(input);
+  if (!parsed.success) return { success: false, message: parsed.error.issues[0]!.message };
+  if (await limited(admin.id)) return { success: false, message: "Too many tries. Please wait a few minutes." };
+  const { currentPassword, newPassword, code } = parsed.data;
+
+  if (!(await verifyPassword({ plainPassword: currentPassword, storedHash: admin.passwordHash }))) {
+    return { success: false, message: "Your current password isn't right." };
+  }
+  if (admin.totpEnabledAt) {
+    const secret = admin.totpSecret ? openTotpSecret(admin.totpSecret) : null;
+    const step = secret && code ? verifyTotp({ secretBase32: secret, code, lastUsedStep: admin.totpLastStep }) : null;
+    if (step === null) return { success: false, message: "Enter the newest 6-digit code from your authenticator app." };
+    await db.adminUser.update({ where: { id: admin.id }, data: { totpLastStep: step } });
+  }
+  const problem = adminPasswordProblem(newPassword, admin.email);
+  if (problem) return { success: false, message: problem };
+  if (newPassword === currentPassword) return { success: false, message: "Choose a password different from your current one." };
+
+  await db.adminUser.update({ where: { id: admin.id }, data: { passwordHash: await hashPassword(newPassword) } });
+  await destroyOtherAdminSessions(admin.id);
+  revalidatePath("/admin/security");
+  return { success: true };
+}
+
+/** "I signed in somewhere I shouldn't have" — ends every session except
+ * this browser's. */
+export async function signOutOtherDevicesAction(): Promise<{ success: true; signedOut: number } | Failure> {
+  const admin = await getAdminSession();
+  if (!admin) return { success: false, message: "Please sign in again." };
+  const before = await db.adminSession.count({ where: { adminUserId: admin.id } });
+  await destroyOtherAdminSessions(admin.id);
+  revalidatePath("/admin/security");
+  return { success: true, signedOut: Math.max(0, before - 1) };
 }

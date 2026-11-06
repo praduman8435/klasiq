@@ -114,7 +114,7 @@ export default async function AdminReturnsPage({ searchParams }: PageProps) {
                     {request.overriddenAt && (
                       <>
                         <span aria-hidden className="text-muted-foreground">·</span>
-                        <span className="text-amber-500">Override</span>
+                        <span className="text-amber-500 light:text-amber-700">Override</span>
                       </>
                     )}
                   </div>
@@ -124,7 +124,7 @@ export default async function AdminReturnsPage({ searchParams }: PageProps) {
                       <ReturnTypeBadge type={request.type} className="opacity-70" />
                       <ReturnStatusBadge status={request.status} />
                       {request.overriddenAt && (
-                        <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-500">
+                        <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-500 light:text-amber-700">
                           Override
                         </span>
                       )}

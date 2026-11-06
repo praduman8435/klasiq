@@ -10,7 +10,7 @@ export type DashboardMetric = {
 
 const TONE_CLASS: Record<NonNullable<DashboardMetric["tone"]>, string> = {
   default: "text-foreground",
-  warning: "text-amber-500",
+  warning: "text-amber-500 light:text-amber-700",
   danger: "text-destructive",
 };
 

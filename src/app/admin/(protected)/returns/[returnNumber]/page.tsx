@@ -137,7 +137,7 @@ export default async function AdminReturnDetailPage({ params }: PageProps) {
 
       {request.overriddenAt && (
         <div className="mb-5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
-          <h2 className="text-sm font-semibold text-amber-500">Admin Override</h2>
+          <h2 className="text-sm font-semibold text-amber-500 light:text-amber-700">Admin Override</h2>
           <p className="mt-1 text-sm text-foreground">{request.overrideReason}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Delivery/return-window eligibility was bypassed by{" "}
@@ -269,7 +269,7 @@ export default async function AdminReturnDetailPage({ params }: PageProps) {
                           {adj.reason.replace(/_/g, " ").toLowerCase()}
                         </span>
                       </span>
-                      <span className={cn("font-medium", adj.delta >= 0 ? "text-emerald-500" : "text-destructive")}>
+                      <span className={cn("font-medium", adj.delta >= 0 ? "text-emerald-500 light:text-emerald-700" : "text-destructive")}>
                         {adj.delta >= 0 ? `+${adj.delta}` : adj.delta}
                       </span>
                     </li>

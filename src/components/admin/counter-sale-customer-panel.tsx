@@ -48,7 +48,7 @@ export type CustomerMode = "GUEST" | "CUSTOMER";
 function KhataDue({ customer, className }: { customer: CustomerSearchResult; className?: string }) {
   const due = customer.khataDueInPaise ?? 0;
   return (
-    <span className={cn("text-xs", due > 0 ? "font-medium text-amber-500" : "text-muted-foreground", className)}>
+    <span className={cn("text-xs", due > 0 ? "font-medium text-amber-500 light:text-amber-700" : "text-muted-foreground", className)}>
       {due > 0 ? `${formatPaise(due)} baaki` : "No udhaar"}
     </span>
   );

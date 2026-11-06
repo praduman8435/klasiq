@@ -31,7 +31,7 @@ function stockSummary(sizes: SizeRow[]): { text: string; tone: "danger" | "warn"
 
 const TONE = {
   danger: "text-destructive",
-  warn: "text-amber-400",
+  warn: "text-amber-400 light:text-amber-700",
   ok: "text-muted-foreground",
   none: "text-muted-foreground",
 } as const;
@@ -122,7 +122,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
                             size.stockStatus === "OUT_OF_STOCK"
                               ? "border-destructive/40 text-destructive"
                               : size.stockStatus === "LOW_STOCK"
-                                ? "border-amber-500/40 text-amber-400"
+                                ? "border-amber-500/40 text-amber-400 light:text-amber-700"
                                 : "border-border text-foreground/90",
                           )}
                         >
